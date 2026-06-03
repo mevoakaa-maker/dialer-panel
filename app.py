@@ -1,4 +1,4 @@
-import os, json, bcrypt, jwt
+import os, json, bcrypt, jwt, base64, io, math
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -52,6 +52,47 @@ def require_admin(f):
         request.user = user
         return f(*args, **kwargs)
     return wrapper
+
+# ── XLSX PARSE ───────────────────────────────────────────
+@app.route('/api/xlsx/parse', methods=['POST'])
+@require_admin
+def parse_xlsx():
+    try:
+        import pandas as pd
+        data = request.json
+        b64  = data.get('data', '')
+        raw  = base64.b64decode(b64)
+        xl   = pd.ExcelFile(io.BytesIO(raw))
+        # Bos sayfalari filtrele
+        valid = [s for s in xl.sheet_names if not s.strip().lower().startswith('sayfa') or not s[5:].strip().isdigit()]
+        sheets_info = {}
+        for sheet in valid:
+            df = pd.read_excel(io.BytesIO(raw), sheet_name=sheet, header=1)
+            # Tel No kolonunu bul
+            tel_col = next((c for c in df.columns if 'tel' in str(c).lower()), None)
+            if tel_col:
+                df = df[df[tel_col].notna()].copy()
+                df[tel_col] = df[tel_col].apply(lambda x: str(int(float(x))) if pd.notna(x) else '')
+            df = df.where(pd.notna(df), None)
+            rows = []
+            for i, (_, row) in enumerate(df.iterrows()):
+                r = {'_row': i+1}
+                for col in df.columns:
+                    if not str(col).startswith('Unnamed'):
+                        val = row[col]
+                        if isinstance(val, float) and math.isnan(val):
+                            r[str(col)] = None
+                        else:
+                            r[str(col)] = str(val) if val is not None else None
+                rows.append(r)
+            sheets_info[sheet] = {
+                'columns': [c for c in df.columns if not str(c).startswith('Unnamed')],
+                'rows': rows,
+                'count': len(rows)
+            }
+        return jsonify({'sheets': valid, 'data': sheets_info})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ── STATIC ────────────────────────────────────────────────
 @app.route('/')
