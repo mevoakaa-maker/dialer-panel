@@ -219,8 +219,14 @@ main{overflow:hidden;display:flex;flex-direction:column}
       </div>
 
       <div class="sonuc-panel">
-        <div class="sonuc-lbl" id="sonucLbl">Arama Sonucu</div>
-        <div class="sonuc-grid">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div class="sonuc-lbl" id="sonucLbl" style="margin:0;flex:1">Arama Sonucu</div>
+          <div style="display:flex;gap:2px">
+            <button id="tabSonuc" onclick="switchTab('sonuc')" style="padding:3px 10px;font-size:11px;border-radius:4px 0 0 4px;border:1px solid var(--a);background:var(--a);color:#fff;cursor:pointer;font-family:var(--sans)">Sonuç</button>
+            <button id="tabDonus" onclick="switchTab('donus')" style="padding:3px 10px;font-size:11px;border-radius:0 4px 4px 0;border:1px solid var(--b2);background:var(--s);color:var(--m);cursor:pointer;font-family:var(--sans)">Dönüş</button>
+          </div>
+        </div>
+        <div class="sonuc-grid" id="sonucGrid">
           <button class="sbtn" onclick="selSonuc('İlgilenmiyor',this)">İlgilenmiyor</button>
           <button class="sbtn" onclick="selSonuc('Link Atıldı',this)">Link Atıldı</button>
           <button class="sbtn" onclick="selSonuc('Cevapsız',this)">Cevapsız</button>
@@ -633,9 +639,9 @@ async function loadUcList(list,btn){
   // Tablo basligini guncelle
   const extraCols=getExtraCols();
   const head=document.getElementById('ucHead');
-  let ths='<th style="width:36px">#</th><th>İsim</th><th>Tel</th>';
+  let ths='<th style="width:36px">#</th><th>İsim</th><th>Tel</th><th>Sonuç</th><th>Dönüş</th>';
   extraCols.forEach(c=>{ths+=`<th>${esc(c)}</th>`;});
-  ths+='<th style="width:130px">Sonuç</th>';
+  // extra cols handled above
   head.innerHTML='<tr>'+ths+'</tr>';
 }
 
@@ -656,11 +662,12 @@ function renderUcTable(){
     const ri=ucContacts.indexOf(c)+1;
     const isSel=selContact&&selContact.id===c.id;
     let st=c.sonuc?`<span class="badge badge-sonuc">${esc(c.sonuc)}</span>`:'<span style="color:var(--b2);font-size:16px">·</span>';
+    const donusBadge=c.donus?`<span class="badge badge-sonuc">${esc(c.donus)}</span>`:'<span style="color:var(--b2)">·</span>';
     let tds=`<td style="font-family:var(--mono);font-size:11px;color:var(--m)">${ri}</td>
       <td>${esc(c.name||'—')}</td>
-      <td style="font-family:var(--mono);font-size:12px;color:var(--m)">${esc(c.tel||'')}</td>`;
-    extra.forEach(k=>{tds+=`<td style="font-size:11px;color:var(--m)">${esc(String((c.extra||{})[k]||''))}</td>`;});
-    tds+=`<td>${st}</td>`;
+      <td style="font-family:var(--mono);font-size:12px;color:var(--m)">${esc(c.tel||'')}</td>
+      <td>${st}</td>
+      <td>${donusBadge}</td>`;
     return `<tr onclick="selectContact('${c.id}')" style="cursor:pointer;${isSel?'background:#0c1a2e;outline:1px solid var(--g);':''}" id="uc-${c.id}">${tds}</tr>`;
   }).join('');
 }
@@ -688,12 +695,10 @@ function selectContact(id){
   document.getElementById('ucExtra').textContent=parts.join('  ');
   document.getElementById('sonucLbl').textContent='✏️ '+( selContact.name||'');
   document.getElementById('ucNot').value=selContact.not_text||'';
-  // Mevcut sonucu sec
-  document.querySelectorAll('.sbtn').forEach(b=>{
-    b.classList.remove('sel');
-    if(b.textContent.trim()===selContact.sonuc)b.classList.add('sel');
-  });
   selSonucVal=selContact.sonuc||null;
+  selDonusVal=selContact.donus||null;
+  activeTab='sonuc';
+  switchTab('sonuc');
   const sb=document.getElementById('ucSaveBtn');
   sb.style.opacity='1';sb.style.pointerEvents='auto';
   // Timer
@@ -708,8 +713,29 @@ function selectContact(id){
   renderUcTable();
 }
 
+let activeTab='sonuc'; // 'sonuc' or 'donus'
+let selDonusVal=null;
+
+function switchTab(tab){
+  activeTab=tab;
+  const isSonuc=(tab==='sonuc');
+  document.getElementById('tabSonuc').style.background=isSonuc?'var(--a)':'var(--s)';
+  document.getElementById('tabSonuc').style.color=isSonuc?'#fff':'var(--m)';
+  document.getElementById('tabSonuc').style.borderColor=isSonuc?'var(--a)':'var(--b2)';
+  document.getElementById('tabDonus').style.background=!isSonuc?'var(--a)':'var(--s)';
+  document.getElementById('tabDonus').style.color=!isSonuc?'#fff':'var(--m)';
+  document.getElementById('tabDonus').style.borderColor=!isSonuc?'var(--a)':'var(--b2)';
+  // Mevcut secimi goster
+  const cur=isSonuc?selSonucVal:selDonusVal;
+  document.querySelectorAll('.sbtn').forEach(b=>{
+    b.classList.remove('sel');
+    if(b.textContent.trim()===cur) b.classList.add('sel');
+  });
+}
+
 function selSonuc(val,btn){
-  selSonucVal=val;
+  if(activeTab==='sonuc') selSonucVal=val;
+  else selDonusVal=val;
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('sel'));
   btn.classList.add('sel');
   const sb=document.getElementById('ucSaveBtn');
@@ -717,13 +743,22 @@ function selSonuc(val,btn){
 }
 
 async function saveResult(){
-  if(!selSonucVal||!selContact)return;
+  if(!selContact)return;
   const not=document.getElementById('ucNot').value.trim();
-  const r=await api('PUT','/api/contacts/'+selContact.id+'/result',{sonuc:selSonucVal,not_text:not});
+  const payload={not_text:not};
+  if(selSonucVal!==null) payload.sonuc=selSonucVal;
+  if(selDonusVal!==null) payload.donus=selDonusVal;
+  if(!payload.sonuc&&!payload.donus){alert('Sonuç veya Dönüş seçin');return;}
+  const r=await api('PUT','/api/contacts/'+selContact.id+'/result',payload);
   if(r.error){alert(r.error);return;}
   const idx=ucContacts.findIndex(c=>c.id===selContact.id);
-  if(idx>=0){ucContacts[idx].sonuc=selSonucVal;ucContacts[idx].not_text=not;}
-  selContact=null;selSonucVal=null;
+  if(idx>=0){
+    if(selSonucVal) ucContacts[idx].sonuc=selSonucVal;
+    if(selDonusVal) ucContacts[idx].donus=selDonusVal;
+    ucContacts[idx].not_text=not;
+  }
+  selContact=null;selSonucVal=null;selDonusVal=null;activeTab='sonuc';
+  switchTab('sonuc');
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('ucNot').value='';
   document.getElementById('ucSaveBtn').style.opacity='.5';
