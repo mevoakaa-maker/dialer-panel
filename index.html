@@ -82,20 +82,32 @@ main{overflow:hidden;display:flex;flex-direction:column}
 .form-row input:focus,.form-row select:focus{outline:none;border-color:var(--a)}
 
 /* DIALER */
-.callstrip{display:flex;align-items:center;gap:16px;padding:14px 16px;background:var(--s);border-bottom:1px solid var(--b);flex-shrink:0}
-.cavatar{width:52px;height:52px;border-radius:50%;background:var(--ad);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:16px;font-weight:600;color:#93c5fd;flex-shrink:0;border:1px solid #1d3a6e}
-.cname{font-size:22px;font-weight:500;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cnum{font-family:var(--mono);font-size:15px;color:#93c5fd;margin-top:3px}
-.cextra{font-size:11px;color:var(--m);margin-top:2px;font-family:var(--mono)}
-.ctimer{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--g);min-width:72px;text-align:right;flex-shrink:0}
+.callstrip{display:flex;align-items:center;gap:18px;padding:16px 20px;background:var(--s);border-bottom:1px solid var(--b);flex-shrink:0}
+.cavatar{width:62px;height:62px;border-radius:50%;background:var(--ad);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:20px;font-weight:600;color:#93c5fd;flex-shrink:0;border:2px solid #1d3a6e}
+.cname{font-size:26px;font-weight:500;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cnum{font-family:var(--mono);font-size:17px;color:#93c5fd;margin-top:4px;letter-spacing:.05em}
+.cextra{font-size:12px;color:var(--m);margin-top:3px;font-family:var(--mono)}
+.ctimer{font-family:var(--mono);font-size:32px;font-weight:600;color:var(--g);min-width:80px;text-align:right;flex-shrink:0}
 
 /* SONUÇ */
 .sonuc-panel{padding:10px 16px;background:var(--s2);border-bottom:1px solid var(--b);flex-shrink:0}
 .sonuc-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--m);text-transform:uppercase;margin-bottom:7px}
 .sonuc-grid{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px}
-.sbtn{padding:5px 11px;border-radius:4px;font-size:12px;cursor:pointer;border:1px solid var(--b2);background:var(--s);color:var(--t);transition:all .12s;white-space:nowrap}
-.sbtn:hover{background:var(--s2)}
-.sbtn.sel{border-color:var(--a);background:var(--ad);color:#93c5fd}
+.sbtn{padding:5px 12px;border-radius:4px;font-size:12px;cursor:pointer;border:1px solid var(--b2);background:var(--s);color:var(--t);transition:all .12s;white-space:nowrap;font-weight:400}
+.sbtn:hover{filter:brightness(1.2)}
+.sbtn.sel{filter:brightness(1.3);outline:2px solid #fff2}
+.sbtn-ilgilenmiyor{border-color:#7f1d1d;color:#fca5a5;background:#450a0a}
+.sbtn-link{border-color:#5b21b6;color:#c4b5fd;background:#2e1065}
+.sbtn-cevapsiz{border-color:#374151;color:#9ca3af;background:#1f2937}
+.sbtn-mesgul{border-color:#78350f;color:#fcd34d;background:#451a03}
+.sbtn-ulasilamiyor{border-color:#1e3a5f;color:#7dd3fc;background:#0c1a2e}
+.sbtn-sonra{border-color:#0f766e;color:#5eead4;background:#042f2e}
+.sbtn-servis{border-color:#374151;color:#6b7280;background:#111827}
+.sbtn-gorisme{border-color:#92400e;color:#fbbf24;background:#451a03}
+.sbtn-uyeoldu{border-color:#14532d;color:#86efac;background:#052e16}
+.sbtn-mevcutaktif{border-color:#065f46;color:#6ee7b7;background:#022c22}
+.sbtn-mevcutedildi{border-color:#1e3a5f;color:#93c5fd;background:#0c1a2e}
+.sbtn-numara{border-color:#374151;color:#6b7280;background:#1f2937}
 .not-row{display:flex;gap:8px;align-items:center}
 .not-row input{flex:1;padding:5px 10px;background:var(--bg);border:1px solid var(--b);border-radius:4px;color:var(--t);font-size:12px;font-family:var(--sans)}
 .not-row input:focus{outline:none;border-color:var(--a)}
@@ -148,6 +160,7 @@ main{overflow:hidden;display:flex;flex-direction:column}
       <button class="nav-btn active" onclick="showPage('dashboard')"><span class="ni">📊</span>Dashboard</button>
       <button class="nav-btn" onclick="showPage('users')"><span class="ni">👥</span>Kullanıcılar</button>
       <button class="nav-btn" onclick="showPage('lists')"><span class="ni">📋</span>Datalar</button>
+      <button class="nav-btn" onclick="showPage('settings')"><span class="ni">⚙️</span>Ayarlar</button>
     </div>
     <!-- User nav -->
     <div id="userNav" style="display:none">
@@ -206,6 +219,31 @@ main{overflow:hidden;display:flex;flex-direction:column}
       </div>
     </div>
 
+    <!-- SETTINGS (admin) -->
+    <div class="page" id="page-settings">
+      <div class="card">
+        <h3>⚙️ Sistem Ayarları</h3>
+        <div class="form-row" style="margin-top:8px">
+          <label style="min-width:160px">Arama Süresi (timeout)</label>
+          <input type="number" id="cfgTimeout" min="5" max="120" value="25" style="width:80px;flex:none"> <span style="font-size:12px;color:var(--m);margin-left:6px">saniye</span>
+        </div>
+        <div class="form-row" style="margin-top:6px">
+          <label style="min-width:160px">Aramalar Arası Bekleme</label>
+          <input type="number" id="cfgDelay" min="0" max="120" value="10" style="width:80px;flex:none"> <span style="font-size:12px;color:var(--m);margin-left:6px">saniye</span>
+        </div>
+        <div style="border-top:1px solid var(--b);margin:14px 0"></div>
+        <div class="form-row">
+          <label style="min-width:160px">Google Apps Script URL</label>
+          <input type="text" id="gsUrlInput" placeholder="https://script.google.com/macros/s/...">
+        </div>
+        <div style="font-size:11px;color:var(--m);margin:4px 0 12px 164px">
+          Sonuçlar bu URL'ye otomatik gönderilir. Boş bırakılırsa gönderilmez.
+        </div>
+        <button class="btn g" onclick="saveSettings()">💾 Kaydet</button>
+        <div style="font-size:12px;font-family:var(--mono);margin-top:8px" id="gsUrlStatus"></div>
+      </div>
+    </div>
+
     <!-- DIALER (user) -->
     <div class="page-full" id="page-dialer">
       <div class="callstrip">
@@ -215,24 +253,45 @@ main{overflow:hidden;display:flex;flex-direction:column}
           <div class="cnum" id="ucNum">—</div>
           <div class="cextra" id="ucExtra"></div>
         </div>
-        <div class="ctimer" id="ucTimer" style="color:var(--m)">—</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <div class="ctimer" id="ucTimer" style="color:var(--m)">—</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-family:var(--mono)" id="localStatus">
+            <span id="localDot" style="width:6px;height:6px;border-radius:50%;background:var(--m);flex-shrink:0;display:inline-block"></span>
+            <span id="localTxt" style="color:var(--m)">local kapalı</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ARAMA KONTROL -->
+      <div style="display:flex;align-items:center;gap:6px;padding:7px 16px;border-bottom:1px solid var(--b);background:var(--s);flex-shrink:0" id="dialerControls">
+        <button class="btn g" onclick="localCmd('resume')" title="F10">▶ Başlat / Devam</button>
+        <button class="btn a" onclick="localCmd('cancel_hangup')" title="F8">🔕 Hangup iptal</button>
+        <button class="btn r" onclick="localCmd('pause')" title="F9">■ Durdur</button>
+        <div style="flex:1"></div>
+        <span style="font-size:11px;color:var(--m);font-family:var(--mono)">start.bat çalışıyor olmalı</span>
       </div>
 
       <div class="sonuc-panel">
-        <div class="sonuc-lbl" id="sonucLbl">Arama Sonucu</div>
-        <div class="sonuc-grid">
-          <button class="sbtn" onclick="selSonuc('İlgilenmiyor',this)">İlgilenmiyor</button>
-          <button class="sbtn" onclick="selSonuc('Link Atıldı',this)">Link Atıldı</button>
-          <button class="sbtn" onclick="selSonuc('Cevapsız',this)">Cevapsız</button>
-          <button class="sbtn" onclick="selSonuc('Meşgul',this)">Meşgul</button>
-          <button class="sbtn" onclick="selSonuc('Ulaşılamıyor',this)">Ulaşılamıyor</button>
-          <button class="sbtn" onclick="selSonuc('Sonra Aranacak',this)">Sonra Aranacak</button>
-          <button class="sbtn" onclick="selSonuc('Servis Dışı',this)">Servis Dışı</button>
-          <button class="sbtn" onclick="selSonuc('Görüşmeyi Sonlandırdı',this)">Görüşmeyi Sonlandırdı</button>
-          <button class="sbtn" onclick="selSonuc('Üye oldu',this)">Üye oldu</button>
-          <button class="sbtn" onclick="selSonuc('Mevcut Üye Aktif',this)">Mevcut Üye Aktif</button>
-          <button class="sbtn" onclick="selSonuc('Mevcut Üye Aktif Edildi',this)">Mevcut Üye Aktif Edildi</button>
-          <button class="sbtn" onclick="selSonuc('Numara Başkasına ait',this)">Numara Başkasına ait</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div class="sonuc-lbl" id="sonucLbl" style="margin:0;flex:1">Arama Sonucu</div>
+          <div style="display:flex;gap:2px">
+            <button id="tabSonuc" onclick="switchTab('sonuc')" style="padding:3px 10px;font-size:11px;border-radius:4px 0 0 4px;border:1px solid var(--a);background:var(--a);color:#fff;cursor:pointer;font-family:var(--sans)">Sonuç</button>
+            <button id="tabDonus" onclick="switchTab('donus')" style="padding:3px 10px;font-size:11px;border-radius:0 4px 4px 0;border:1px solid var(--b2);background:var(--s);color:var(--m);cursor:pointer;font-family:var(--sans)">Dönüş</button>
+          </div>
+        </div>
+        <div class="sonuc-grid" id="sonucGrid">
+          <button class="sbtn sbtn-ilgilenmiyor" onclick="selSonuc('İlgilenmiyor',this)">İlgilenmiyor</button>
+          <button class="sbtn sbtn-link" onclick="selSonuc('Link Atıldı',this)">Link Atıldı</button>
+          <button class="sbtn sbtn-cevapsiz" onclick="selSonuc('Cevapsız',this)">Cevapsız</button>
+          <button class="sbtn sbtn-mesgul" onclick="selSonuc('Meşgul',this)">Meşgul</button>
+          <button class="sbtn sbtn-ulasilamiyor" onclick="selSonuc('Ulaşılamıyor',this)">Ulaşılamıyor</button>
+          <button class="sbtn sbtn-sonra" onclick="selSonuc('Sonra Aranacak',this)">Sonra Aranacak</button>
+          <button class="sbtn sbtn-servis" onclick="selSonuc('Servis Dışı',this)">Servis Dışı</button>
+          <button class="sbtn sbtn-gorisme" onclick="selSonuc('Görüşmeyi Sonlandırdı',this)">Görüşmeyi Sonlandırdı</button>
+          <button class="sbtn sbtn-uyeoldu" onclick="selSonuc('Üye oldu',this)">Üye oldu</button>
+          <button class="sbtn sbtn-mevcutaktif" onclick="selSonuc('Mevcut Üye Aktif',this)">Mevcut Üye Aktif</button>
+          <button class="sbtn sbtn-mevcutedildi" onclick="selSonuc('Mevcut Üye Aktif Edildi',this)">Mevcut Üye Aktif Edildi</button>
+          <button class="sbtn sbtn-numara" onclick="selSonuc('Numara Başkasına ait',this)">Numara Başkasına ait</button>
         </div>
         <div class="not-row">
           <input type="text" id="ucNot" placeholder="Not ekle (opsiyonel)...">
@@ -325,6 +384,33 @@ main{overflow:hidden;display:flex;flex-direction:column}
 </div>
 </div>
 
+<!-- USER UPLOAD MODAL -->
+<div class="overlay" id="userUploadModal">
+<div class="modal">
+  <h3>+ Data Yükle</h3>
+  <div id="uuStep1">
+    <div class="dropzone" id="uuDrop" onclick="document.getElementById('uuInput').click()">
+      📂 XLSX dosyasını sürükle veya tıkla
+      <span style="display:block;font-size:11px;font-family:var(--mono);color:var(--m);margin-top:4px">Excel data dosyası</span>
+    </div>
+    <input type="file" id="uuInput" accept=".xlsx,.xls" style="display:none">
+    <div style="font-size:12px;color:var(--m)" id="uuStatus"></div>
+  </div>
+  <div id="uuStep2" style="display:none">
+    <div style="font-size:12px;color:var(--m);margin-bottom:10px" id="uuFname"></div>
+    <div class="form-row"><label>Sayfa</label>
+      <select id="uuSheet" onchange="onUuSheetChange()"><option value="">Seç...</option></select>
+    </div>
+    <div style="font-size:12px;font-family:var(--mono);color:var(--g);margin-bottom:8px" id="uuInfo"></div>
+    <div class="form-row"><label>Data Adı</label><input type="text" id="uuName" placeholder="Örn: 01.06 Atakanaff"></div>
+  </div>
+  <div class="mactions">
+    <button class="btn" onclick="closeModal('userUploadModal');resetUu()">İptal</button>
+    <button class="btn g" id="uuAddBtn" style="display:none" onclick="addUserList()">✓ Ekle</button>
+  </div>
+</div>
+</div>
+
 <script>
 const API='';
 let token=localStorage.getItem('token')||'';
@@ -381,10 +467,12 @@ async function initApp(){
     await loadUsers();
     await loadLists();
     loadDashboard();
+    loadGsUrl();
   } else {
     document.getElementById('userNav').style.display='block';
     showPage('dialer');
     loadUserLists();
+    loadGsUrl();
   }
 }
 
@@ -606,9 +694,9 @@ async function loadUcList(list,btn){
   // Tablo basligini guncelle
   const extraCols=getExtraCols();
   const head=document.getElementById('ucHead');
-  let ths='<th style="width:36px">#</th><th>İsim</th><th>Tel</th>';
+  let ths='<th style="width:36px">#</th><th>İsim</th><th>Tel</th><th>Sonuç</th><th>Dönüş</th>';
   extraCols.forEach(c=>{ths+=`<th>${esc(c)}</th>`;});
-  ths+='<th style="width:130px">Sonuç</th>';
+  // extra cols handled above
   head.innerHTML='<tr>'+ths+'</tr>';
 }
 
@@ -629,11 +717,12 @@ function renderUcTable(){
     const ri=ucContacts.indexOf(c)+1;
     const isSel=selContact&&selContact.id===c.id;
     let st=c.sonuc?`<span class="badge badge-sonuc">${esc(c.sonuc)}</span>`:'<span style="color:var(--b2);font-size:16px">·</span>';
+    const donusBadge=c.donus?`<span class="badge badge-sonuc">${esc(c.donus)}</span>`:'<span style="color:var(--b2)">·</span>';
     let tds=`<td style="font-family:var(--mono);font-size:11px;color:var(--m)">${ri}</td>
       <td>${esc(c.name||'—')}</td>
-      <td style="font-family:var(--mono);font-size:12px;color:var(--m)">${esc(c.tel||'')}</td>`;
-    extra.forEach(k=>{tds+=`<td style="font-size:11px;color:var(--m)">${esc(String((c.extra||{})[k]||''))}</td>`;});
-    tds+=`<td>${st}</td>`;
+      <td style="font-family:var(--mono);font-size:12px;color:var(--m)">${esc(c.tel||'')}</td>
+      <td>${st}</td>
+      <td>${donusBadge}</td>`;
     return `<tr onclick="selectContact('${c.id}')" style="cursor:pointer;${isSel?'background:#0c1a2e;outline:1px solid var(--g);':''}" id="uc-${c.id}">${tds}</tr>`;
   }).join('');
 }
@@ -661,12 +750,10 @@ function selectContact(id){
   document.getElementById('ucExtra').textContent=parts.join('  ');
   document.getElementById('sonucLbl').textContent='✏️ '+( selContact.name||'');
   document.getElementById('ucNot').value=selContact.not_text||'';
-  // Mevcut sonucu sec
-  document.querySelectorAll('.sbtn').forEach(b=>{
-    b.classList.remove('sel');
-    if(b.textContent.trim()===selContact.sonuc)b.classList.add('sel');
-  });
   selSonucVal=selContact.sonuc||null;
+  selDonusVal=selContact.donus||null;
+  activeTab='sonuc';
+  switchTab('sonuc');
   const sb=document.getElementById('ucSaveBtn');
   sb.style.opacity='1';sb.style.pointerEvents='auto';
   // Timer
@@ -681,8 +768,29 @@ function selectContact(id){
   renderUcTable();
 }
 
+let activeTab='sonuc'; // 'sonuc' or 'donus'
+let selDonusVal=null;
+
+function switchTab(tab){
+  activeTab=tab;
+  const isSonuc=(tab==='sonuc');
+  document.getElementById('tabSonuc').style.background=isSonuc?'var(--a)':'var(--s)';
+  document.getElementById('tabSonuc').style.color=isSonuc?'#fff':'var(--m)';
+  document.getElementById('tabSonuc').style.borderColor=isSonuc?'var(--a)':'var(--b2)';
+  document.getElementById('tabDonus').style.background=!isSonuc?'var(--a)':'var(--s)';
+  document.getElementById('tabDonus').style.color=!isSonuc?'#fff':'var(--m)';
+  document.getElementById('tabDonus').style.borderColor=!isSonuc?'var(--a)':'var(--b2)';
+  // Mevcut secimi goster
+  const cur=isSonuc?selSonucVal:selDonusVal;
+  document.querySelectorAll('.sbtn').forEach(b=>{
+    b.classList.remove('sel');
+    if(b.textContent.trim()===cur) b.classList.add('sel');
+  });
+}
+
 function selSonuc(val,btn){
-  selSonucVal=val;
+  if(activeTab==='sonuc') selSonucVal=val;
+  else selDonusVal=val;
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('sel'));
   btn.classList.add('sel');
   const sb=document.getElementById('ucSaveBtn');
@@ -690,13 +798,24 @@ function selSonuc(val,btn){
 }
 
 async function saveResult(){
-  if(!selSonucVal||!selContact)return;
+  if(!selContact)return;
   const not=document.getElementById('ucNot').value.trim();
-  const r=await api('PUT','/api/contacts/'+selContact.id+'/result',{sonuc:selSonucVal,not_text:not});
+  const payload={not_text:not};
+  if(selSonucVal!==null) payload.sonuc=selSonucVal;
+  if(selDonusVal!==null) payload.donus=selDonusVal;
+  if(!payload.sonuc&&!payload.donus){alert('Sonuç veya Dönüş seçin');return;}
+  const r=await api('PUT','/api/contacts/'+selContact.id+'/result',payload);
   if(r.error){alert(r.error);return;}
   const idx=ucContacts.findIndex(c=>c.id===selContact.id);
-  if(idx>=0){ucContacts[idx].sonuc=selSonucVal;ucContacts[idx].not_text=not;}
-  selContact=null;selSonucVal=null;
+  if(idx>=0){
+    if(selSonucVal) ucContacts[idx].sonuc=selSonucVal;
+    if(selDonusVal) ucContacts[idx].donus=selDonusVal;
+    ucContacts[idx].not_text=not;
+  }
+  // Google Sheets'e gonder
+  sendToGoogleSheets(selContact, selSonucVal, selDonusVal, not);
+  selContact=null;selSonucVal=null;selDonusVal=null;activeTab='sonuc';
+  switchTab('sonuc');
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('ucNot').value='';
   document.getElementById('ucSaveBtn').style.opacity='.5';
@@ -722,6 +841,120 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
 
 if(token)initApp();
+
+// ── LOCAL SERVER ──────────────────────────────────────────
+const LOCAL = 'http://localhost:8080';
+let localOnline = false;
+let localTimer = null;
+let localTimerSec = 0;
+let lastLocalName = '';
+
+async function localCmd(cmd){
+  if(!localOnline){ alert('Local server çalışmıyor.\nÖnce start.bat çalıştırın.'); return; }
+  try {
+    if(cmd==='resume'){
+      await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'paused.flag'})});
+      await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.lock'})});
+      await fetch(LOCAL+'/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd:'resume_after_manual.bat'})});
+    } else if(cmd==='pause'){
+      await fetch(LOCAL+'/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd:'pause.bat'})});
+    } else if(cmd==='cancel_hangup'){
+      await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'cancel_hangup.flag'})});
+      await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'cancel_hangup.flag',content:'1'})});
+    }
+  } catch(e){ console.log('local cmd error',e); }
+}
+
+async function pollLocal(){
+  try {
+    const r = await fetch(LOCAL+'/api/list',{signal:AbortSignal.timeout(1500)});
+    if(r.ok){
+      localOnline = true;
+      document.getElementById('localDot').style.background='var(--g)';
+      document.getElementById('localDot').style.boxShadow='0 0 5px var(--g)';
+      document.getElementById('localTxt').style.color='var(--g)';
+      document.getElementById('localTxt').textContent='local bağlı';
+      // current_call oku
+      const cc = await fetch(LOCAL+'/api/file?name=current_call.txt');
+      if(cc.ok){
+        const d = await cc.json();
+        if(d.exists && d.content.trim()){
+          const lines = d.content.trim().split('\n');
+          const name = lines[0]?.trim()||'—';
+          const num  = lines[1]?.trim()||'—';
+          if(name !== lastLocalName && name !== '—'){
+            lastLocalName = name;
+            localTimerSec = 0;
+            clearInterval(localTimer);
+            document.getElementById('ucTimer').style.color='var(--g)';
+            localTimer = setInterval(()=>{
+              localTimerSec++;
+              const m=String(Math.floor(localTimerSec/60)).padStart(2,'0');
+              const sc=String(localTimerSec%60).padStart(2,'0');
+              document.getElementById('ucTimer').textContent=m+':'+sc;
+            },1000);
+          }
+          if(name!=='—'){
+            document.getElementById('ucName').textContent=name;
+            document.getElementById('ucNum').textContent=num;
+            document.getElementById('ucAvatar').textContent=initials(name);
+          }
+        }
+      }
+    }
+  } catch(e){
+    localOnline = false;
+    document.getElementById('localDot').style.background='var(--m)';
+    document.getElementById('localDot').style.boxShadow='none';
+    document.getElementById('localTxt').style.color='var(--m)';
+    document.getElementById('localTxt').textContent='local kapalı';
+  }
+}
+
+// Her 2 sn local'i kontrol et
+setInterval(pollLocal, 2000);
+pollLocal();
+
+// ── SETTINGS ──────────────────────────────────────────────
+let gsUrl = '';
+
+async function loadGsUrl(){
+  const d = await api('GET','/api/settings');
+  if(d){
+    if(d.gs_url){ gsUrl=d.gs_url; document.getElementById('gsUrlInput').value=gsUrl; }
+    if(d.timeout_sec) document.getElementById('cfgTimeout').value=d.timeout_sec;
+    if(d.delay_between_calls) document.getElementById('cfgDelay').value=d.delay_between_calls;
+  }
+}
+
+async function saveSettings(){
+  gsUrl = document.getElementById('gsUrlInput').value.trim();
+  const timeout = parseInt(document.getElementById('cfgTimeout').value)||25;
+  const delay   = parseInt(document.getElementById('cfgDelay').value)||10;
+  const r = await api('PUT','/api/settings',{gs_url:gsUrl, timeout_sec:timeout, delay_between_calls:delay});
+  const el = document.getElementById('gsUrlStatus');
+  if(r.ok){ el.style.color='var(--g)'; el.textContent='✓ Kaydedildi'; }
+  else { el.style.color='var(--r)'; el.textContent='Hata: '+(r.error||''); }
+  setTimeout(()=>el.textContent='',3000);
+}
+
+async function sendToGoogleSheets(contact, sonuc, donus, not_text){
+  if(!gsUrl) return;
+  try {
+    await fetch(gsUrl, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        tel: contact.tel||'',
+        isim: contact.name||'',
+        sonuc: sonuc||'',
+        donus: donus||'',
+        not: not_text||'',
+        sheet: ucCurrentList?.sheet||''
+      })
+    });
+  } catch(e){}
+}
 
 // ── USER UPLOAD ───────────────────────────────────────────
 let uuData={};
@@ -794,32 +1027,6 @@ async function addUserList(){
 }
 </script>
 
-<!-- USER UPLOAD MODAL -->
-<div class="overlay" id="userUploadModal">
-<div class="modal">
-  <h3>+ Data Yükle</h3>
-  <div id="uuStep1">
-    <div class="dropzone" id="uuDrop" onclick="document.getElementById('uuInput').click()">
-      📂 XLSX dosyasını sürükle veya tıkla
-      <span style="display:block;font-size:11px;font-family:var(--mono);color:var(--m);margin-top:4px">Excel data dosyası</span>
-    </div>
-    <input type="file" id="uuInput" accept=".xlsx,.xls" style="display:none">
-    <div style="font-size:12px;color:var(--m)" id="uuStatus"></div>
-  </div>
-  <div id="uuStep2" style="display:none">
-    <div style="font-size:12px;color:var(--m);margin-bottom:10px" id="uuFname"></div>
-    <div class="form-row"><label>Sayfa</label>
-      <select id="uuSheet" onchange="onUuSheetChange()"><option value="">Seç...</option></select>
-    </div>
-    <div style="font-size:12px;font-family:var(--mono);color:var(--g);margin-bottom:8px" id="uuInfo"></div>
-    <div class="form-row"><label>Data Adı</label><input type="text" id="uuName" placeholder="Örn: 01.06 Atakanaff"></div>
-  </div>
-  <div class="mactions">
-    <button class="btn" onclick="closeModal('userUploadModal');resetUu()">İptal</button>
-    <button class="btn g" id="uuAddBtn" style="display:none" onclick="addUserList()">✓ Ekle</button>
-  </div>
-</div>
-</div>
 
 </body>
 </html>
