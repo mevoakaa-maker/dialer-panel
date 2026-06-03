@@ -163,7 +163,13 @@ tbody tr.sel-row{background:#0a2a0a;outline:1px solid var(--green)}
 <!-- APP -->
 <div class="shell" id="appShell">
 <header>
-  <span class="logo">DIALER//PANEL</span>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div style="width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,#1d3a6e,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🎰</div>
+    <div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text);letter-spacing:.05em;line-height:1.2">PAŞA CASINO</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.12em;line-height:1.2">DIALER PANEL</div>
+    </div>
+  </div>
   <div class="sep"></div>
   <div class="hstatus" id="hstatus"><span class="hdot"></span><span id="hstatustxt">Bağlanıyor...</span></div>
   <div class="sep"></div>
@@ -175,7 +181,10 @@ tbody tr.sel-row{background:#0a2a0a;outline:1px solid var(--green)}
   <span style="font-family:var(--mono);font-size:11px;color:var(--muted)" id="hclock"></span>
   <div class="sep"></div>
   <span class="badge badge-admin" id="hadminBadge" style="display:none">ADMIN</span>
-  <span style="font-size:12px;color:var(--muted);font-family:var(--mono)" id="huser"></span>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div id="userAvatar" style="width:30px;height:30px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:600;color:#93c5fd;border:1px solid #1d3a6e;display:none"></div>
+    <span style="font-size:13px;font-weight:500;color:var(--text)" id="huser"></span>
+  </div>
   <button class="btn r" style="font-size:11px" onclick="logout()">Çıkış</button>
 </header>
 
@@ -506,7 +515,11 @@ async function initApp(){
   currentUser=me;
   document.getElementById('loginWrap').style.display='none';
   document.getElementById('appShell').style.display='grid';
-  document.getElementById('huser').textContent=me.name||me.email;
+  const uname = me.name || me.email.split('@')[0];
+  document.getElementById('huser').textContent = uname;
+  const av = document.getElementById('userAvatar');
+  av.style.display = 'flex';
+  av.textContent = uname.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase().slice(0,2);
   setInterval(()=>{document.getElementById('hclock').textContent=new Date().toLocaleTimeString('tr-TR');},1000);
   await loadGsSettings();
   if(me.role==='admin'){
