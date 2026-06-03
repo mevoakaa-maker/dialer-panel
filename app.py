@@ -55,7 +55,7 @@ def require_admin(f):
 
 # ── XLSX PARSE ───────────────────────────────────────────
 @app.route('/api/xlsx/parse', methods=['POST'])
-@require_admin
+@require_auth
 def parse_xlsx():
     try:
         import pandas as pd
