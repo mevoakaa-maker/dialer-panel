@@ -325,8 +325,35 @@ main{overflow:hidden;display:flex;flex-direction:column}
 </div>
 </div>
 
+<!-- USER UPLOAD MODAL -->
+<div class="overlay" id="userUploadModal">
+<div class="modal">
+  <h3>+ Data Yükle</h3>
+  <div id="uuStep1">
+    <div class="dropzone" id="uuDrop" onclick="document.getElementById('uuInput').click()">
+      📂 XLSX dosyasını sürükle veya tıkla
+      <span style="display:block;font-size:11px;font-family:var(--mono);color:var(--m);margin-top:4px">Excel data dosyası</span>
+    </div>
+    <input type="file" id="uuInput" accept=".xlsx,.xls" style="display:none">
+    <div style="font-size:12px;color:var(--m)" id="uuStatus"></div>
+  </div>
+  <div id="uuStep2" style="display:none">
+    <div style="font-size:12px;color:var(--m);margin-bottom:10px" id="uuFname"></div>
+    <div class="form-row"><label>Sayfa</label>
+      <select id="uuSheet" onchange="onUuSheetChange()"><option value="">Seç...</option></select>
+    </div>
+    <div style="font-size:12px;font-family:var(--mono);color:var(--g);margin-bottom:8px" id="uuInfo"></div>
+    <div class="form-row"><label>Data Adı</label><input type="text" id="uuName" placeholder="Örn: 01.06 Atakanaff"></div>
+  </div>
+  <div class="mactions">
+    <button class="btn" onclick="closeModal('userUploadModal');resetUu()">İptal</button>
+    <button class="btn g" id="uuAddBtn" style="display:none" onclick="addUserList()">✓ Ekle</button>
+  </div>
+</div>
+</div>
+
 <script>
-const API='';
+const API='';const API='';
 let token=localStorage.getItem('token')||'';
 let currentUser=null;
 let allUsers=[];
@@ -794,32 +821,6 @@ async function addUserList(){
 }
 </script>
 
-<!-- USER UPLOAD MODAL -->
-<div class="overlay" id="userUploadModal">
-<div class="modal">
-  <h3>+ Data Yükle</h3>
-  <div id="uuStep1">
-    <div class="dropzone" id="uuDrop" onclick="document.getElementById('uuInput').click()">
-      📂 XLSX dosyasını sürükle veya tıkla
-      <span style="display:block;font-size:11px;font-family:var(--mono);color:var(--m);margin-top:4px">Excel data dosyası</span>
-    </div>
-    <input type="file" id="uuInput" accept=".xlsx,.xls" style="display:none">
-    <div style="font-size:12px;color:var(--m)" id="uuStatus"></div>
-  </div>
-  <div id="uuStep2" style="display:none">
-    <div style="font-size:12px;color:var(--m);margin-bottom:10px" id="uuFname"></div>
-    <div class="form-row"><label>Sayfa</label>
-      <select id="uuSheet" onchange="onUuSheetChange()"><option value="">Seç...</option></select>
-    </div>
-    <div style="font-size:12px;font-family:var(--mono);color:var(--g);margin-bottom:8px" id="uuInfo"></div>
-    <div class="form-row"><label>Data Adı</label><input type="text" id="uuName" placeholder="Örn: 01.06 Atakanaff"></div>
-  </div>
-  <div class="mactions">
-    <button class="btn" onclick="closeModal('userUploadModal');resetUu()">İptal</button>
-    <button class="btn g" id="uuAddBtn" style="display:none" onclick="addUserList()">✓ Ekle</button>
-  </div>
-</div>
-</div>
 
 </body>
 </html>
