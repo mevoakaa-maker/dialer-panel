@@ -834,8 +834,11 @@ async function saveResult(){
   if(!selContact)return;
   const not=document.getElementById('ucNot').value.trim();
   const payload={not_text:not};
-  if(selSonucVal) payload.sonuc=selSonucVal;
-  if(selDonusVal) payload.donus=selDonusVal;
+  if(selSonucVal!==null) payload.sonuc=selSonucVal;
+  if(selDonusVal!==null) payload.donus=selDonusVal;
+  // Mevcut degerleri de koru
+  if(!payload.sonuc&&selContact.sonuc) payload.sonuc=selContact.sonuc;
+  if(!payload.donus&&selContact.donus) payload.donus=selContact.donus;
   if(!payload.sonuc&&!payload.donus){alert('Sonuç veya Dönüş seçin');return;}
   const r=await api('PUT','/api/contacts/'+selContact.id+'/result',payload);
   if(r.error){alert(r.error);return;}
@@ -899,7 +902,7 @@ function renderUcTable(){
     const isSel=selContact&&selContact.id===c.id;
     const st=c.sonuc?`<span class="badge badge-sonuc">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
     const dt=c.donus?`<span class="badge badge-sonuc">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
-    return `<tr onclick="selectContact('${c.id}')" class="${isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}">
+    return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}" title="Çift tıkla: bu kişiyi ara">
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
       <td>${esc(c.name||'—')}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(c.tel||'')}</td>
@@ -914,6 +917,18 @@ function updateUcProg(){
   const pct=total?Math.round(done/total*100):0;
   document.getElementById('ucProg').style.width=pct+'%';
   document.getElementById('ucProgLbl').textContent=`${done} / ${total} tamamlandı (${pct}%)`;
+}
+
+async function jumpToContact(ri){
+  if(!localOnline){alert('Local server çalışmıyor.\nÖnce start.bat çalıştırın.');return;}
+  if(!confirm(ucContacts[ri-1]?.name+' — bu kişiden başlat?'))return;
+  try{
+    await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'index.txt',content:String(ri-1)})});
+    await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'paused.flag'})});
+    await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.lock'})});
+    await fetch(LOCAL+'/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd:'resume_after_manual.bat'})});
+    setStatus(ri+'. kişiden başlatıldı','live');
+  }catch(e){alert('Hata: '+e);}
 }
 
 function toggleHide(){
@@ -953,16 +968,20 @@ async function saveLocalSettings(){
   const delay=parseInt(document.getElementById('cfgDelayU').value)||10;
   await api('PUT','/api/settings',{timeout_sec:timeout,delay_between_calls:delay});
   if(localOnline){
-    const bat=await fetch(LOCAL+'/api/file?name=nextcall.bat');
-    if(bat.ok){
-      const d=await bat.json();
-      if(d.exists){
-        const updated=d.content.replace(/set "TIMEOUTSEC=\d+"/,`set "TIMEOUTSEC=${timeout}"`);
-        await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.bat',content:updated})});
+    try{
+      const r=await fetch(LOCAL+'/api/file?name=nextcall.bat');
+      if(r.ok){
+        const d=await r.json();
+        if(d.exists){
+          let c=d.content;
+          c=c.replace(/set "TIMEOUTSEC=\d+"/,`set "TIMEOUTSEC=${timeout}"`);
+          await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.bat',content:c})});
+        }
       }
-    }
+    }catch(e){}
   }
-  setStatus('Ayarlar kaydedildi','live');
+  setStatus('Ayarlar kaydedildi ✓','live');
+  alert('Kaydedildi! Timeout: '+timeout+'sn');
 }
 
 async function sendToSheets(contact,sonuc,donus,not_text){
