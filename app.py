@@ -69,10 +69,15 @@ def login():
     email = data.get('email','').lower().strip()
     password = data.get('password','')
     res = sb.table('users').select('*').eq('email', email).execute()
-    if not res.data: return jsonify({'error':'Email veya şifre hatalı'}), 401
+    if not res.data: return jsonify({'error':'Email veya sifre hatali'}), 401
     user = res.data[0]
-    if not bcrypt.checkpw(password.encode(), user['password'].encode()):
-        return jsonify({'error':'Email veya şifre hatalı'}), 401
+    stored = user['password']
+    try:
+        ok = bcrypt.checkpw(password.encode(), stored.encode())
+    except Exception:
+        ok = (password == stored)
+    if not ok:
+        return jsonify({'error':'Email veya sifre hatali'}), 401
     token = make_token(user)
     return jsonify({'token': token, 'user': {
         'id': user['id'], 'email': user['email'],
