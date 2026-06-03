@@ -72,6 +72,11 @@ def parse_xlsx():
             tel_col = next((c for c in df.columns if 'tel' in str(c).lower()), None)
             if tel_col:
                 df = df[df[tel_col].notna()].copy()
+                # Sadece sayisal telefon numarasi icerenleri al (Data Raporu satirlarini ele)
+                def is_valid_tel(x):
+                    try: return len(str(int(float(x)))) >= 7
+                    except: return False
+                df = df[df[tel_col].apply(is_valid_tel)].copy()
                 df[tel_col] = df[tel_col].apply(lambda x: str(int(float(x))) if pd.notna(x) else '')
             df = df.where(pd.notna(df), None)
             rows = []
@@ -245,18 +250,16 @@ def upload_contacts(lid):
 @require_auth
 def update_result(cid):
     data = request.json
-    sonuc = data.get('sonuc','')
-    not_text = data.get('not_text','')
-    sb.table('contacts').update({
-        'sonuc': sonuc,
-        'not_text': not_text,
-        'updated_at': datetime.utcnow().isoformat()
-    }).eq('id', cid).execute()
+    update = {'updated_at': datetime.utcnow().isoformat()}
+    if 'sonuc' in data:    update['sonuc']    = data['sonuc']
+    if 'donus' in data:    update['donus']    = data['donus']
+    if 'not_text' in data: update['not_text'] = data['not_text']
+    sb.table('contacts').update(update).eq('id', cid).execute()
     sb.table('results').insert({
         'contact_id': cid,
         'user_id': request.user['id'],
-        'sonuc': sonuc,
-        'not_text': not_text
+        'sonuc': data.get('sonuc'),
+        'not_text': data.get('not_text','')
     }).execute()
     return jsonify({'ok': True})
 
