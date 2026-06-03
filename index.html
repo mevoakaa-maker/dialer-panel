@@ -151,8 +151,11 @@ main{overflow:hidden;display:flex;flex-direction:column}
     </div>
     <!-- User nav -->
     <div id="userNav" style="display:none">
-      <div class="slabel">Datalarım</div>
-      <div id="userListNav" style="padding:4px 6px;display:flex;flex-direction:column;gap:2px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 8px 4px">
+        <span class="slabel" style="padding:0">Datalarım</span>
+        <button class="btn g" style="font-size:11px;padding:3px 8px" onclick="openModal('userUploadModal')">+ Yükle</button>
+      </div>
+      <div id="userListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px"></div>
     </div>
   </aside>
 
@@ -719,6 +722,104 @@ function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
 
 if(token)initApp();
+
+// ── USER UPLOAD ───────────────────────────────────────────
+let uuData={};
+let uuSelSheet='';
+
+function resetUu(){
+  uuData={};uuSelSheet='';
+  document.getElementById('uuStep1').style.display='';
+  document.getElementById('uuStep2').style.display='none';
+  document.getElementById('uuAddBtn').style.display='none';
+  document.getElementById('uuStatus').textContent='';
+  document.getElementById('uuInfo').textContent='';
+  document.getElementById('uuInput').value='';
+}
+
+document.getElementById('uuInput').onchange=async function(e){
+  const file=e.target.files[0];if(!file)return;
+  document.getElementById('uuStatus').textContent='Yükleniyor...';
+  const buf=await file.arrayBuffer();
+  const bytes=new Uint8Array(buf);
+  let bin='';for(let i=0;i<bytes.length;i++)bin+=String.fromCharCode(bytes[i]);
+  const b64=btoa(bin);
+  const res=await api('POST','/api/xlsx/parse',{data:b64});
+  if(res.error){document.getElementById('uuStatus').textContent='Hata: '+res.error;return;}
+  uuData=res.data;
+  document.getElementById('uuFname').textContent='📄 '+file.name;
+  const sel=document.getElementById('uuSheet');
+  sel.innerHTML='<option value="">Sayfa seç...</option>'+res.sheets.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  document.getElementById('uuName').value=file.name.replace(/\.xlsx?$/i,'');
+  document.getElementById('uuStep1').style.display='none';
+  document.getElementById('uuStep2').style.display='';
+};
+
+const uuDz=document.getElementById('uuDrop');
+uuDz.ondragover=e=>{e.preventDefault();uuDz.classList.add('drag')};
+uuDz.ondragleave=()=>uuDz.classList.remove('drag');
+uuDz.ondrop=e=>{
+  e.preventDefault();uuDz.classList.remove('drag');
+  const f=e.dataTransfer.files[0];
+  if(f){const dt=new DataTransfer();dt.items.add(f);document.getElementById('uuInput').files=dt.files;document.getElementById('uuInput').onchange({target:{files:[f]}});}
+};
+
+function onUuSheetChange(){
+  uuSelSheet=document.getElementById('uuSheet').value;
+  const info=uuSelSheet&&uuData[uuSelSheet];
+  document.getElementById('uuInfo').textContent=info?info.count+' kişi bulundu':'';
+  document.getElementById('uuAddBtn').style.display=info?'':'none';
+}
+
+async function addUserList(){
+  const name=document.getElementById('uuName').value.trim();
+  if(!name)return alert('Data adı zorunlu');
+  if(!uuSelSheet||!uuData[uuSelSheet])return alert('Sayfa seçin');
+  const sheetData=uuData[uuSelSheet];
+  // Kendi user id ile liste olustur
+  const lst=await api('POST','/api/lists',{name,sheet:uuSelSheet,assigned_to:currentUser.id});
+  if(lst.error)return alert(lst.error);
+  if(lst.id){
+    const rows=sheetData.rows.map((r,i)=>{
+      const extra={};
+      sheetData.columns.forEach(c=>{
+        if(!['İsim Soyisim','Tel No','Sonuç','Dönüş','NOTLAR'].includes(c))extra[c]=r[c];
+      });
+      return {name:r['İsim Soyisim']||r['Kullanıcı Adı']||'',tel:r['Tel No']||'',extra,row_index:i+1};
+    }).filter(r=>r.tel);
+    await api('POST','/api/lists/'+lst.id+'/contacts',{rows});
+  }
+  closeModal('userUploadModal');resetUu();
+  loadUserLists();
+}
 </script>
+
+<!-- USER UPLOAD MODAL -->
+<div class="overlay" id="userUploadModal">
+<div class="modal">
+  <h3>+ Data Yükle</h3>
+  <div id="uuStep1">
+    <div class="dropzone" id="uuDrop" onclick="document.getElementById('uuInput').click()">
+      📂 XLSX dosyasını sürükle veya tıkla
+      <span style="display:block;font-size:11px;font-family:var(--mono);color:var(--m);margin-top:4px">Excel data dosyası</span>
+    </div>
+    <input type="file" id="uuInput" accept=".xlsx,.xls" style="display:none">
+    <div style="font-size:12px;color:var(--m)" id="uuStatus"></div>
+  </div>
+  <div id="uuStep2" style="display:none">
+    <div style="font-size:12px;color:var(--m);margin-bottom:10px" id="uuFname"></div>
+    <div class="form-row"><label>Sayfa</label>
+      <select id="uuSheet" onchange="onUuSheetChange()"><option value="">Seç...</option></select>
+    </div>
+    <div style="font-size:12px;font-family:var(--mono);color:var(--g);margin-bottom:8px" id="uuInfo"></div>
+    <div class="form-row"><label>Data Adı</label><input type="text" id="uuName" placeholder="Örn: 01.06 Atakanaff"></div>
+  </div>
+  <div class="mactions">
+    <button class="btn" onclick="closeModal('userUploadModal');resetUu()">İptal</button>
+    <button class="btn g" id="uuAddBtn" style="display:none" onclick="addUserList()">✓ Ekle</button>
+  </div>
+</div>
+</div>
+
 </body>
 </html>

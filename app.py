@@ -178,7 +178,7 @@ def get_lists():
     return jsonify(res.data)
 
 @app.route('/api/lists', methods=['POST'])
-@require_admin
+@require_auth
 def create_list():
     data = request.json
     res = sb.table('data_lists').insert({
@@ -216,7 +216,7 @@ def get_contacts(lid):
     return jsonify(res.data)
 
 @app.route('/api/lists/<lid>/contacts', methods=['POST'])
-@require_admin
+@require_auth
 def upload_contacts(lid):
     data = request.json
     rows = data.get('rows', [])
