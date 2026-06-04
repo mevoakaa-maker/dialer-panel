@@ -861,7 +861,10 @@ async function saveResult(){
     if(selDonusVal)ucContacts[idx].donus=selDonusVal;
     ucContacts[idx].not_text=not;
   }
-  if(gsUrl) sendToSheets(selContact,selSonucVal,selDonusVal,not);
+  // gsUrl'yi her seferinde settings'ten oku
+  const settingsD = await api('GET','/api/settings');
+  const currentGsUrl = settingsD?.gs_url || gsUrl;
+  if(currentGsUrl) sendToSheets(selContact, selSonucVal, selDonusVal, not, currentGsUrl);
   const saved=selContact;
   selContact=null;selSonucVal=null;selDonusVal=null;activeTab='sonuc';
   switchTab('sonuc');
@@ -997,7 +1000,8 @@ async function saveLocalSettings(){
   alert('Kaydedildi! Timeout: '+timeout+'sn');
 }
 
-async function sendToSheets(contact,sonuc,donus,not_text){
+async function sendToSheets(contact,sonuc,donus,not_text,url){
+  const gsUrl = url || '';
   if(!gsUrl)return;
   try{
     await fetch(gsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
