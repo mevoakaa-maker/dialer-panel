@@ -1004,8 +1004,18 @@ async function sendToSheets(contact,sonuc,donus,not_text,url){
   const gsUrl = url || '';
   if(!gsUrl)return;
   try{
-    await fetch(gsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({tel:contact.tel||'',isim:contact.name||'',sonuc:sonuc||'',donus:donus||'',not:not_text||'',sheet:ucCurrentList?.sheet||''})});
+    const payload = {
+      tel: contact.tel||'',
+      isim: contact.name||'',
+      sonuc: sonuc||'',
+      donus: donus||'',
+      not: not_text||'',
+      sheet: ucCurrentList?.sheet||''
+    };
+    // Form encode ile gonder (no-cors uyumlu)
+    const form = new URLSearchParams();
+    form.append('data', JSON.stringify(payload));
+    await fetch(gsUrl, {method:'POST', mode:'no-cors', body: form});
   }catch(e){}
 }
 
