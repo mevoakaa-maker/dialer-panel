@@ -205,6 +205,8 @@ def update_list_gsurl(lid):
 @app.route('/api/lists/<lid>', methods=['DELETE'])
 @require_admin
 def delete_list(lid):
+    # Once contacts sil, sonra listeyi sil
+    sb.table('contacts').delete().eq('list_id', lid).execute()
     sb.table('data_lists').delete().eq('id', lid).execute()
     return jsonify({'ok': True})
 
