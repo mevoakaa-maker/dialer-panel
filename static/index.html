@@ -436,6 +436,9 @@ tbody tr.sel-row{background:#0a2a0a;outline:1px solid var(--green)}
     <div class="form-row"><label>Kullanıcı</label>
       <select id="nlUser"><option value="">Seç...</option></select>
     </div>
+    <div class="form-row"><label>Apps Script URL</label>
+      <input type="text" id="nlGsUrl" placeholder="https://script.google.com/... (opsiyonel)">
+    </div>
   </div>
   <div class="mactions">
     <button class="btn" onclick="closeModal('addListModal');resetXlsx()">İptal</button>
@@ -677,9 +680,18 @@ async function loadLists(){
     <td style="font-family:var(--mono);font-size:12px">—</td>
     <td style="display:flex;gap:4px">
       <button class="btn b" style="font-size:11px" onclick="openAssign('${l.id}')">👤 Ata</button>
-      <button class="btn r" style="font-size:11px" onclick="deleteList('${l.id}')">Sil</button>
+        <button class="btn" style="font-size:11px" onclick="editGsUrl('${l.id}','${esc(l.gs_url||'')}')">🔗 URL</button>
+        <button class="btn r" style="font-size:11px" onclick="deleteList('${l.id}')">Sil</button>
     </td></tr>`).join('');
 }
+async function editGsUrl(lid, current){
+  const url = prompt('Apps Script URL girin:', current||'');
+  if(url === null) return;
+  await api('PUT','/api/lists/'+lid+'/gsurl',{gs_url: url});
+  loadLists();
+  setStatus('URL güncellendi','live');
+}
+
 async function deleteList(lid){if(!confirm('Sil?'))return;await api('DELETE','/api/lists/'+lid);loadLists();loadDashboard();}
 function openAssign(lid){document.getElementById('assignLid').value=lid;openModal('assignModal');}
 async function doAssign(){
@@ -697,6 +709,7 @@ function resetXlsx(){
   document.getElementById('xlsxAddBtn').style.display='none';
   document.getElementById('xlsxStatus').textContent='';
   document.getElementById('xlsxInput').value='';
+  const nlGs=document.getElementById('nlGsUrl');if(nlGs)nlGs.value='';
 }
 document.getElementById('xlsxInput').onchange=async function(e){
   const file=e.target.files[0];if(!file)return;
@@ -724,7 +737,8 @@ async function addList(){
   const uid=document.getElementById('nlUser').value;
   if(!name)return alert('Data adı zorunlu');
   if(!xlsxSelSheet||!xlsxData[xlsxSelSheet])return alert('Sayfa seçin');
-  const lst=await api('POST','/api/lists',{name,sheet:xlsxSelSheet,assigned_to:uid||null});
+  const gsUrl=document.getElementById('nlGsUrl').value.trim();
+  const lst=await api('POST','/api/lists',{name,sheet:xlsxSelSheet,assigned_to:uid||null,gs_url:gsUrl});
   if(lst.id) await uploadContacts(lst.id,xlsxData[xlsxSelSheet]);
   closeModal('addListModal');resetXlsx();loadLists();loadDashboard();
 }
@@ -1009,7 +1023,8 @@ async function sendToSheets(contact,sonuc,donus,not_text,url){
       sonuc: sonuc||'',
       donus: donus||'',
       not: not_text||'',
-      sheet: ucCurrentList?.sheet||''
+      sheet: ucCurrentList?.sheet||'',
+      list_id: ucCurrentList?.id||''
     });
   }catch(e){ console.log('sheets error',e); }
 }
