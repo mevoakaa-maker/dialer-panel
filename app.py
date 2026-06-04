@@ -306,5 +306,22 @@ def settings():
         sb.table('settings').insert(data).execute()
     return jsonify({'ok': True})
 
+# ── GOOGLE SHEETS PROXY ───────────────────────────────────
+@app.route('/api/sheets/send', methods=['POST'])
+@require_auth
+def sheets_send():
+    try:
+        import requests as req_lib
+        data = request.json
+        # GS URL'yi settings'ten al
+        settings_res = sb.table('settings').select('gs_url').limit(1).execute()
+        if not settings_res.data or not settings_res.data[0].get('gs_url'):
+            return jsonify({'error': 'Google Sheets URL ayarlanmamış'}), 400
+        gs_url = settings_res.data[0]['gs_url']
+        resp = req_lib.post(gs_url, json=data, timeout=10)
+        return jsonify({'ok': True, 'response': resp.text})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
