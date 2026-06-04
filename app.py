@@ -190,9 +190,17 @@ def create_list():
         'name': data['name'],
         'sheet': data.get('sheet',''),
         'assigned_to': data.get('assigned_to'),
-        'created_by': request.user['id']
+        'created_by': request.user['id'],
+        'gs_url': data.get('gs_url','')
     }).execute()
     return jsonify(res.data[0])
+
+@app.route('/api/lists/<lid>/gsurl', methods=['PUT'])
+@require_admin
+def update_list_gsurl(lid):
+    data = request.json
+    sb.table('data_lists').update({'gs_url': data.get('gs_url','')}).eq('id', lid).execute()
+    return jsonify({'ok': True})
 
 @app.route('/api/lists/<lid>', methods=['DELETE'])
 @require_admin
@@ -313,11 +321,17 @@ def sheets_send():
     try:
         import requests as req_lib
         data = request.json
-        # GS URL'yi settings'ten al
-        settings_res = sb.table('settings').select('gs_url').limit(1).execute()
-        if not settings_res.data or not settings_res.data[0].get('gs_url'):
+        # Önce list'e özel gs_url bak, yoksa global settings'ten al
+        list_id = data.get('list_id')
+        gs_url = ''
+        if list_id:
+            list_res = sb.table('data_lists').select('gs_url').eq('id', list_id).execute()
+            if list_res.data: gs_url = list_res.data[0].get('gs_url','')
+        if not gs_url:
+            settings_res = sb.table('settings').select('gs_url').limit(1).execute()
+            if settings_res.data: gs_url = settings_res.data[0].get('gs_url','')
+        if not gs_url:
             return jsonify({'error': 'Google Sheets URL ayarlanmamış'}), 400
-        gs_url = settings_res.data[0]['gs_url']
         resp = req_lib.post(gs_url, json=data, timeout=10)
         return jsonify({'ok': True, 'response': resp.text})
     except Exception as e:
