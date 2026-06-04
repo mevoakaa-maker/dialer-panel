@@ -1001,22 +1001,17 @@ async function saveLocalSettings(){
 }
 
 async function sendToSheets(contact,sonuc,donus,not_text,url){
-  const gsUrl = url || '';
-  if(!gsUrl)return;
   try{
-    const payload = {
+    // Railway proxy üzerinden gönder (CORS sorunu olmaz)
+    await api('POST','/api/sheets/send',{
       tel: contact.tel||'',
       isim: contact.name||'',
       sonuc: sonuc||'',
       donus: donus||'',
       not: not_text||'',
       sheet: ucCurrentList?.sheet||''
-    };
-    // Form encode ile gonder (no-cors uyumlu)
-    const form = new URLSearchParams();
-    form.append('data', JSON.stringify(payload));
-    await fetch(gsUrl, {method:'POST', mode:'no-cors', body: form});
-  }catch(e){}
+    });
+  }catch(e){ console.log('sheets error',e); }
 }
 
 // ── HELPERS ───────────────────────────────────────────────
