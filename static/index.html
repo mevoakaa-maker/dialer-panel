@@ -844,7 +844,7 @@ function selSonuc(val,btn){
 }
 
 async function saveResult(){
-  if(!selContact)return;
+  if(!selContact){alert('Önce bir kişi seçin');return;}
   const not=document.getElementById('ucNot').value.trim();
   const payload={not_text:not};
   if(selSonucVal!==null) payload.sonuc=selSonucVal;
@@ -855,7 +855,7 @@ async function saveResult(){
   if(!payload.sonuc&&!payload.donus){alert('Sonuç veya Dönüş seçin');return;}
   const r=await api('PUT','/api/contacts/'+selContact.id+'/result',payload);
   if(r.error){alert(r.error);return;}
-  const idx=ucContacts.findIndex(c=>c.id===selContact.id);
+  const idx=selContact?ucContacts.findIndex(c=>c.id===selContact.id):-1;
   if(idx>=0){
     if(selSonucVal)ucContacts[idx].sonuc=selSonucVal;
     if(selDonusVal)ucContacts[idx].donus=selDonusVal;
