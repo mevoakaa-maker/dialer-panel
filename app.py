@@ -80,15 +80,31 @@ def parse_xlsx():
                 df[tel_col] = df[tel_col].apply(lambda x: str(int(float(x))) if pd.notna(x) else '')
             df = df.where(pd.notna(df), None)
             rows = []
+            # Duplicate kolon isimlerini handle et
+            seen_cols = {}
+            col_names = []
+            for col in df.columns:
+                if str(col).startswith('Unnamed'):
+                    col_names.append(None)
+                    continue
+                col_str = str(col)
+                if col_str in seen_cols:
+                    seen_cols[col_str] += 1
+                    col_names.append(f"{col_str}_{seen_cols[col_str]}")
+                else:
+                    seen_cols[col_str] = 0
+                    col_names.append(col_str)
+            
             for i, (_, row) in enumerate(df.iterrows()):
                 r = {'_row': i+1}
-                for col in df.columns:
-                    if not str(col).startswith('Unnamed'):
-                        val = row[col]
-                        if isinstance(val, float) and math.isnan(val):
-                            r[str(col)] = None
-                        else:
-                            r[str(col)] = str(val) if val is not None else None
+                for j, col_name in enumerate(col_names):
+                    if col_name is None:
+                        continue
+                    val = row.iloc[j]
+                    if isinstance(val, float) and math.isnan(val):
+                        r[col_name] = None
+                    else:
+                        r[col_name] = str(val) if val is not None else None
                 rows.append(r)
             sheets_info[sheet] = {
                 'columns': [c for c in df.columns if not str(c).startswith('Unnamed')],
@@ -243,12 +259,13 @@ def upload_contacts(lid):
     for i, r in enumerate(rows):
         batch.append({
             'list_id': lid,
-            'row_index': i + 1,
+            'row_index': int(r.get('row_index', i + 1)),
             'name': r.get('name',''),
             'tel': r.get('tel',''),
             'extra': r.get('extra', {}),
-            'sonuc': r.get('sonuc'),
-            'not_text': r.get('not_text','')
+            'sonuc': r.get('sonuc') or None,
+            'donus': r.get('donus') or None,
+            'not_text': r.get('not_text','') or ''
         })
         if len(batch) >= 500:
             sb.table('contacts').insert(batch).execute()
