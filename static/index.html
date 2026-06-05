@@ -1229,9 +1229,13 @@ async function exportOneToGoogle(id){
 }
 
 async function exportAllToGoogle(){
-  if(!confirm(ucContacts.length+' kişiyi Google Kişilere aktar?')) return;
+  const total = ucContacts.filter(c=>c.tel).length;
+  if(!confirm(total+' kişiyi Google Kişilere aktar?')) return;
   const contacts = ucContacts.map(c=>({name:c.name||'',tel:c.tel||''})).filter(c=>c.tel);
-  await exportToGoogle(contacts);
+  const r = await api('POST','/api/google/contacts/add',{contacts});
+  if(r.ok) alert(r.added+' kişi Google Kişilere eklendi!'+(r.errors?' ('+r.errors+' hata)':''));
+  else if(r.needs_auth) alert('Google bağlantısı gerekli');
+  else alert('Hata: '+r.error);
 }
 </script>
 </body>
