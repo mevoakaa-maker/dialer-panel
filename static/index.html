@@ -635,14 +635,13 @@ function autoSelectActiveContact(tel){
     return ct===clean || ct.endsWith(clean.slice(-10)) || clean.endsWith(ct.slice(-10));
   });
   if(!contact) return;
-  // Sadece başka biri manuel seçilmediyse otomatik seç
+  // Başka biri manuel seçilmemişse otomatik seç
   if(!selContact || selContact._autoSelected){
     selContact = {...contact, _autoSelected: true};
     document.getElementById('sonucLbl').textContent='✏️ '+(contact.name||'');
     document.getElementById('ucNot').value=contact.not_text||'';
     selSonucVal = contact.sonuc||null;
     selDonusVal = contact.donus||null;
-    activeTab='sonuc'; switchTab('sonuc');
     const sb=document.getElementById('ucSaveBtn');
     sb.style.opacity='1'; sb.style.pointerEvents='auto';
   }
@@ -948,8 +947,15 @@ async function saveResult(){
   const currentGsUrl = settingsD?.gs_url || gsUrl;
   if(currentGsUrl) sendToSheets(selContact, selSonucVal, selDonusVal, not, currentGsUrl);
   const saved=selContact;
-  selContact=null;selSonucVal=null;selDonusVal=null;
+  selSonucVal=null;selDonusVal=null;
   // activeTab korunuyor - sekme değişmiyor
+  // Aktif aranan kişiyi tekrar seç
+  const activeNum=document.getElementById('cnum').textContent;
+  if(activeNum&&activeNum!=='—'){
+    setTimeout(()=>autoSelectActiveContact(activeNum),100);
+  } else {
+    selContact=null;
+  }
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('ucNot').value='';
   document.getElementById('ucSaveBtn').style.opacity='.5';
