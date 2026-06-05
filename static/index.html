@@ -547,6 +547,16 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
 
 <script>
 const API='';
+// Token URL'de varsa hemen temizle
+(function(){
+  try{
+    const p=new URLSearchParams(window.location.search);
+    const t=p.get('token');
+    if(t){localStorage.setItem('token',t);window.history.replaceState({},'','/');}
+    const e=p.get('error');
+    if(e) window._loginError=e;
+  }catch(ex){}
+})();
 document.addEventListener('DOMContentLoaded',()=>{
   const btn=document.getElementById('googleLoginBtn');
   if(btn) btn.onclick=()=>window.location.href='/auth/google/login';
@@ -1288,20 +1298,12 @@ function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
 
-// URL'den token al (Google OAuth callback)
-const urlParams = new URLSearchParams(window.location.search);
-const urlToken = urlParams.get('token');
-const urlError = urlParams.get('error');
-if(urlToken){
-  token = urlToken;
-  localStorage.setItem('token', token);
-  window.history.replaceState({}, '', '/');
-}
-if(urlError){
-  const errEl = document.getElementById('loginErr');
+// Google OAuth error göster
+if(window._loginError){
+  const errEl=document.getElementById('loginErr');
   if(errEl){
-    const msgs = {not_found:'Bu Google hesabı sisteme kayıtlı değil. Adminle iletişime geçin.', no_email:'Email alınamadı.', no_code:'Giriş iptal edildi.'};
-    errEl.textContent = msgs[urlError] || 'Giriş hatası: '+urlError;
+    const msgs={not_found:'Bu Google hesabı sisteme kayıtlı değil.',no_email:'Email alınamadı.',no_code:'Giriş iptal edildi.'};
+    errEl.textContent=msgs[window._loginError]||'Giriş hatası: '+window._loginError;
   }
 }
 if(token)initApp();
