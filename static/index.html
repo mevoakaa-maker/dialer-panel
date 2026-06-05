@@ -131,6 +131,8 @@ tbody tr:hover{background:var(--surface2)}
 tbody tr.done{opacity:.45}
 tbody tr.current-row{background:#0c1a2e}
 tbody tr.sel-row{background:#0a2a0a;outline:1px solid var(--green)}
+tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:pulse-row 1.5s infinite}
+@keyframes pulse-row{0%,100%{background:#052e16}50%{background:#0a4a1a}}
 
 /* MODAL */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center}
@@ -588,6 +590,7 @@ async function pollLocal(){
                 const s=String(localTimerSec%60).padStart(2,'0');
                 tel.textContent=m+':'+s;
               },1000);
+              highlightActiveContact(num);
             }
             if(name){
               document.getElementById('cname').textContent=name;
@@ -604,6 +607,23 @@ async function pollLocal(){
     document.getElementById('localTxt').textContent='local kapalı';
     document.getElementById('localTxt').style.color='var(--muted)';
   }
+}
+
+function highlightActiveContact(tel){
+  if(!tel||!ucContacts.length) return;
+  const clean = tel.replace(/\D/g,'');
+  const idx = ucContacts.findIndex(c=>{
+    const ct = String(c.tel||'').replace(/\D/g,'');
+    return ct===clean || ct.endsWith(clean.slice(-10)) || clean.endsWith(ct.slice(-10));
+  });
+  if(idx<0) return;
+  // Tabloyu yeniden render et — aktif satır yeşil görünsün
+  renderUcTable();
+  // O satıra scroll yap
+  setTimeout(()=>{
+    const row = document.getElementById('uc-'+ucContacts[idx].id);
+    if(row) row.scrollIntoView({block:'center',behavior:'smooth'});
+  },300);
 }
 
 async function localCmd(cmd){
@@ -789,7 +809,12 @@ async function uploadContacts(lid,sheetData){
     sheetData.columns.forEach(c=>{if(!['İsim Soyisim','Tel No','Sonuç','Dönüş','NOTLAR'].includes(c))extra[c]=r[c];});
     return {name:r['İsim Soyisim']||r['Kullanıcı Adı']||'',tel:r['Tel No']||'',extra,row_index:i+1};
   }).filter(r=>r.tel);
-  await api('POST','/api/lists/'+lid+'/contacts',{rows});
+  // 200'lük batch'lere böl
+  const batchSize = 200;
+  for(let i=0; i<rows.length; i+=batchSize){
+    const batch = rows.slice(i, i+batchSize);
+    await api('POST','/api/lists/'+lid+'/contacts',{rows:batch});
+  }
 }
 
 // ── USER LISTS ────────────────────────────────────────────
@@ -929,11 +954,14 @@ function renderUcTable(){
   });
   document.getElementById('ucTbody').innerHTML=rows.map(c=>{
     const ri=ucContacts.indexOf(c)+1;
+    const cleanTel=String(c.tel||'').replace(/\D/g,'');
+    const cleanActive=lastLocalName?(String(document.getElementById('cnum').textContent||'').replace(/\D/g,'')):'' ;
+    const isActive = cleanActive && (cleanTel===cleanActive || cleanTel.endsWith(cleanActive.slice(-10)) || cleanActive.endsWith(cleanTel.slice(-10)));
     const isSel=selContact&&selContact.id===c.id;
     const st=c.sonuc?`<span class="badge badge-sonuc">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
     const dt=c.donus?`<span class="badge badge-sonuc">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
     const jumpBtn = `<button onclick="event.stopPropagation();jumpToContact(${ri})" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer" title="Bu kişiden başlat">→</button>`;
-    return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}">
+    return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isSel?'sel-row':isActive?'active-row':c.sonuc?'done':''}" id="uc-${c.id}">
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
       <td>${esc(c.name||'—')}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(c.tel||'')}</td>
