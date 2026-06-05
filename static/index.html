@@ -339,7 +339,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
           <div id="googleProgressBar" style="height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .3s"></div>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+      <div style="display:none">
         <div class="ctimer" id="ctimer" style="color:var(--muted)">—</div>
       </div>
     </div>
@@ -386,7 +386,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     <div style="display:flex;align-items:center;gap:8px;padding:7px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
       <input type="text" id="ucSearch" placeholder="İsim veya numara ara..." oninput="renderUcTable()" style="flex:1;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:13px">
       <button class="btn" onclick="toggleHide()" id="hideBtn">✕ Bitti olanları gizle</button>
-      <button class="btn b" onclick="exportAllToGoogle()" title="Tüm listeyi Google Kişilere aktar">📇 Tümünü Aktar</button>
+      <button class="btn b" onclick="exportAllToGoogle()" title="Tüm listeyi Google Kişilere aktar">📇 Kişileri Aktar</button>
       <button class="btn" style="font-size:11px;border-color:#0f766e;color:#5eead4;background:#042f2e" onclick="syncAllToSheets()" title="Tüm işaretlemeleri Google Sheets'e gönder">📊 Sheets'e Aktar</button>
       <button class="btn" style="font-size:11px" onclick="downloadMarked()" title="İşaretlenmiş kişileri CSV indir">⬇ İşaretlileri İndir</button>
       <div style="width:1px;height:16px;background:var(--border2)"></div>
@@ -1033,6 +1033,19 @@ async function saveResult(){
     if(selDonusVal)ucContacts[idx].donus=selDonusVal;
     ucContacts[idx].not_text=not;
   }
+  // Seçili diğer kişilere de uygula
+  if(selectedIds.size>1){
+    const others=[...selectedIds].filter(id=>id!==selContact.id);
+    for(const id of others){
+      await api('PUT','/api/contacts/'+id+'/result',payload);
+      const i2=ucContacts.findIndex(c=>c.id===id);
+      if(i2>=0){
+        if(selSonucVal)ucContacts[i2].sonuc=selSonucVal;
+        if(selDonusVal)ucContacts[i2].donus=selDonusVal;
+        ucContacts[i2].not_text=not;
+      }
+    }
+  }
   // gsUrl'yi her seferinde settings'ten oku
   const settingsD = await api('GET','/api/settings');
   const currentGsUrl = settingsD?.gs_url || gsUrl;
@@ -1476,33 +1489,49 @@ function downloadMarked(){
 // ── SYNC TO SHEETS ───────────────────────────────────────
 async function syncAllToSheets(){
   const withData = ucContacts.filter(c=>c.sonuc||c.donus||c.not_text);
-  if(!withData.length){alert('İşaretlenmiş kişi yok.');return;}
-  if(!confirm(withData.length+" kişinin işaretlemelerini Google Sheets'e gönder?"))return;
+  if(!withData.length){alert('Isaretlenmis kisi yok.');return;}
+  if(!confirm(withData.length+" kisinin isaretlemelerini Sheets'e gonder?"))return;
   
+  const hasSheetId = ucCurrentList?.spreadsheet_id;
   const settingsD = await api('GET','/api/settings');
   const currentGsUrl = settingsD?.gs_url || gsUrl;
-  if(!currentGsUrl){alert("Ayarlar'dan Apps Script URL'si girilmemiş.");return;}
+  
+  if(!hasSheetId && !currentGsUrl){
+    alert('Bu dataya Sheets ID veya Apps Script URL girilmemis.');
+    return;
+  }
   
   let done=0, errors=0;
-  setStatus("Sheets'e aktarılıyor...",'warn');
+  setStatus("Sheets aktariliyor...",'warn');
   
   for(const c of withData){
     try{
-      await api('POST','/api/sheets/send',{
-        tel: c.tel||'',
-        isim: c.name||'',
-        sonuc: c.sonuc||'',
-        donus: c.donus||'',
-        not: c.not_text||'',
-        sheet: ucCurrentList?.sheet||'',
-        list_id: ucCurrentList?.id||''
-      });
+      if(hasSheetId){
+        await api('POST','/api/sheets/write',{
+          spreadsheet_id: ucCurrentList.spreadsheet_id,
+          sheet: ucCurrentList.sheet||'',
+          tel: c.tel||'',
+          sonuc: c.sonuc||'',
+          donus: c.donus||'',
+          not: c.not_text||''
+        });
+      } else {
+        await api('POST','/api/sheets/send',{
+          tel: c.tel||'',
+          isim: c.name||'',
+          sonuc: c.sonuc||'',
+          donus: c.donus||'',
+          not: c.not_text||'',
+          sheet: ucCurrentList?.sheet||'',
+          list_id: ucCurrentList?.id||''
+        });
+      }
       done++;
     }catch(e){ errors++; }
   }
   
-  setStatus('Aktarim tamamlandi','live');
-  alert(done+" kişi Sheets'e aktarıldı!"+(errors?' ('+errors+' hata)':''));
+  setStatus('Tamamlandi','live');
+  alert(done+" kisi Sheets'e aktarildi!"+(errors?" ("+errors+" hata)":""));
 }
 
 // ── GOOGLE CONTACTS ───────────────────────────────────────
