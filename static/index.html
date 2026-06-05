@@ -1088,6 +1088,10 @@ function renderUcTable(){
   const q=document.getElementById('ucSearch').value.toLowerCase();
   const rows=ucContacts.filter(c=>{
     if(ucHide&&c.sonuc)return false;
+    if(activeFilter&&activeFilter!=='filtered'&&activeFilter!=='empty'){
+      if(c.sonuc!==activeFilter)return false;
+    }
+    if(activeFilter==='empty'&&c.sonuc)return false;
     return !q||(c.name||'').toLowerCase().includes(q)||(c.tel||'').includes(q);
   });
   document.getElementById('ucTbody').innerHTML=rows.map(c=>{
@@ -1294,6 +1298,7 @@ async function loadAdminLists(){
 
 // ── BULK SELECTION ───────────────────────────────────────
 let selectedIds = new Set();
+let activeFilter = null; // null = tümü, string = filtre
 
 function onCbChange(){
   selectedIds = new Set();
@@ -1335,14 +1340,21 @@ function selectFiltered(){
     return !q||(c.name||'').toLowerCase().includes(q)||(c.tel||'').includes(q);
   });
   selectedIds = new Set(filtered.map(c=>c.id));
+  activeFilter = 'filtered';
   renderUcTable();
   updateBulkToolbar();
   closeFilterMenu();
 }
 
 function selectBySonuc(sonuc){
-  selectedIds = new Set(ucContacts.filter(c=>c.sonuc===sonuc).map(c=>c.id));
-  // Arama kutusuna filtre uygula
+  if(activeFilter===sonuc){
+    // Aynı filtreye tekrar tıklandı - kaldır
+    activeFilter=null;
+    selectedIds=new Set();
+  } else {
+    selectedIds = new Set(ucContacts.filter(c=>c.sonuc===sonuc).map(c=>c.id));
+    activeFilter = sonuc;
+  }
   document.getElementById('ucSearch').value='';
   renderUcTable();
   updateBulkToolbar();
@@ -1364,13 +1376,20 @@ document.addEventListener('click', e=>{
 });
 
 function selectEmpty(){
-  selectedIds = new Set(ucContacts.filter(c=>!c.sonuc).map(c=>c.id));
+  if(activeFilter==='empty'){
+    activeFilter=null;
+    selectedIds=new Set();
+  } else {
+    selectedIds = new Set(ucContacts.filter(c=>!c.sonuc).map(c=>c.id));
+    activeFilter='empty';
+  }
   renderUcTable();
   updateBulkToolbar();
 }
 
 function clearSelection(){
   selectedIds = new Set();
+  activeFilter = null;
   renderUcTable();
   updateBulkToolbar();
   const sa = document.getElementById('selectAll');
@@ -1382,12 +1401,20 @@ async function bulkMark(sonuc){
   if(!confirm(selectedIds.size+' kişiye "'+sonuc+'" işaretlensin?')) return;
   const ids = [...selectedIds];
   let done=0;
-  for(const id of ids){
-    await api('PUT','/api/contacts/'+id+'/result',{sonuc});
+  // Hepsini aynı anda gönder
+  const promises = ids.map(id => api('PUT','/api/contacts/'+id+'/result',{sonuc}));
+  await Promise.all(promises);
+  // Local güncelle
+  ids.forEach(id=>{
     const idx = ucContacts.findIndex(c=>c.id===id);
-    if(idx>=0) ucContacts[idx].sonuc=sonuc;
-    done++;
-  }
+    if(idx>=0){
+      ucContacts[idx].sonuc=sonuc;
+      done++;
+      // Google Sheets'e gönder
+      const c = ucContacts[idx];
+      sendToSheets(c, sonuc, c.donus||'', c.not_text||'', null);
+    }
+  });
   clearSelection();
   renderUcTable();
   updateUcProg();
