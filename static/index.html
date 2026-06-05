@@ -307,7 +307,10 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <h3 style="margin:0">Datalar</h3>
-        <button class="btn g" onclick="openModal('addListModal')">+ Data Ekle</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn" style="border-color:#0f766e;color:#5eead4;background:#042f2e" onclick="openAdminDrivePicker()">📊 Drive'dan Aktar</button>
+          <button class="btn g" onclick="openModal('addListModal')">+ Data Ekle</button>
+        </div>
       </div>
       <table class="tbl" id="listsTbl">
         <thead><tr><th>Data</th><th>Sayfa</th><th>Atanan</th><th>Kişi</th><th>İşlem</th></tr></thead>
@@ -473,6 +476,17 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
 
 </main>
 </div><!-- /shell -->
+
+<!-- ADMIN DRIVE MODAL -->
+<div class="overlay" id="adminDriveModal">
+<div class="modal">
+  <h3>📊 Drive'dan Data Aktar</h3>
+  <div id="adminDriveFileList" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:6px"></div>
+  <div class="mactions">
+    <button class="btn" onclick="closeModal('adminDriveModal')">İptal</button>
+  </div>
+</div>
+</div>
 
 <!-- DRIVE SHEET SELECT MODAL -->
 <div class="overlay" id="driveSheetSelectModal">
@@ -1597,6 +1611,54 @@ async function syncAllToSheets(){
   
   setStatus('Tamamlandi','live');
   alert(done+" kisi Sheets'e aktarildi!"+(errors?" ("+errors+" hata)":""));
+}
+
+// ── ADMIN DRIVE ──────────────────────────────────────────
+async function openAdminDrivePicker(){
+  document.getElementById('adminDriveFileList').innerHTML = '<div style="color:var(--muted);font-size:12px">Yükleniyor...</div>';
+  openModal('adminDriveModal');
+  const r = await api('GET','/api/drive/sheets');
+  if(r.error){
+    document.getElementById('adminDriveFileList').innerHTML = '<div style="color:var(--red);font-size:12px">'+r.error+'</div>';
+    return;
+  }
+  const files = r.files || [];
+  document.getElementById('adminDriveFileList').innerHTML = files.map(f=>
+    `<div onclick="selectAdminDriveFile('${f.id}','${esc(f.name)}')"
+      style="padding:8px 10px;cursor:pointer;border-radius:4px;font-size:13px;border-bottom:1px solid var(--border)"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      📊 ${esc(f.name)}
+    </div>`
+  ).join('');
+}
+
+async function selectAdminDriveFile(fileId, fileName){
+  const r = await api('GET','/api/sheets/pages?spreadsheet_id='+fileId);
+  if(r.error){alert('Hata: '+r.error);return;}
+  const sheets = r.sheets || [];
+  document.getElementById('adminDriveFileList').innerHTML = 
+    `<div style="font-size:12px;color:var(--muted);margin-bottom:8px">📊 ${esc(fileName)} - Sayfa seçin:</div>` +
+    sheets.map(sh=>
+      `<div onclick="importAdminDriveSheet('${fileId}','${esc(sh)}','${esc(fileName)}')"
+        style="padding:8px 10px;cursor:pointer;border-radius:4px;font-size:13px;border-bottom:1px solid var(--border)"
+        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        📋 ${esc(sh)}
+      </div>`
+    ).join('');
+}
+
+async function importAdminDriveSheet(spreadsheetId, sheetName, fileName){
+  const listName = fileName + ' - ' + sheetName;
+  setStatus('Veri aktariliyor...','warn');
+  const r = await api('POST','/api/sheets/import',{
+    spreadsheet_id: spreadsheetId,
+    sheet: sheetName,
+    name: listName
+  });
+  if(r.error){alert('Hata: '+r.error);return;}
+  closeModal('adminDriveModal');
+  setStatus(r.count+' kisi eklendi','live');
+  loadLists(); loadDashboard();
 }
 
 // ── DRIVE NAV ────────────────────────────────────────────
