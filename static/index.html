@@ -825,7 +825,7 @@ async function loadLists(){
     </td></tr>`).join('');
 }
 async function editSpreadsheetId(lid, current){
-  const id = prompt('Sheets ID (URL\'deki /d/XXX/edit kısmı):', current||'');
+  const id = prompt("Sheets ID - URL\u2019deki /d/XXX/edit kismi:", current||"");
   if(id === null) return;
   await api('PUT','/api/lists/'+lid+'/spreadsheetid',{spreadsheet_id: id});
   loadLists();
