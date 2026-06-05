@@ -257,7 +257,7 @@ def add_to_google_contacts():
                     _time.sleep(1)
             return 'error'
 
-        with ThreadPoolExecutor(max_workers=3) as ex:
+        with ThreadPoolExecutor(max_workers=2) as ex:
             futures = {ex.submit(add_one, c): c for c in contacts}
             for f in as_completed(futures):
                 res = f.result()
