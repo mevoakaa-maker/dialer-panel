@@ -193,6 +193,7 @@ def google_callback():
 @require_auth
 def add_to_google_contacts():
     try:
+        import uuid
         data = request.json
         user_id = request.user['id']
         user_res = sb.table('users').select('google_access_token,google_refresh_token').eq('id', user_id).execute()
@@ -205,7 +206,6 @@ def add_to_google_contacts():
         test = req_lib.get('https://www.googleapis.com/oauth2/v1/tokeninfo',
             params={'access_token': access_token}, timeout=5)
         if test.status_code != 200 and refresh_token:
-            # Token süresi dolmuş, refresh et
             ref = req_lib.post('https://oauth2.googleapis.com/token', data={
                 'client_id': GOOGLE_CLIENT_ID,
                 'client_secret': GOOGLE_CLIENT_SECRET,
@@ -217,59 +217,65 @@ def add_to_google_contacts():
                 sb.table('users').update({'google_access_token': access_token}).eq('id', user_id).execute()
             else:
                 return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
-        contacts = data.get('contacts', [])
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-        added = 0
-        errors = 0
-        auth_expired = False
 
-        import time as _time
+        contacts = data.get('contacts', [])
+        
         def normalize_tel(tel):
             t = ''.join(filter(str.isdigit, str(tel)))
             if t.startswith('90') and len(t)==12: return '+'+t
             if t.startswith('0') and len(t)==11: return '+9'+t
             if len(t)==10: return '+90'+t
-            return '+'+t if not t.startswith('+') else tel
+            return '+'+t
 
-        def add_one(c):
-            name = c.get('name','')
-            tel  = normalize_tel(c.get('tel',''))
-            if not tel: return 'skip'
-            body = {
-                'names': [{'displayName': name, 'givenName': name}],
-                'phoneNumbers': [{'value': tel, 'type': 'mobile'}]
-            }
-            for attempt in range(3):
-                try:
-                    r = req_lib.post(
-                        'https://people.googleapis.com/v1/people:createContact',
-                        json=body,
-                        headers={'Authorization': f'Bearer {access_token}'},
-                        timeout=30
-                    )
-                    if r.status_code == 200: return 'ok'
-                    elif r.status_code == 401: return 'auth'
-                    elif r.status_code == 429:
-                        _time.sleep(2 ** attempt)  # 1s, 2s, 4s
-                        continue
-                    else: return 'error'
-                except Exception:
-                    _time.sleep(1)
-            return 'error'
+        added = 0
+        errors = 0
 
-        with ThreadPoolExecutor(max_workers=2) as ex:
-            futures = {ex.submit(add_one, c): c for c in contacts}
-            for f in as_completed(futures):
-                res = f.result()
-                if res == 'ok': added += 1
-                elif res == 'auth': auth_expired = True
-                elif res == 'error': errors += 1
+        # Google Batch API - 50 kişi tek istekte
+        batch_size = 50
+        for i in range(0, len(contacts), batch_size):
+            batch = contacts[i:i+batch_size]
+            boundary = f'batch_{uuid.uuid4().hex}'
+            body_parts = []
+            for c in batch:
+                name = c.get('name','')
+                tel  = normalize_tel(c.get('tel',''))
+                if not tel: continue
+                contact_body = json.dumps({
+                    'names': [{'displayName': name, 'givenName': name}],
+                    'phoneNumbers': [{'value': tel, 'type': 'mobile'}]
+                })
+                body_parts.append(
+                    f'--{boundary}\r\n'
+                    f'Content-Type: application/http\r\n'
+                    f'Content-Transfer-Encoding: binary\r\n\r\n'
+                    f'POST /v1/people:createContact HTTP/1.1\r\n'
+                    f'Content-Type: application/json\r\n\r\n'
+                    f'{contact_body}\r\n'
+                )
+            if not body_parts: continue
+            body_parts.append(f'--{boundary}--')
+            batch_body = ''.join(body_parts)
 
-        if auth_expired:
-            return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
+            try:
+                r = req_lib.post(
+                    'https://people.googleapis.com/batch',
+                    data=batch_body.encode('utf-8'),
+                    headers={
+                        'Authorization': f'Bearer {access_token}',
+                        'Content-Type': f'multipart/mixed; boundary={boundary}'
+                    },
+                    timeout=60
+                )
+                if r.status_code == 401:
+                    return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
+                added += r.text.count('"resourceName"')
+            except Exception as e:
+                errors += len(batch)
+
         return jsonify({'ok': True, 'added': added, 'errors': errors})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 # ── STATIC ────────────────────────────────────────────────
 @app.route('/')
