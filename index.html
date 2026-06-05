@@ -20,8 +20,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--s
 .login-err{color:var(--red);font-size:12px;margin-bottom:8px;text-align:center;min-height:18px}
 
 /* SHELL */
-.shell{display:grid;grid-template-columns:240px 1fr;grid-template-rows:48px 1fr;height:100vh;display:none}
-header{grid-column:1/-1;display:flex;align-items:center;padding:0 16px;gap:12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.shell{display:grid;grid-template-columns:240px 1fr;grid-template-rows:56px 1fr;height:100vh;display:none}
+header{grid-column:1/-1;display:flex;align-items:center;padding:0 20px;gap:12px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;min-height:56px}
 .logo{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.1em;color:var(--accent)}
 .sep{width:1px;height:16px;background:var(--border2)}
 .hstatus{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
@@ -83,6 +83,18 @@ main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .badge-admin{background:var(--accent-dim);color:#93c5fd}
 .badge-user{background:var(--surface2);color:var(--muted)}
 .badge-sonuc{background:var(--surface2);color:var(--text);font-size:11px}
+.bs-ilgilenmiyor{background:#450a0a;color:#fca5a5}
+.bs-link{background:#2e1065;color:#c4b5fd}
+.bs-cevapsiz{background:#1f2937;color:#9ca3af}
+.bs-mesgul{background:#451a03;color:#fcd34d}
+.bs-ulasilamiyor{background:#0c1a2e;color:#7dd3fc}
+.bs-sonra{background:#042f2e;color:#5eead4}
+.bs-servis{background:#111827;color:#6b7280}
+.bs-gorisme{background:#451a03;color:#fbbf24}
+.bs-uyeoldu{background:#052e16;color:#86efac}
+.bs-mevcutaktif{background:#022c22;color:#6ee7b7}
+.bs-mevcutedildi{background:#0c1a2e;color:#93c5fd}
+.bs-numara{background:#1f2937;color:#6b7280}
 
 /* FORM */
 .form-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
@@ -131,6 +143,8 @@ tbody tr:hover{background:var(--surface2)}
 tbody tr.done{opacity:.45}
 tbody tr.current-row{background:#0c1a2e}
 tbody tr.sel-row{background:#0a2a0a;outline:1px solid var(--green)}
+tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:pulse-row 1.5s infinite}
+@keyframes pulse-row{0%,100%{background:#052e16}50%{background:#0a4a1a}}
 
 /* MODAL */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center}
@@ -163,7 +177,13 @@ tbody tr.sel-row{background:#0a2a0a;outline:1px solid var(--green)}
 <!-- APP -->
 <div class="shell" id="appShell">
 <header>
-  <span class="logo">DIALER//PANEL</span>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#1d3a6e,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🎰</div>
+    <div>
+      <div style="font-family:var(--mono);font-size:15px;font-weight:600;color:var(--text);letter-spacing:.06em;line-height:1.2">PAŞA CASINO</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.14em;line-height:1.2">DIALER PANEL</div>
+    </div>
+  </div>
   <div class="sep"></div>
   <div class="hstatus" id="hstatus"><span class="hdot"></span><span id="hstatustxt">Bağlanıyor...</span></div>
   <div class="sep"></div>
@@ -175,7 +195,10 @@ tbody tr.sel-row{background:#0a2a0a;outline:1px solid var(--green)}
   <span style="font-family:var(--mono);font-size:11px;color:var(--muted)" id="hclock"></span>
   <div class="sep"></div>
   <span class="badge badge-admin" id="hadminBadge" style="display:none">ADMIN</span>
-  <span style="font-size:12px;color:var(--muted);font-family:var(--mono)" id="huser"></span>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div id="userAvatar" style="width:30px;height:30px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:600;color:#93c5fd;border:1px solid #1d3a6e;display:none"></div>
+    <span style="font-size:13px;font-weight:500;color:var(--text)" id="huser"></span>
+  </div>
   <button class="btn r" style="font-size:11px" onclick="logout()">Çıkış</button>
 </header>
 
@@ -324,7 +347,7 @@ tbody tr.sel-row{background:#0a2a0a;outline:1px solid var(--green)}
         <button class="sbtn sonra" onclick="selSonuc('Sonra Aranacak',this)">Sonra Aranacak</button>
         <button class="sbtn servis" onclick="selSonuc('Servis Dışı',this)">Servis Dışı</button>
         <button class="sbtn gorisme" onclick="selSonuc('Görüşmeyi Sonlandırdı',this)">Görüşmeyi Sonlandırdı</button>
-        <button class="sbtn uyeoldu" onclick="selSonuc('Üye oldu',this)">Üye oldu</button>
+        <button class="sbtn uyeoldu" onclick="selSonuc('Üye Oldu',this)">Üye Oldu</button>
         <button class="sbtn mevcutaktif" onclick="selSonuc('Mevcut Üye Aktif',this)">Mevcut Üye Aktif</button>
         <button class="sbtn mevcutedildi" onclick="selSonuc('Mevcut Üye Aktif Edildi',this)">Mevcut Üye Aktif Edildi</button>
         <button class="sbtn numara" onclick="selSonuc('Numara Başkasına ait',this)">Numara Başkasına ait</button>
@@ -427,6 +450,9 @@ tbody tr.sel-row{background:#0a2a0a;outline:1px solid var(--green)}
     <div class="form-row"><label>Kullanıcı</label>
       <select id="nlUser"><option value="">Seç...</option></select>
     </div>
+    <div class="form-row"><label>Apps Script URL</label>
+      <input type="text" id="nlGsUrl" placeholder="https://script.google.com/... (opsiyonel)">
+    </div>
   </div>
   <div class="mactions">
     <button class="btn" onclick="closeModal('addListModal');resetXlsx()">İptal</button>
@@ -475,6 +501,7 @@ let localOnline=false;
 let localTimerIv=null;
 let localTimerSec=0;
 let lastLocalName='';
+let lastLocalNum='';
 
 // ── API ───────────────────────────────────────────────────
 async function api(method,path,data){
@@ -506,7 +533,11 @@ async function initApp(){
   currentUser=me;
   document.getElementById('loginWrap').style.display='none';
   document.getElementById('appShell').style.display='grid';
-  document.getElementById('huser').textContent=me.name||me.email;
+  const uname = me.name || me.email.split('@')[0];
+  document.getElementById('huser').textContent = uname;
+  const av = document.getElementById('userAvatar');
+  av.style.display = 'flex';
+  av.textContent = uname.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase().slice(0,2);
   setInterval(()=>{document.getElementById('hclock').textContent=new Date().toLocaleTimeString('tr-TR');},1000);
   await loadGsSettings();
   if(me.role==='admin'){
@@ -520,7 +551,7 @@ async function initApp(){
     loadUserLists();
     loadLocalSettings();
   }
-  setInterval(pollLocal,2000); pollLocal();
+  setInterval(pollLocal,200); pollLocal();
 }
 
 // ── NAVIGATION ────────────────────────────────────────────
@@ -560,8 +591,9 @@ async function pollLocal(){
             const lines=d.content.trim().split('\n');
             const name=(lines[0]||'').trim();
             const num=(lines[1]||'').trim();
-            if(name&&name!==lastLocalName){
+            if(num&&num!==lastLocalNum){
               lastLocalName=name;
+              lastLocalNum=num;
               localTimerSec=0;
               clearInterval(localTimerIv);
               const tel=document.getElementById('ctimer');
@@ -572,6 +604,9 @@ async function pollLocal(){
                 const s=String(localTimerSec%60).padStart(2,'0');
                 tel.textContent=m+':'+s;
               },1000);
+              highlightActiveContact(num);
+              // Aktif aranan kişiyi otomatik seç
+              autoSelectActiveContact(num);
             }
             if(name){
               document.getElementById('cname').textContent=name;
@@ -588,6 +623,44 @@ async function pollLocal(){
     document.getElementById('localTxt').textContent='local kapalı';
     document.getElementById('localTxt').style.color='var(--muted)';
   }
+}
+
+function autoSelectActiveContact(tel){
+  if(!tel||!ucContacts.length) return;
+  const clean = tel.replace(/\D/g,'');
+  const contact = ucContacts.find(c=>{
+    const ct = String(c.tel||'').replace(/\D/g,'');
+    return ct===clean || ct.endsWith(clean.slice(-10)) || clean.endsWith(ct.slice(-10));
+  });
+  if(!contact) return;
+  // Sadece başka biri manuel seçilmediyse otomatik seç
+  if(!selContact || selContact._autoSelected){
+    selContact = {...contact, _autoSelected: true};
+    document.getElementById('sonucLbl').textContent='✏️ '+(contact.name||'');
+    document.getElementById('ucNot').value=contact.not_text||'';
+    selSonucVal = contact.sonuc||null;
+    selDonusVal = contact.donus||null;
+    activeTab='sonuc'; switchTab('sonuc');
+    const sb=document.getElementById('ucSaveBtn');
+    sb.style.opacity='1'; sb.style.pointerEvents='auto';
+  }
+}
+
+function highlightActiveContact(tel){
+  if(!tel||!ucContacts.length) return;
+  const clean = tel.replace(/\D/g,'');
+  const idx = ucContacts.findIndex(c=>{
+    const ct = String(c.tel||'').replace(/\D/g,'');
+    return ct===clean || ct.endsWith(clean.slice(-10)) || clean.endsWith(ct.slice(-10));
+  });
+  if(idx<0) return;
+  // Tabloyu yeniden render et — aktif satır yeşil görünsün
+  renderUcTable();
+  // O satıra scroll yap
+  setTimeout(()=>{
+    const row = document.getElementById('uc-'+ucContacts[idx].id);
+    if(row) row.scrollIntoView({block:'center',behavior:'smooth'});
+  },300);
 }
 
 async function localCmd(cmd){
@@ -664,9 +737,18 @@ async function loadLists(){
     <td style="font-family:var(--mono);font-size:12px">—</td>
     <td style="display:flex;gap:4px">
       <button class="btn b" style="font-size:11px" onclick="openAssign('${l.id}')">👤 Ata</button>
-      <button class="btn r" style="font-size:11px" onclick="deleteList('${l.id}')">Sil</button>
+        <button class="btn" style="font-size:11px" onclick="editGsUrl('${l.id}','${esc(l.gs_url||'')}')">🔗 URL</button>
+        <button class="btn r" style="font-size:11px" onclick="deleteList('${l.id}')">Sil</button>
     </td></tr>`).join('');
 }
+async function editGsUrl(lid, current){
+  const url = prompt('Apps Script URL girin:', current||'');
+  if(url === null) return;
+  await api('PUT','/api/lists/'+lid+'/gsurl',{gs_url: url});
+  loadLists();
+  setStatus('URL güncellendi','live');
+}
+
 async function deleteList(lid){if(!confirm('Sil?'))return;await api('DELETE','/api/lists/'+lid);loadLists();loadDashboard();}
 function openAssign(lid){document.getElementById('assignLid').value=lid;openModal('assignModal');}
 async function doAssign(){
@@ -684,6 +766,7 @@ function resetXlsx(){
   document.getElementById('xlsxAddBtn').style.display='none';
   document.getElementById('xlsxStatus').textContent='';
   document.getElementById('xlsxInput').value='';
+  const nlGs=document.getElementById('nlGsUrl');if(nlGs)nlGs.value='';
 }
 document.getElementById('xlsxInput').onchange=async function(e){
   const file=e.target.files[0];if(!file)return;
@@ -711,7 +794,8 @@ async function addList(){
   const uid=document.getElementById('nlUser').value;
   if(!name)return alert('Data adı zorunlu');
   if(!xlsxSelSheet||!xlsxData[xlsxSelSheet])return alert('Sayfa seçin');
-  const lst=await api('POST','/api/lists',{name,sheet:xlsxSelSheet,assigned_to:uid||null});
+  const gsUrl=document.getElementById('nlGsUrl').value.trim();
+  const lst=await api('POST','/api/lists',{name,sheet:xlsxSelSheet,assigned_to:uid||null,gs_url:gsUrl});
   if(lst.id) await uploadContacts(lst.id,xlsxData[xlsxSelSheet]);
   closeModal('addListModal');resetXlsx();loadLists();loadDashboard();
 }
@@ -753,16 +837,25 @@ async function addUserList(){
   const lst=await api('POST','/api/lists',{name,sheet:uuSelSheet,assigned_to:currentUser.id});
   if(lst.error)return alert(lst.error);
   if(lst.id) await uploadContacts(lst.id,uuData[uuSelSheet]);
-  closeModal('userUploadModal');resetUu();loadUserLists();
+  closeModal('userUploadModal');resetUu();await loadUserLists();
 }
 
 async function uploadContacts(lid,sheetData){
   const rows=sheetData.rows.map((r,i)=>{
     const extra={};
     sheetData.columns.forEach(c=>{if(!['İsim Soyisim','Tel No','Sonuç','Dönüş','NOTLAR'].includes(c))extra[c]=r[c];});
-    return {name:r['İsim Soyisim']||r['Kullanıcı Adı']||'',tel:r['Tel No']||'',extra,row_index:i+1};
+    // Duplicate kolon fix: Sonuç/Dönüş küçük harf, SONUÇ/DÖNÜŞ büyük harf Data Raporu
+    const sonucVal = r['Sonuç']||null;
+    const donusVal = r['Dönüş_1']||r['Dönüş']||null; // _1 suffix duplicate için
+    const notVal = r['NOTLAR']||null;
+    return {name:r['İsim Soyisim']||r['Kullanıcı Adı']||'',tel:r['Tel No']||'',extra,row_index:i+1,sonuc:sonucVal,donus:donusVal,not_text:notVal};
   }).filter(r=>r.tel);
-  await api('POST','/api/lists/'+lid+'/contacts',{rows});
+  // 200'lük batch'lere böl
+  const batchSize = 100;
+  for(let i=0; i<rows.length; i+=batchSize){
+    const batch = rows.slice(i, i+batchSize).map((r,j)=>({...r, row_index: i+j+1}));
+    await api('POST','/api/lists/'+lid+'/contacts',{rows:batch, append: i>0});
+  }
 }
 
 // ── USER LISTS ────────────────────────────────────────────
@@ -796,7 +889,7 @@ async function loadUcList(list,btn){
   if(localOnline){
     const csv=contacts.map(c=>((c.name||'')+','+(c.tel||''))).join('\n');
     await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'contacts.csv',content:csv})}).catch(()=>{});
-    await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'index.txt',content:'0'})}).catch(()=>{});
+    // index.txt sıfırlamıyoruz - mevcut arama devam etsin
   }
 }
 
@@ -831,24 +924,30 @@ function selSonuc(val,btn){
 }
 
 async function saveResult(){
-  if(!selContact)return;
+  if(!selContact){alert('Önce bir kişi seçin');return;}
   const not=document.getElementById('ucNot').value.trim();
   const payload={not_text:not};
-  if(selSonucVal) payload.sonuc=selSonucVal;
-  if(selDonusVal) payload.donus=selDonusVal;
+  if(selSonucVal!==null) payload.sonuc=selSonucVal;
+  if(selDonusVal!==null) payload.donus=selDonusVal;
+  // Mevcut degerleri de koru
+  if(!payload.sonuc&&selContact.sonuc) payload.sonuc=selContact.sonuc;
+  if(!payload.donus&&selContact.donus) payload.donus=selContact.donus;
   if(!payload.sonuc&&!payload.donus){alert('Sonuç veya Dönüş seçin');return;}
   const r=await api('PUT','/api/contacts/'+selContact.id+'/result',payload);
   if(r.error){alert(r.error);return;}
-  const idx=ucContacts.findIndex(c=>c.id===selContact.id);
+  const idx=selContact?ucContacts.findIndex(c=>c.id===selContact.id):-1;
   if(idx>=0){
     if(selSonucVal)ucContacts[idx].sonuc=selSonucVal;
     if(selDonusVal)ucContacts[idx].donus=selDonusVal;
     ucContacts[idx].not_text=not;
   }
-  if(gsUrl) sendToSheets(selContact,selSonucVal,selDonusVal,not);
+  // gsUrl'yi her seferinde settings'ten oku
+  const settingsD = await api('GET','/api/settings');
+  const currentGsUrl = settingsD?.gs_url || gsUrl;
+  if(currentGsUrl) sendToSheets(selContact, selSonucVal, selDonusVal, not, currentGsUrl);
   const saved=selContact;
-  selContact=null;selSonucVal=null;selDonusVal=null;activeTab='sonuc';
-  switchTab('sonuc');
+  selContact=null;selSonucVal=null;selDonusVal=null;
+  // activeTab korunuyor - sekme değişmiyor
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('ucNot').value='';
   document.getElementById('ucSaveBtn').style.opacity='.5';
@@ -860,6 +959,7 @@ async function saveResult(){
 function selectContact(id){
   selContact=ucContacts.find(c=>c.id===id);
   if(!selContact)return;
+  delete selContact._autoSelected; // Manuel seçim
   document.getElementById('cname').textContent=selContact.name||'—';
   document.getElementById('cnum').textContent=selContact.tel||'—';
   document.getElementById('cavatar').textContent=initials(selContact.name||'?');
@@ -896,14 +996,20 @@ function renderUcTable(){
   });
   document.getElementById('ucTbody').innerHTML=rows.map(c=>{
     const ri=ucContacts.indexOf(c)+1;
+    const cleanTel=String(c.tel||'').replace(/\D/g,'');
+    const cleanActive=lastLocalName?(String(document.getElementById('cnum').textContent||'').replace(/\D/g,'')):'' ;
+    const isActive = cleanActive && (cleanTel===cleanActive || cleanTel.endsWith(cleanActive.slice(-10)) || cleanActive.endsWith(cleanTel.slice(-10)));
     const isSel=selContact&&selContact.id===c.id;
-    const st=c.sonuc?`<span class="badge badge-sonuc">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
-    const dt=c.donus?`<span class="badge badge-sonuc">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
-    return `<tr onclick="selectContact('${c.id}')" class="${isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}">
+    const bcls={'İlgilenmiyor':'bs-ilgilenmiyor','Link Atıldı':'bs-link','Cevapsız':'bs-cevapsiz','Meşgul':'bs-mesgul','Ulaşılamıyor':'bs-ulasilamiyor','Sonra Aranacak':'bs-sonra','Servis Dışı':'bs-servis','Görüşmeyi Sonlandırdı':'bs-gorisme','Üye Oldu':'bs-uyeoldu','Üye oldu':'bs-uyeoldu','Mevcut Üye Aktif':'bs-mevcutaktif','Mevcut Üye Aktif Edildi':'bs-mevcutedildi','Numara Başkasına ait':'bs-numara'};
+    const st=c.sonuc?`<span class="badge ${bcls[c.sonuc]||'badge-sonuc'}">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
+    const dt=c.donus?`<span class="badge ${bcls[c.donus]||'badge-sonuc'}">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
+    const jumpBtn = `<button onclick="event.stopPropagation();jumpToContact(${ri})" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer" title="Bu kişiden başlat">→</button>`;
+    return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isSel?'sel-row':isActive?'active-row':c.sonuc?'done':''}" id="uc-${c.id}">
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
       <td>${esc(c.name||'—')}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(c.tel||'')}</td>
-      <td>${st}</td><td>${dt}</td></tr>`;
+      <td>${st}</td><td>${dt}</td>
+      <td style="width:36px">${jumpBtn}</td></tr>`;
   }).join('');
   document.getElementById('ucSearch').setAttribute('placeholder',`İsim veya numara ara... (${rows.length})`);
 }
@@ -914,6 +1020,18 @@ function updateUcProg(){
   const pct=total?Math.round(done/total*100):0;
   document.getElementById('ucProg').style.width=pct+'%';
   document.getElementById('ucProgLbl').textContent=`${done} / ${total} tamamlandı (${pct}%)`;
+}
+
+async function jumpToContact(ri){
+  if(!localOnline){alert('Local server çalışmıyor.\nÖnce start.bat çalıştırın.');return;}
+  if(!confirm(ucContacts[ri-1]?.name+' — bu kişiden başlat?'))return;
+  try{
+    await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'index.txt',content:String(ri-1)})});
+    await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'paused.flag'})});
+    await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.lock'})});
+    await fetch(LOCAL+'/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd:'resume_after_manual.bat'})});
+    setStatus(ri+'. kişiden başlatıldı','live');
+  }catch(e){alert('Hata: '+e);}
 }
 
 function toggleHide(){
@@ -953,24 +1071,42 @@ async function saveLocalSettings(){
   const delay=parseInt(document.getElementById('cfgDelayU').value)||10;
   await api('PUT','/api/settings',{timeout_sec:timeout,delay_between_calls:delay});
   if(localOnline){
-    const bat=await fetch(LOCAL+'/api/file?name=nextcall.bat');
-    if(bat.ok){
-      const d=await bat.json();
-      if(d.exists){
-        const updated=d.content.replace(/set "TIMEOUTSEC=\d+"/,`set "TIMEOUTSEC=${timeout}"`);
-        await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.bat',content:updated})});
+    try{
+      const r=await fetch(LOCAL+'/api/file?name=nextcall.bat');
+      if(r.ok){
+        const d=await r.json();
+        if(d.exists){
+          let c=d.content;
+          c=c.replace(/set "TIMEOUTSEC=\d+"/,`set "TIMEOUTSEC=${timeout}"`);
+          // DELAYSEC varsa güncelle, yoksa ekle
+          if(c.includes('DELAYSEC')){
+            c=c.replace(/set "DELAYSEC=\d+"/,`set "DELAYSEC=${delay}"`);
+          } else {
+            c=c.replace('set "CANCELFILE=',`set "DELAYSEC=${delay}"
+set "CANCELFILE=`);
+          }
+          await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.bat',content:c})});
+        }
       }
-    }
+    }catch(e){}
   }
-  setStatus('Ayarlar kaydedildi','live');
+  setStatus('Ayarlar kaydedildi ✓','live');
+  alert('Kaydedildi! Timeout: '+timeout+'sn');
 }
 
-async function sendToSheets(contact,sonuc,donus,not_text){
-  if(!gsUrl)return;
+async function sendToSheets(contact,sonuc,donus,not_text,url){
   try{
-    await fetch(gsUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({tel:contact.tel||'',isim:contact.name||'',sonuc:sonuc||'',donus:donus||'',not:not_text||'',sheet:ucCurrentList?.sheet||''})});
-  }catch(e){}
+    // Railway proxy üzerinden gönder (CORS sorunu olmaz)
+    await api('POST','/api/sheets/send',{
+      tel: contact.tel||'',
+      isim: contact.name||'',
+      sonuc: sonuc||'',
+      donus: donus||'',
+      not: not_text||'',
+      sheet: ucCurrentList?.sheet||'',
+      list_id: ucCurrentList?.id||''
+    });
+  }catch(e){ console.log('sheets error',e); }
 }
 
 // ── HELPERS ───────────────────────────────────────────────
