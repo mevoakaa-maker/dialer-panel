@@ -275,17 +275,19 @@ def add_to_google_contacts():
                 if r.status_code == 401:
                     return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
                 if r.status_code == 200:
-                    # Debug: ilk batch response'u döndür
-                    if i == 0:
-                        return jsonify({'ok': False, 'debug': r.text[:1000], 'status': r.status_code})
                     added += r.text.count('"resourceName"')
+                elif r.status_code == 429 or 'RESOURCE_EXHAUSTED' in r.text:
+                    # Rate limit - bekle ve devam et
+                    import time as _t2
+                    _t2.sleep(5)
+                    errors += len(batch)
                 else:
                     errors += len(batch)
             except Exception as e:
                 app.logger.error(f'Batch error: {e}')
                 errors += len(batch)
 
-            _t.sleep(1)
+            _t.sleep(15)
 
         return jsonify({'ok': True, 'added': added, 'errors': errors, 'total_sent': len(contacts)})
     except Exception as e:
