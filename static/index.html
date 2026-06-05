@@ -231,11 +231,31 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
 
   <!-- USER NAV -->
   <div id="userNav" style="display:none;flex:1;flex-direction:column;overflow:hidden;display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 8px 4px">
-      <span class="slabel" style="padding:0">Datalarım</span>
-      <button class="btn g" style="font-size:11px;padding:3px 8px" onclick="openModal('userUploadModal')">+ Yükle</button>
+    <!-- Tab seçici -->
+    <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0">
+      <button id="tabMyData" onclick="switchNavTab('mydata')" style="flex:1;padding:7px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:var(--accent-dim);color:#93c5fd;border-bottom:2px solid var(--accent)">📋 Datalarım</button>
+      <button id="tabDrive" onclick="switchNavTab('drive')" style="flex:1;padding:7px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:2px solid transparent">📊 Drive</button>
     </div>
-    <div id="userListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1"></div>
+
+    <!-- Datalarım -->
+    <div id="navMyData" style="flex:1;flex-direction:column;overflow:hidden;display:flex">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px 4px">
+        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Listeler</span>
+        <button class="btn g" style="font-size:10px;padding:2px 7px" onclick="openModal('userUploadModal')">+ Yükle</button>
+      </div>
+      <div id="userListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1"></div>
+    </div>
+
+    <!-- Drive -->
+    <div id="navDrive" style="flex:1;flex-direction:column;overflow:hidden;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px 4px">
+        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Google Drive</span>
+        <button class="btn" style="font-size:10px;padding:2px 7px" onclick="loadDriveFiles()">↻</button>
+      </div>
+      <div id="driveFileNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1">
+        <div style="font-size:11px;color:var(--muted);padding:8px">Yükleniyor...</div>
+      </div>
+    </div>
   </div>
 
   <!-- FOOTER (sadece user için) -->
@@ -385,6 +405,10 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     <!-- TABLO TOOLBAR -->
     <div style="display:flex;align-items:center;gap:8px;padding:7px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
       <input type="text" id="ucSearch" placeholder="İsim veya numara ara..." oninput="renderUcTable()" style="flex:1;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:13px">
+      <div id="sheetPageWrap" style="display:none;align-items:center;gap:6px">
+        <span style="font-size:11px;color:var(--muted)">Sayfa:</span>
+        <select id="sheetPageSelector" onchange="changeSheetPage(this.value)" style="padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px"></select>
+      </div>
       <button class="btn" onclick="toggleHide()" id="hideBtn">✕ Bitti olanları gizle</button>
       <button class="btn b" onclick="exportAllToGoogle()" title="Tüm listeyi Google Kişilere aktar">📇 Kişileri Aktar</button>
       <button class="btn" style="font-size:11px;border-color:#0f766e;color:#5eead4;background:#042f2e" onclick="syncAllToSheets()" title="Tüm işaretlemeleri Google Sheets'e gönder">📊 Sheets'e Aktar</button>
@@ -449,6 +473,31 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
 
 </main>
 </div><!-- /shell -->
+
+<!-- DRIVE SHEET SELECT MODAL -->
+<div class="overlay" id="driveSheetSelectModal">
+<div class="modal">
+  <h3>📊 Sayfa Seç</h3>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:10px" id="driveSheetFileName"></div>
+  <div id="driveSheetList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:6px"></div>
+  <div class="mactions">
+    <button class="btn" onclick="closeModal('driveSheetSelectModal')">İptal</button>
+  </div>
+</div>
+</div>
+
+<!-- DRIVE PICKER MODAL -->
+<div class="overlay" id="drivePickerModal">
+<div class="modal" id="drivePicker">
+  <h3>🔍 Google Drive'dan Sheets Seç</h3>
+  <input type="hidden" id="drivePickerListId">
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Erişiminiz olan tüm Google Sheets dosyaları:</div>
+  <div id="driveFileList" style="max-height:350px;overflow-y:auto;border:1px solid var(--border);border-radius:6px"></div>
+  <div class="mactions">
+    <button class="btn" onclick="closeModal('drivePickerModal')">Kapat</button>
+  </div>
+</div>
+</div>
 
 <!-- USER UPLOAD MODAL -->
 <div class="overlay" id="userUploadModal">
@@ -965,7 +1014,21 @@ async function loadUserLists(){
       btn.classList.add('active');
       loadUcList(l,btn);
     };
+    // Sheets ID butonu
+    const sheetsBtn = document.createElement('button');
+    sheetsBtn.className='btn';
+    sheetsBtn.style.cssText='font-size:10px;padding:2px 6px;margin:1px 6px;width:calc(100% - 12px);border-color:#0f766e;color:#5eead4;background:#042f2e';
+    sheetsBtn.textContent = (l.spreadsheet_id ? '📊 Sheets ID ✓' : '📊 Sheets ID ekle');
+    sheetsBtn.onclick=()=>editSpreadsheetId(l.id, l.spreadsheet_id||'');
+    // Drive'dan seç butonu
+    const driveBtn = document.createElement('button');
+    driveBtn.className='btn';
+    driveBtn.style.cssText='font-size:10px;padding:2px 6px;margin:1px 6px;width:calc(100% - 12px);border-color:#1d3a6e;color:#93c5fd;background:#0c1a2e';
+    driveBtn.textContent="🔍 Drive'dan Sec";
+    driveBtn.onclick=()=>openDrivePicker(l.id);
     wrap.appendChild(btn);
+    wrap.appendChild(sheetsBtn);
+    wrap.appendChild(driveBtn);
   });
   if(lists.length>0)loadUcList(lists[0],wrap.querySelector('.nav-btn'));
 }
@@ -977,6 +1040,8 @@ async function loadUcList(list,btn){
   ucContacts=contacts;
   if(btn){const b=btn.querySelector('.nav-badge');if(b)b.textContent=contacts.length;}
   renderUcTable();updateUcProg();
+  // Sheets ID varsa sayfaları yükle
+  if(list.spreadsheet_id) loadSheetPages(list);
   // CSV'ye yaz
   if(localOnline){
     const csv=contacts.map(c=>((c.name||'')+','+(c.tel||''))).join('\n');
@@ -1532,6 +1597,156 @@ async function syncAllToSheets(){
   
   setStatus('Tamamlandi','live');
   alert(done+" kisi Sheets'e aktarildi!"+(errors?" ("+errors+" hata)":""));
+}
+
+// ── DRIVE NAV ────────────────────────────────────────────
+let driveFiles = [];
+let selectedDriveFile = null;
+let driveSheets = [];
+
+function switchNavTab(tab){
+  const isMyData = tab === 'mydata';
+  document.getElementById('navMyData').style.display = isMyData ? 'flex' : 'none';
+  document.getElementById('navDrive').style.display = isMyData ? 'none' : 'flex';
+  document.getElementById('tabMyData').style.background = isMyData ? 'var(--accent-dim)' : 'transparent';
+  document.getElementById('tabMyData').style.color = isMyData ? '#93c5fd' : 'var(--muted)';
+  document.getElementById('tabMyData').style.borderBottomColor = isMyData ? 'var(--accent)' : 'transparent';
+  document.getElementById('tabDrive').style.background = !isMyData ? 'var(--accent-dim)' : 'transparent';
+  document.getElementById('tabDrive').style.color = !isMyData ? '#93c5fd' : 'var(--muted)';
+  document.getElementById('tabDrive').style.borderBottomColor = !isMyData ? 'var(--accent)' : 'transparent';
+  if(!isMyData && driveFiles.length === 0) loadDriveFiles();
+}
+
+async function loadDriveFiles(){
+  const wrap = document.getElementById('driveFileNav');
+  wrap.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:8px">Yükleniyor...</div>';
+  const r = await api('GET','/api/drive/sheets');
+  if(r.error){
+    wrap.innerHTML = `<div style="font-size:11px;color:var(--red);padding:8px">${r.error}</div>`;
+    return;
+  }
+  driveFiles = r.files || [];
+  if(!driveFiles.length){
+    wrap.innerHTML = "<div style='font-size:11px;color:var(--muted);padding:8px'>Sheets bulunamadi.</div>";
+    return;
+  }
+  wrap.innerHTML = driveFiles.map(f=>`
+    <button class="nav-btn" onclick="selectDriveNav('${f.id}','${esc(f.name)}')">
+      <span style="width:18px;text-align:center">📊</span>${esc(f.name)}
+    </button>`).join('');
+}
+
+async function selectDriveNav(fileId, fileName){
+  selectedDriveFile = {id: fileId, name: fileName};
+  // Sayfaları yükle
+  const r = await api('GET','/api/sheets/pages?spreadsheet_id='+fileId);
+  if(r.error){alert('Hata: '+r.error);return;}
+  driveSheets = r.sheets || [];
+  // Sayfa seçim modalını göster
+  const modal = document.getElementById('driveSheetSelectModal');
+  document.getElementById('driveSheetFileName').textContent = fileName;
+  document.getElementById('driveSheetList').innerHTML = driveSheets.map(sh=>`
+    <div onclick="importDriveSheet('${fileId}','${esc(sh)}','${esc(fileName)}')"
+      style="padding:10px;cursor:pointer;border-radius:4px;border-bottom:1px solid var(--border);font-size:13px"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      📋 ${esc(sh)}
+    </div>`).join('');
+  openModal('driveSheetSelectModal');
+}
+
+async function importDriveSheet(spreadsheetId, sheetName, fileName){
+  // Bu sayfanın verilerini çek ve data olarak ekle
+  const listName = fileName + ' - ' + sheetName;
+  
+  // Sheets'ten veriyi oku
+  setStatus('Veri okunuyor...', 'warn');
+  const r = await api('POST', '/api/sheets/import', {
+    spreadsheet_id: spreadsheetId,
+    sheet: sheetName,
+    name: listName
+  });
+  
+  if(r.error){
+    alert('Hata: ' + r.error);
+    setStatus('Hata','err');
+    return;
+  }
+  
+  closeModal('driveSheetSelectModal');
+  setStatus(r.count + ' kisi eklendi', 'live');
+  switchNavTab('mydata');
+  await loadUserLists();
+  // Yeni eklenen listeye geç
+  const lists = await api('GET','/api/lists');
+  if(Array.isArray(lists)){
+    const newList = lists.find(l=>l.name===listName);
+    if(newList){
+      const btn = document.querySelector('#userListNav .nav-btn');
+      if(btn) btn.click();
+    }
+  }
+}
+
+// ── DRIVE PICKER ─────────────────────────────────────────
+async function openDrivePicker(listId){
+  const el = document.getElementById('drivePicker');
+  if(!el) return;
+  document.getElementById('drivePickerListId').value = listId;
+  document.getElementById('driveFileList').innerHTML = '<div style="color:var(--muted);font-size:12px">Yükleniyor...</div>';
+  openModal('drivePickerModal');
+  const r = await api('GET','/api/drive/sheets');
+  if(r.error){
+    if(r.needs_auth) alert('Google hesabınızla giriş yapın.');
+    else alert('Hata: '+r.error);
+    closeModal('drivePickerModal');
+    return;
+  }
+  const files = r.files || [];
+  if(!files.length){
+    document.getElementById('driveFileList').innerHTML = '<div style="color:var(--muted);font-size:12px">Sheets dosyası bulunamadı.</div>';
+    return;
+  }
+  document.getElementById('driveFileList').innerHTML = files.map(f=>
+    `<div onclick="selectDriveFile('${f.id}','${esc(f.name)}',document.getElementById('drivePickerListId').value)"
+      style="padding:8px 10px;cursor:pointer;border-radius:4px;font-size:13px;border-bottom:1px solid var(--border)"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      📊 ${esc(f.name)}
+    </div>`
+  ).join('');
+}
+
+async function selectDriveFile(spreadsheetId, name, listId){
+  await api('PUT','/api/lists/'+listId+'/spreadsheetid',{spreadsheet_id: spreadsheetId});
+  // ucCurrentList güncelle
+  if(ucCurrentList && ucCurrentList.id === listId){
+    ucCurrentList.spreadsheet_id = spreadsheetId;
+    loadSheetPages(ucCurrentList);
+  }
+  closeModal('drivePickerModal');
+  setStatus(name+' seçildi','live');
+  loadUserLists();
+}
+
+async function loadSheetPages(list){
+  if(!list.spreadsheet_id) return;
+  const r = await api('GET','/api/sheets/pages?spreadsheet_id='+list.spreadsheet_id);
+  if(!r.sheets || !r.sheets.length) return;
+  // Sayfa seçici göster
+  const el = document.getElementById('sheetPageSelector');
+  if(!el) return;
+  el.innerHTML = r.sheets.map(sh=>
+    `<option value="${esc(sh)}" ${sh===list.sheet?'selected':''}>${esc(sh)}</option>`
+  ).join('');
+  el.style.display = '';
+  document.getElementById('sheetPageWrap').style.display='flex';
+}
+
+async function changeSheetPage(sheet){
+  if(!ucCurrentList) return;
+  ucCurrentList.sheet = sheet;
+  // DB'ye kaydet
+  await api('PUT','/api/lists/'+ucCurrentList.id+'/sheet',{sheet});
+  setStatus(sheet+' sayfasına geçildi','live');
 }
 
 // ── GOOGLE CONTACTS ───────────────────────────────────────
