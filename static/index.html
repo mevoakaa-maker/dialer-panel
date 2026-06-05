@@ -800,7 +800,7 @@ async function addUserList(){
   const lst=await api('POST','/api/lists',{name,sheet:uuSelSheet,assigned_to:currentUser.id});
   if(lst.error)return alert(lst.error);
   if(lst.id) await uploadContacts(lst.id,uuData[uuSelSheet]);
-  closeModal('userUploadModal');resetUu();loadUserLists();
+  closeModal('userUploadModal');resetUu();await loadUserLists();
 }
 
 async function uploadContacts(lid,sheetData){
