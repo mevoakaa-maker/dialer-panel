@@ -258,7 +258,7 @@ def add_to_google_contacts():
 
             try:
                 r = req_lib.post(
-                    'https://people.googleapis.com/batch',
+                    'https://www.googleapis.com/batch/people/v1',
                     data=batch_body.encode('utf-8'),
                     headers={
                         'Authorization': f'Bearer {access_token}',
@@ -268,9 +268,14 @@ def add_to_google_contacts():
                 )
                 if r.status_code == 401:
                     return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
-                added += r.text.count('"resourceName"')
+                # Her başarılı yanıt HTTP/1.1 200 ile başlar
+                added += r.text.count('HTTP/1.1 200')
+                errors += r.text.count('HTTP/1.1 4')
             except Exception as e:
                 errors += len(batch)
+            
+            import time as _t
+            _t.sleep(1)  # Batch arası 1 saniye bekle
 
         return jsonify({'ok': True, 'added': added, 'errors': errors})
     except Exception as e:
