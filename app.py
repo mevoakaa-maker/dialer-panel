@@ -195,10 +195,28 @@ def add_to_google_contacts():
     try:
         data = request.json
         user_id = request.user['id']
-        user_res = sb.table('users').select('google_access_token').eq('id', user_id).execute()
+        user_res = sb.table('users').select('google_access_token,google_refresh_token').eq('id', user_id).execute()
         if not user_res.data or not user_res.data[0].get('google_access_token'):
             return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
         access_token = user_res.data[0]['google_access_token']
+        refresh_token = user_res.data[0].get('google_refresh_token','')
+        
+        # Token geçerli mi test et
+        test = req_lib.get('https://www.googleapis.com/oauth2/v1/tokeninfo',
+            params={'access_token': access_token}, timeout=5)
+        if test.status_code != 200 and refresh_token:
+            # Token süresi dolmuş, refresh et
+            ref = req_lib.post('https://oauth2.googleapis.com/token', data={
+                'client_id': GOOGLE_CLIENT_ID,
+                'client_secret': GOOGLE_CLIENT_SECRET,
+                'refresh_token': refresh_token,
+                'grant_type': 'refresh_token'
+            }, timeout=10)
+            if ref.status_code == 200:
+                access_token = ref.json().get('access_token', access_token)
+                sb.table('users').update({'google_access_token': access_token}).eq('id', user_id).execute()
+            else:
+                return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
         contacts = data.get('contacts', [])
         from concurrent.futures import ThreadPoolExecutor, as_completed
         added = 0
