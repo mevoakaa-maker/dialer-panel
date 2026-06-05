@@ -1427,7 +1427,7 @@ async function exportAllToGoogle(){
   if(!confirm(total+' kişiyi Google Kişilere aktar?')) return;
   const contacts = ucContacts.map(c=>({name:c.name||'',tel:c.tel||''})).filter(c=>c.tel);
   let totalAdded=0, totalErrors=0;
-  const batchSize=50;
+  const batchSize=50; // backend batch API halleder
   const gpEl=document.getElementById('googleProgress');
   const gpTxt=document.getElementById('googleProgressTxt');
   const gpBar=document.getElementById('googleProgressBar');
@@ -1445,6 +1445,7 @@ async function exportAllToGoogle(){
     }catch(e){
       totalErrors+=batch.length;
     }
+
   }
   gpTxt.textContent=contacts.length+'/'+contacts.length;
   gpBar.style.width='100%';
