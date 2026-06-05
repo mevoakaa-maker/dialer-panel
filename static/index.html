@@ -810,10 +810,10 @@ async function uploadContacts(lid,sheetData){
     return {name:r['İsim Soyisim']||r['Kullanıcı Adı']||'',tel:r['Tel No']||'',extra,row_index:i+1};
   }).filter(r=>r.tel);
   // 200'lük batch'lere böl
-  const batchSize = 200;
+  const batchSize = 100;
   for(let i=0; i<rows.length; i+=batchSize){
     const batch = rows.slice(i, i+batchSize);
-    await api('POST','/api/lists/'+lid+'/contacts',{rows:batch});
+    await api('POST','/api/lists/'+lid+'/contacts',{rows:batch, append: i>0});
   }
 }
 
