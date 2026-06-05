@@ -1427,7 +1427,7 @@ async function exportAllToGoogle(){
   if(!confirm(total+' kişiyi Google Kişilere aktar?')) return;
   const contacts = ucContacts.map(c=>({name:c.name||'',tel:c.tel||''})).filter(c=>c.tel);
   let totalAdded=0, totalErrors=0;
-  const batchSize=5;
+  const batchSize=50;
   const gpEl=document.getElementById('googleProgress');
   const gpTxt=document.getElementById('googleProgressTxt');
   const gpBar=document.getElementById('googleProgressBar');
