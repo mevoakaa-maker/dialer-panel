@@ -284,7 +284,7 @@ def add_to_google_contacts():
 
             _t.sleep(1)
 
-        return jsonify({'ok': True, 'added': added, 'errors': errors})
+        return jsonify({'ok': True, 'added': added, 'errors': errors, 'total_sent': len(contacts)})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
