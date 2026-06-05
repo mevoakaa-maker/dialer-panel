@@ -128,7 +128,7 @@ def google_login():
         'client_id': GOOGLE_CLIENT_ID,
         'redirect_uri': GOOGLE_REDIRECT_URI,
         'response_type': 'code',
-        'scope': 'openid email profile https://www.googleapis.com/auth/contacts https://www.googleapis.com/auth/spreadsheets',
+        'scope': 'openid email profile https://www.googleapis.com/auth/contacts https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly',
         'access_type': 'offline',
         'prompt': 'consent',
     }
@@ -317,7 +317,54 @@ def add_to_google_contacts():
         return jsonify({'error': str(e)}), 500
 
 
-# ── SHEETS API ────────────────────────────────────────────
+# ── DRIVE API ─────────────────────────────────────────────
+@app.route('/api/drive/sheets', methods=['GET'])
+@require_auth
+def list_drive_sheets():
+    try:
+        user_id = request.user['id']
+        user_res = sb.table('users').select('google_access_token,google_refresh_token').eq('id', user_id).execute()
+        if not user_res.data or not user_res.data[0].get('google_access_token'):
+            return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
+        
+        access_token = user_res.data[0]['google_access_token']
+        refresh_token = user_res.data[0].get('google_refresh_token','')
+
+        # Token yenile gerekirse
+        test = req_lib.get('https://www.googleapis.com/oauth2/v1/tokeninfo',
+            params={'access_token': access_token}, timeout=5)
+        if test.status_code != 200 and refresh_token:
+            ref = req_lib.post('https://oauth2.googleapis.com/token', data={
+                'client_id': GOOGLE_CLIENT_ID,
+                'client_secret': GOOGLE_CLIENT_SECRET,
+                'refresh_token': refresh_token,
+                'grant_type': 'refresh_token'
+            }, timeout=10)
+            if ref.status_code == 200:
+                access_token = ref.json().get('access_token', access_token)
+                sb.table('users').update({'google_access_token': access_token}).eq('id', user_id).execute()
+
+        # Drive'daki tüm Sheets dosyalarını listele
+        r = req_lib.get(
+            'https://www.googleapis.com/drive/v3/files',
+            params={
+                'q': "mimeType='application/vnd.google-apps.spreadsheet' and trashed=false",
+                'fields': 'files(id,name,modifiedTime)',
+                'orderBy': 'modifiedTime desc',
+                'pageSize': 100
+            },
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=15
+        )
+        if r.status_code != 200:
+            return jsonify({'error': f'Drive hatası: {r.text[:200]}'}), 400
+        
+        files = r.json().get('files', [])
+        return jsonify({'files': files})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ── SHEETS API ─────────────────────────────────────────────
 @app.route('/api/sheets/write', methods=['POST'])
 @require_auth
 def sheets_write():
@@ -402,6 +449,130 @@ def sheets_write():
                 return jsonify({'error': f'Yazma hatası: {r2.text[:200]}'}), 400
         
         return jsonify({'ok': True, 'row': row_num})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ── SHEETS PAGES ─────────────────────────────────────────
+@app.route('/api/sheets/pages', methods=['GET'])
+@require_auth
+def get_sheet_pages():
+    try:
+        user_id = request.user['id']
+        spreadsheet_id = request.args.get('spreadsheet_id','')
+        if not spreadsheet_id:
+            return jsonify({'error': 'spreadsheet_id gerekli'}), 400
+        
+        user_res = sb.table('users').select('google_access_token').eq('id', user_id).execute()
+        if not user_res.data or not user_res.data[0].get('google_access_token'):
+            return jsonify({'error': 'Google bağlı değil'}), 401
+        
+        access_token = user_res.data[0]['google_access_token']
+        r = req_lib.get(
+            f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}',
+            params={'fields': 'sheets.properties.title'},
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=10
+        )
+        if r.status_code != 200:
+            return jsonify({'error': r.text[:200]}), 400
+        
+        sheets = [s['properties']['title'] for s in r.json().get('sheets', [])]
+        return jsonify({'sheets': sheets})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ── SHEETS IMPORT ─────────────────────────────────────────
+@app.route('/api/sheets/import', methods=['POST'])
+@require_auth
+def sheets_import():
+    try:
+        data = request.json
+        user_id = request.user['id']
+        spreadsheet_id = data.get('spreadsheet_id','')
+        sheet_name = data.get('sheet','')
+        list_name = data.get('name','')
+        
+        if not spreadsheet_id or not sheet_name:
+            return jsonify({'error': 'spreadsheet_id ve sheet gerekli'}), 400
+
+        user_res = sb.table('users').select('google_access_token,google_refresh_token').eq('id', user_id).execute()
+        if not user_res.data or not user_res.data[0].get('google_access_token'):
+            return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
+        
+        access_token = user_res.data[0]['google_access_token']
+        refresh_token = user_res.data[0].get('google_refresh_token','')
+
+        # Token yenile
+        test = req_lib.get('https://www.googleapis.com/oauth2/v1/tokeninfo',
+            params={'access_token': access_token}, timeout=5)
+        if test.status_code != 200 and refresh_token:
+            ref = req_lib.post('https://oauth2.googleapis.com/token', data={
+                'client_id': GOOGLE_CLIENT_ID,
+                'client_secret': GOOGLE_CLIENT_SECRET,
+                'refresh_token': refresh_token,
+                'grant_type': 'refresh_token'
+            }, timeout=10)
+            if ref.status_code == 200:
+                access_token = ref.json().get('access_token', access_token)
+                sb.table('users').update({'google_access_token': access_token}).eq('id', user_id).execute()
+
+        # Sheets'ten veriyi oku (A:E aralığı - İsim, Tel, Sonuç, Dönüş, Notlar)
+        range_name = f"'{sheet_name}'!A3:E"
+        r = req_lib.get(
+            f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_name}',
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=15
+        )
+        if r.status_code != 200:
+            return jsonify({'error': f'Sheets okuma hatası: {r.text[:200]}'}), 400
+
+        values = r.json().get('values', [])
+        
+        # Liste oluştur
+        lst_res = sb.table('data_lists').insert({
+            'name': list_name,
+            'sheet': sheet_name,
+            'assigned_to': user_id,
+            'created_by': user_id,
+            'spreadsheet_id': spreadsheet_id
+        }).execute()
+        
+        if not lst_res.data:
+            return jsonify({'error': 'Liste oluşturulamadı'}), 500
+        
+        lid = lst_res.data[0]['id']
+        
+        # Kişileri ekle
+        batch = []
+        for i, row in enumerate(values):
+            name = row[0].strip() if len(row) > 0 else ''
+            tel  = ''.join(filter(str.isdigit, str(row[1]))) if len(row) > 1 else ''
+            sonuc = row[2].strip() if len(row) > 2 else None
+            donus = row[3].strip() if len(row) > 3 else None
+            not_text = row[4].strip() if len(row) > 4 else ''
+            
+            if not tel: continue
+            
+            batch.append({
+                'list_id': lid,
+                'row_index': i + 1,
+                'name': name,
+                'tel': tel,
+                'extra': {},
+                'sonuc': sonuc or None,
+                'donus': donus or None,
+                'not_text': not_text
+            })
+            
+            # 200'lük batch'ler
+            if len(batch) >= 200:
+                sb.table('contacts').insert(batch).execute()
+                batch = []
+        
+        if batch:
+            sb.table('contacts').insert(batch).execute()
+        
+        return jsonify({'ok': True, 'count': len(values), 'list_id': lid})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -503,10 +674,17 @@ def create_list():
     return jsonify(res.data[0])
 
 @app.route('/api/lists/<lid>/spreadsheetid', methods=['PUT'])
-@require_admin
+@require_auth
 def update_spreadsheet_id(lid):
     data = request.json
     sb.table('data_lists').update({'spreadsheet_id': data.get('spreadsheet_id','')}).eq('id', lid).execute()
+    return jsonify({'ok': True})
+
+@app.route('/api/lists/<lid>/sheet', methods=['PUT'])
+@require_auth
+def update_list_sheet(lid):
+    data = request.json
+    sb.table('data_lists').update({'sheet': data.get('sheet','')}).eq('id', lid).execute()
     return jsonify({'ok': True})
 
 @app.route('/api/lists/<lid>/gsurl', methods=['PUT'])
