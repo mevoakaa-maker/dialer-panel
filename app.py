@@ -200,39 +200,35 @@ def add_to_google_contacts():
             return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
         access_token = user_res.data[0]['google_access_token']
         contacts = data.get('contacts', [])
-        from concurrent.futures import ThreadPoolExecutor, as_completed
+        import time
         added = 0
         errors = 0
-        auth_expired = False
+        batch_size = 10
 
-        def add_contact(c):
-            name = c.get('name','')
-            tel  = c.get('tel','')
-            if not tel: return 'skip'
-            body = {
-                'names': [{'displayName': name, 'givenName': name}],
-                'phoneNumbers': [{'value': tel, 'type': 'mobile'}]
-            }
-            r = req_lib.post(
-                'https://people.googleapis.com/v1/people:createContact',
-                json=body,
-                headers={'Authorization': f'Bearer {access_token}'},
-                timeout=10
-            )
-            if r.status_code == 200: return 'ok'
-            elif r.status_code == 401: return 'auth'
-            else: return 'error'
+        for i in range(0, len(contacts), batch_size):
+            batch = contacts[i:i+batch_size]
+            for c in batch:
+                name = c.get('name','')
+                tel  = c.get('tel','')
+                if not tel: continue
+                body = {
+                    'names': [{'displayName': name, 'givenName': name}],
+                    'phoneNumbers': [{'value': tel, 'type': 'mobile'}]
+                }
+                r = req_lib.post(
+                    'https://people.googleapis.com/v1/people:createContact',
+                    json=body,
+                    headers={'Authorization': f'Bearer {access_token}'},
+                    timeout=8
+                )
+                if r.status_code == 200: added += 1
+                elif r.status_code == 401:
+                    return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
+                elif r.status_code == 429:
+                    time.sleep(2)  # Rate limit - bekle
+                else: errors += 1
+            time.sleep(0.5)  # Batch arası bekleme
 
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            futures = {executor.submit(add_contact, c): c for c in contacts}
-            for future in as_completed(futures):
-                result = future.result()
-                if result == 'ok': added += 1
-                elif result == 'auth': auth_expired = True; break
-                elif result == 'error': errors += 1
-
-        if auth_expired:
-            return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
         return jsonify({'ok': True, 'added': added, 'errors': errors})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
