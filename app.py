@@ -200,12 +200,15 @@ def add_to_google_contacts():
             return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
         access_token = user_res.data[0]['google_access_token']
         contacts = data.get('contacts', [])
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         added = 0
         errors = 0
-        for c in contacts:
+        auth_expired = False
+
+        def add_contact(c):
             name = c.get('name','')
             tel  = c.get('tel','')
-            if not tel: continue
+            if not tel: return 'skip'
             body = {
                 'names': [{'displayName': name, 'givenName': name}],
                 'phoneNumbers': [{'value': tel, 'type': 'mobile'}]
@@ -213,14 +216,23 @@ def add_to_google_contacts():
             r = req_lib.post(
                 'https://people.googleapis.com/v1/people:createContact',
                 json=body,
-                headers={'Authorization': f'Bearer {access_token}'}
+                headers={'Authorization': f'Bearer {access_token}'},
+                timeout=10
             )
-            if r.status_code == 200:
-                added += 1
-            elif r.status_code == 401:
-                return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
-            else:
-                errors += 1
+            if r.status_code == 200: return 'ok'
+            elif r.status_code == 401: return 'auth'
+            else: return 'error'
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(add_contact, c): c for c in contacts}
+            for future in as_completed(futures):
+                result = future.result()
+                if result == 'ok': added += 1
+                elif result == 'auth': auth_expired = True; break
+                elif result == 'error': errors += 1
+
+        if auth_expired:
+            return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
         return jsonify({'ok': True, 'added': added, 'errors': errors})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
