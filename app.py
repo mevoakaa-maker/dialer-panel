@@ -235,8 +235,9 @@ def get_contacts(lid):
 def upload_contacts(lid):
     data = request.json
     rows = data.get('rows', [])
-    # Onceki kisiileri sil
-    sb.table('contacts').delete().eq('list_id', lid).execute()
+    # Sadece ilk batch'te sil (append=True ise silme)
+    if not data.get('append', False):
+        sb.table('contacts').delete().eq('list_id', lid).execute()
     # Toplu ekle
     batch = []
     for i, r in enumerate(rows):
