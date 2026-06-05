@@ -83,6 +83,18 @@ main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .badge-admin{background:var(--accent-dim);color:#93c5fd}
 .badge-user{background:var(--surface2);color:var(--muted)}
 .badge-sonuc{background:var(--surface2);color:var(--text);font-size:11px}
+.bs-ilgilenmiyor{background:#450a0a;color:#fca5a5}
+.bs-link{background:#2e1065;color:#c4b5fd}
+.bs-cevapsiz{background:#1f2937;color:#9ca3af}
+.bs-mesgul{background:#451a03;color:#fcd34d}
+.bs-ulasilamiyor{background:#0c1a2e;color:#7dd3fc}
+.bs-sonra{background:#042f2e;color:#5eead4}
+.bs-servis{background:#111827;color:#6b7280}
+.bs-gorisme{background:#451a03;color:#fbbf24}
+.bs-uyeoldu{background:#052e16;color:#86efac}
+.bs-mevcutaktif{background:#022c22;color:#6ee7b7}
+.bs-mevcutedildi{background:#0c1a2e;color:#93c5fd}
+.bs-numara{background:#1f2937;color:#6b7280}
 
 /* FORM */
 .form-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
@@ -538,7 +550,7 @@ async function initApp(){
     loadUserLists();
     loadLocalSettings();
   }
-  setInterval(pollLocal,2000); pollLocal();
+  setInterval(pollLocal,800); pollLocal();
 }
 
 // ── NAVIGATION ────────────────────────────────────────────
@@ -591,6 +603,8 @@ async function pollLocal(){
                 tel.textContent=m+':'+s;
               },1000);
               highlightActiveContact(num);
+              // Aktif aranan kişiyi otomatik seç
+              autoSelectActiveContact(num);
             }
             if(name){
               document.getElementById('cname').textContent=name;
@@ -606,6 +620,27 @@ async function pollLocal(){
     document.getElementById('localDot').className='local-dot';
     document.getElementById('localTxt').textContent='local kapalı';
     document.getElementById('localTxt').style.color='var(--muted)';
+  }
+}
+
+function autoSelectActiveContact(tel){
+  if(!tel||!ucContacts.length) return;
+  const clean = tel.replace(/\D/g,'');
+  const contact = ucContacts.find(c=>{
+    const ct = String(c.tel||'').replace(/\D/g,'');
+    return ct===clean || ct.endsWith(clean.slice(-10)) || clean.endsWith(ct.slice(-10));
+  });
+  if(!contact) return;
+  // Sadece başka biri manuel seçilmediyse otomatik seç
+  if(!selContact || selContact._autoSelected){
+    selContact = {...contact, _autoSelected: true};
+    document.getElementById('sonucLbl').textContent='✏️ '+(contact.name||'');
+    document.getElementById('ucNot').value=contact.not_text||'';
+    selSonucVal = contact.sonuc||null;
+    selDonusVal = contact.donus||null;
+    activeTab='sonuc'; switchTab('sonuc');
+    const sb=document.getElementById('ucSaveBtn');
+    sb.style.opacity='1'; sb.style.pointerEvents='auto';
   }
 }
 
@@ -909,7 +944,7 @@ async function saveResult(){
   const currentGsUrl = settingsD?.gs_url || gsUrl;
   if(currentGsUrl) sendToSheets(selContact, selSonucVal, selDonusVal, not, currentGsUrl);
   const saved=selContact;
-  selContact=null;selSonucVal=null;selDonusVal=null;activeTab='sonuc';
+  selContact=null;selSonucVal=null;selDonusVal=null;activeTab='sonuc'; // reset
   switchTab('sonuc');
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('ucNot').value='';
@@ -922,6 +957,7 @@ async function saveResult(){
 function selectContact(id){
   selContact=ucContacts.find(c=>c.id===id);
   if(!selContact)return;
+  delete selContact._autoSelected; // Manuel seçim
   document.getElementById('cname').textContent=selContact.name||'—';
   document.getElementById('cnum').textContent=selContact.tel||'—';
   document.getElementById('cavatar').textContent=initials(selContact.name||'?');
@@ -962,8 +998,9 @@ function renderUcTable(){
     const cleanActive=lastLocalName?(String(document.getElementById('cnum').textContent||'').replace(/\D/g,'')):'' ;
     const isActive = cleanActive && (cleanTel===cleanActive || cleanTel.endsWith(cleanActive.slice(-10)) || cleanActive.endsWith(cleanTel.slice(-10)));
     const isSel=selContact&&selContact.id===c.id;
-    const st=c.sonuc?`<span class="badge badge-sonuc">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
-    const dt=c.donus?`<span class="badge badge-sonuc">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
+    const bcls={'İlgilenmiyor':'bs-ilgilenmiyor','Link Atıldı':'bs-link','Cevapsız':'bs-cevapsiz','Meşgul':'bs-mesgul','Ulaşılamıyor':'bs-ulasilamiyor','Sonra Aranacak':'bs-sonra','Servis Dışı':'bs-servis','Görüşmeyi Sonlandırdı':'bs-gorisme','Üye Oldu':'bs-uyeoldu','Üye oldu':'bs-uyeoldu','Mevcut Üye Aktif':'bs-mevcutaktif','Mevcut Üye Aktif Edildi':'bs-mevcutedildi','Numara Başkasına ait':'bs-numara'};
+    const st=c.sonuc?`<span class="badge ${bcls[c.sonuc]||'badge-sonuc'}">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
+    const dt=c.donus?`<span class="badge ${bcls[c.donus]||'badge-sonuc'}">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
     const jumpBtn = `<button onclick="event.stopPropagation();jumpToContact(${ri})" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer" title="Bu kişiden başlat">→</button>`;
     return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isSel?'sel-row':isActive?'active-row':c.sonuc?'done':''}" id="uc-${c.id}">
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
