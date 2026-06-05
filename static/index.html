@@ -1427,8 +1427,7 @@ async function exportAllToGoogle(){
   if(!confirm(total+' kişiyi Google Kişilere aktar?')) return;
   const contacts = ucContacts.map(c=>({name:c.name||'',tel:c.tel||''})).filter(c=>c.tel);
   let totalAdded=0, totalErrors=0;
-  const batchSize=10;
-  // Progress göster
+  const batchSize=5;
   const gpEl=document.getElementById('googleProgress');
   const gpTxt=document.getElementById('googleProgressTxt');
   const gpBar=document.getElementById('googleProgressBar');
@@ -1436,13 +1435,16 @@ async function exportAllToGoogle(){
   for(let i=0; i<contacts.length; i+=batchSize){
     const batch=contacts.slice(i,i+batchSize);
     const pct=Math.round(i/contacts.length*100);
-    gpTxt.textContent=(i)+'/'+contacts.length;
+    gpTxt.textContent=i+'/'+contacts.length;
     gpBar.style.width=pct+'%';
-    const r=await api('POST','/api/google/contacts/add',{contacts:batch});
-    if(r.needs_auth){gpEl.style.display='none';alert('Google bağlantısı gerekli');return;}
-    if(r.error){gpEl.style.display='none';alert('Hata: '+r.error);return;}
-    totalAdded+=r.added||0;
-    totalErrors+=r.errors||0;
+    try{
+      const r=await api('POST','/api/google/contacts/add',{contacts:batch});
+      if(r && r.needs_auth){gpEl.style.display='none';alert('Google bağlantısı gerekli');return;}
+      if(r && r.error){gpEl.style.display='none';alert('Hata: '+r.error);return;}
+      if(r && r.ok){totalAdded+=r.added||0;totalErrors+=r.errors||0;}
+    }catch(e){
+      totalErrors+=batch.length;
+    }
   }
   gpTxt.textContent=contacts.length+'/'+contacts.length;
   gpBar.style.width='100%';
