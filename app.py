@@ -217,7 +217,7 @@ def add_to_google_contacts():
                 'https://people.googleapis.com/v1/people:createContact',
                 json=body,
                 headers={'Authorization': f'Bearer {access_token}'},
-                timeout=8
+                timeout=30
             )
             if r.status_code == 200: return 'ok'
             elif r.status_code == 401: return 'auth'
