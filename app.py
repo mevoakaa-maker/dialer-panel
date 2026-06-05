@@ -205,12 +205,7 @@ def update_list_gsurl(lid):
 @app.route('/api/lists/<lid>', methods=['DELETE'])
 @require_admin
 def delete_list(lid):
-    # Sil: results -> contacts -> data_lists
-    contacts_res = sb.table('contacts').select('id').eq('list_id', lid).execute()
-    if contacts_res.data:
-        contact_ids = [c['id'] for c in contacts_res.data]
-        for cid in contact_ids:
-            sb.table('results').delete().eq('contact_id', cid).execute()
+    # Cascade zaten Supabase'de ayarlı, direkt sil
     sb.table('contacts').delete().eq('list_id', lid).execute()
     sb.table('data_lists').delete().eq('id', lid).execute()
     return jsonify({'ok': True})
