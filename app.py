@@ -275,7 +275,8 @@ def add_to_google_contacts():
                 if r.status_code == 401:
                     return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
                 if r.status_code == 200:
-                    added += r.text.count('"resourceName"')
+                    # Başarılı batch - kaç kişi gönderildiyse o kadar eklendi say
+                    added += len(body_parts) - 1  # son --boundary-- hariç
                 elif r.status_code == 429 or 'RESOURCE_EXHAUSTED' in r.text:
                     # Rate limit - bekle ve tekrar dene
                     _t.sleep(30)
