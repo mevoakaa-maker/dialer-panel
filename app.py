@@ -2,7 +2,7 @@ import os, json, bcrypt, jwt, base64, io, math
 from urllib.parse import urlencode
 import requests as req_lib
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 from supabase import create_client
 
@@ -186,8 +186,7 @@ def google_callback():
     }).eq('id', user['id']).execute()
     # JWT token oluştur
     jwt_token = make_token(user)
-    from flask import redirect as redir
-    return redir(f'/?token={jwt_token}')
+    return redirect(f'/?token={jwt_token}')
 
 @app.route('/api/google/contacts/add', methods=['POST'])
 @require_auth
