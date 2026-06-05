@@ -1465,9 +1465,7 @@ function downloadMarked(){
     '"'+(c.donus||'')+'"',
     '"'+(c.not_text||'').replace(/"/g,'""')+'"'
   ].join(','));
-  const csv='﻿'+header+'
-'+rows.join('
-');
+  const csv='\uFEFF'+header+'\n'+rows.join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download=(ucCurrentList?.name||'data')+'_isaretliler.csv';
@@ -1478,14 +1476,14 @@ function downloadMarked(){
 async function syncAllToSheets(){
   const withData = ucContacts.filter(c=>c.sonuc||c.donus||c.not_text);
   if(!withData.length){alert('İşaretlenmiş kişi yok.');return;}
-  if(!confirm(withData.length+' kişinin işaretlemelerini Google Sheets'e gönder?'))return;
+  if(!confirm(withData.length+" kişinin işaretlemelerini Google Sheets'e gönder?"))return;
   
   const settingsD = await api('GET','/api/settings');
   const currentGsUrl = settingsD?.gs_url || gsUrl;
-  if(!currentGsUrl){alert('Ayarlar'dan Apps Script URL'si girilmemiş.');return;}
+  if(!currentGsUrl){alert("Ayarlar'dan Apps Script URL'si girilmemiş.");return;}
   
   let done=0, errors=0;
-  setStatus('Sheets'e aktarılıyor...','warn');
+  setStatus("Sheets'e aktarılıyor...",'warn');
   
   for(const c of withData){
     try{
@@ -1502,8 +1500,8 @@ async function syncAllToSheets(){
     }catch(e){ errors++; }
   }
   
-  setStatus('Aktarım tamamlandı','live');
-  alert(done+' kişi Sheets'e aktarıldı!'+(errors?' ('+errors+' hata)':''));
+  setStatus('Aktarim tamamlandi','live');
+  alert(done+" kişi Sheets'e aktarıldı!"+(errors?' ('+errors+' hata)':''));
 }
 
 // ── GOOGLE CONTACTS ───────────────────────────────────────
@@ -1536,7 +1534,7 @@ async function exportOneToGoogle(id){
 
 async function exportAllToGoogle(){
   const total = ucContacts.filter(c=>c.tel).length;
-  if(!confirm(total+' kişiyi Google Kişilere aktar?')) return;
+  if(!confirm(total+" kişiyi Google Kişilere aktar?")) return;
   const contacts = ucContacts.map(c=>({name:c.name||'',tel:c.tel||''})).filter(c=>c.tel);
   let totalAdded=0, totalErrors=0;
   const batchSize=50; // backend batch API halleder
