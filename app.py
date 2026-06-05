@@ -193,7 +193,7 @@ def google_callback():
 @require_auth
 def add_to_google_contacts():
     try:
-        import uuid
+        import uuid, time as _t
         data = request.json
         user_id = request.user['id']
         user_res = sb.table('users').select('google_access_token,google_refresh_token').eq('id', user_id).execute()
@@ -201,7 +201,7 @@ def add_to_google_contacts():
             return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
         access_token = user_res.data[0]['google_access_token']
         refresh_token = user_res.data[0].get('google_refresh_token','')
-        
+
         # Token geçerli mi test et
         test = req_lib.get('https://www.googleapis.com/oauth2/v1/tokeninfo',
             params={'access_token': access_token}, timeout=5)
@@ -219,7 +219,7 @@ def add_to_google_contacts():
                 return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
 
         contacts = data.get('contacts', [])
-        
+
         def normalize_tel(tel):
             t = ''.join(filter(str.isdigit, str(tel)))
             if t.startswith('90') and len(t)==12: return '+'+t
@@ -229,13 +229,13 @@ def add_to_google_contacts():
 
         added = 0
         errors = 0
-
-        # Google Batch API - 50 kişi tek istekte
         batch_size = 50
+
         for i in range(0, len(contacts), batch_size):
             batch = contacts[i:i+batch_size]
             boundary = f'batch_{uuid.uuid4().hex}'
             body_parts = []
+
             for c in batch:
                 name = c.get('name','')
                 tel  = normalize_tel(c.get('tel',''))
@@ -252,13 +252,16 @@ def add_to_google_contacts():
                     f'Content-Type: application/json\r\n\r\n'
                     f'{contact_body}\r\n'
                 )
-            if not body_parts: continue
+
+            if not body_parts:
+                continue
+
             body_parts.append(f'--{boundary}--')
             batch_body = ''.join(body_parts)
 
             try:
                 r = req_lib.post(
-                    'https://www.googleapis.com/batch/people/v1',
+                    'https://people.googleapis.com/batch',
                     data=batch_body.encode('utf-8'),
                     headers={
                         'Authorization': f'Bearer {access_token}',
@@ -266,16 +269,20 @@ def add_to_google_contacts():
                     },
                     timeout=60
                 )
+                app.logger.info(f'Batch response status: {r.status_code}')
+                app.logger.info(f'Batch response (first 500): {r.text[:500]}')
+
                 if r.status_code == 401:
                     return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
-                # Her başarılı yanıt HTTP/1.1 200 ile başlar
-                added += r.text.count('HTTP/1.1 200')
-                errors += r.text.count('HTTP/1.1 4')
+                if r.status_code == 200:
+                    added += r.text.count('"resourceName"')
+                else:
+                    errors += len(batch)
             except Exception as e:
+                app.logger.error(f'Batch error: {e}')
                 errors += len(batch)
-            
-            import time as _t
-            _t.sleep(1)  # Batch arası 1 saniye bekle
+
+            _t.sleep(1)
 
         return jsonify({'ok': True, 'added': added, 'errors': errors})
     except Exception as e:
