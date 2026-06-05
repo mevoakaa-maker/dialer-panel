@@ -362,7 +362,7 @@ def sheets_write():
         headers = {'Authorization': f'Bearer {access_token}'}
         
         # Sayfadaki verileri oku - B sütunu (Tel No)
-        range_name = f"'{sheet_name}'!B:B" if sheet_name else 'B:B'
+        range_name = f"'{sheet_name}'!B3:B" if sheet_name else 'B3:B'  # 3. satırdan başla
         r = req_lib.get(
             f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_name}',
             headers=headers, timeout=15
@@ -379,7 +379,7 @@ def sheets_write():
             if row:
                 row_tel = ''.join(filter(str.isdigit, str(row[0])))
                 if row_tel == clean_tel or row_tel.endswith(clean_tel[-10:]) or clean_tel.endswith(row_tel[-10:]):
-                    row_num = i + 1  # 1-indexed
+                    row_num = i + 3  # B3'ten başladık, offset +3
                     break
         
         if not row_num:
