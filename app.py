@@ -274,12 +274,12 @@ def add_to_google_contacts():
 
                 if r.status_code == 401:
                     return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
-                if r.status_code == 200:
-                    # Başarılı batch - kaç kişi gönderildiyse o kadar eklendi say
-                    added += len(body_parts) - 1  # son --boundary-- hariç
-                elif r.status_code == 429 or 'RESOURCE_EXHAUSTED' in r.text:
-                    # Rate limit - bekle ve tekrar dene
-                    _t.sleep(30)
+                batch_count = len(body_parts) - 1  # son --boundary-- hariç
+                if r.status_code == 200 and 'RESOURCE_EXHAUSTED' not in r.text:
+                    added += batch_count
+                elif 'RESOURCE_EXHAUSTED' in r.text or r.status_code == 429:
+                    # Rate limit - 60sn bekle ve tekrar dene
+                    _t.sleep(60)
                     try:
                         r2 = req_lib.post(
                             'https://people.googleapis.com/batch',
@@ -290,14 +290,14 @@ def add_to_google_contacts():
                             },
                             timeout=60
                         )
-                        if r2.status_code == 200:
-                            added += r2.text.count('"resourceName"')
+                        if r2.status_code == 200 and 'RESOURCE_EXHAUSTED' not in r2.text:
+                            added += batch_count
                         else:
-                            errors += len(batch)
+                            errors += batch_count
                     except:
-                        errors += len(batch)
+                        errors += batch_count
                 else:
-                    errors += len(batch)
+                    errors += batch_count
             except Exception as e:
                 app.logger.error(f'Batch error: {e}')
                 errors += len(batch)
