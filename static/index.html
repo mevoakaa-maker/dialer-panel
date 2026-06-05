@@ -547,6 +547,9 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
 
 <script>
 const API='';
+function googleLogin(){
+  window.location.href='/auth/google/login';
+}
 const LOCAL='http://localhost:8080';
 let token=localStorage.getItem('token')||'';
 let currentUser=null;
@@ -581,9 +584,6 @@ async function api(method,path,data){
 }
 
 // ── AUTH ──────────────────────────────────────────────────
-function googleLogin(){
-  window.location.href='/auth/google/login';
-}
 async function doLogin(){
   const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPass').value;
