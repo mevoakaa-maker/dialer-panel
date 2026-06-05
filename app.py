@@ -205,25 +205,41 @@ def add_to_google_contacts():
         errors = 0
         auth_expired = False
 
+        import time as _time
+        def normalize_tel(tel):
+            t = ''.join(filter(str.isdigit, str(tel)))
+            if t.startswith('90') and len(t)==12: return '+'+t
+            if t.startswith('0') and len(t)==11: return '+9'+t
+            if len(t)==10: return '+90'+t
+            return '+'+t if not t.startswith('+') else tel
+
         def add_one(c):
             name = c.get('name','')
-            tel  = c.get('tel','')
+            tel  = normalize_tel(c.get('tel',''))
             if not tel: return 'skip'
             body = {
                 'names': [{'displayName': name, 'givenName': name}],
                 'phoneNumbers': [{'value': tel, 'type': 'mobile'}]
             }
-            r = req_lib.post(
-                'https://people.googleapis.com/v1/people:createContact',
-                json=body,
-                headers={'Authorization': f'Bearer {access_token}'},
-                timeout=30
-            )
-            if r.status_code == 200: return 'ok'
-            elif r.status_code == 401: return 'auth'
-            else: return 'error'
+            for attempt in range(3):
+                try:
+                    r = req_lib.post(
+                        'https://people.googleapis.com/v1/people:createContact',
+                        json=body,
+                        headers={'Authorization': f'Bearer {access_token}'},
+                        timeout=30
+                    )
+                    if r.status_code == 200: return 'ok'
+                    elif r.status_code == 401: return 'auth'
+                    elif r.status_code == 429:
+                        _time.sleep(2 ** attempt)  # 1s, 2s, 4s
+                        continue
+                    else: return 'error'
+                except Exception:
+                    _time.sleep(1)
+            return 'error'
 
-        with ThreadPoolExecutor(max_workers=10) as ex:
+        with ThreadPoolExecutor(max_workers=3) as ex:
             futures = {ex.submit(add_one, c): c for c in contacts}
             for f in as_completed(futures):
                 res = f.result()
