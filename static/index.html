@@ -333,12 +333,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
         <input type="number" id="cfgDelay" min="0" max="120" value="10" style="width:80px;flex:none">
         <span style="font-size:12px;color:var(--muted);margin-left:6px">saniye</span>
       </div>
-      <div style="border-top:1px solid var(--border);margin:14px 0"></div>
-      <div class="form-row">
-        <label style="min-width:160px">Google Apps Script URL</label>
-        <input type="text" id="gsUrlInput" placeholder="https://script.google.com/macros/s/...">
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin:4px 0 12px 164px">Sonuçlar bu URL'ye otomatik gönderilir.</div>
+
       <button class="btn g" onclick="saveSettings()">💾 Kaydet</button>
       <div style="font-size:12px;font-family:var(--mono);margin-top:8px" id="gsUrlStatus"></div>
     </div>
@@ -402,6 +397,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
       <div class="not-row">
         <input type="text" id="ucNot" placeholder="Not ekle (opsiyonel)...">
         <button class="btn g" id="ucSaveBtn" onclick="saveResult()" style="opacity:.5;pointer-events:none">✓ Kaydet</button>
+    <button class="btn r" id="ucClearBtn" onclick="clearResult()" style="opacity:.5;pointer-events:none">✕ Kaldır</button>
       </div>
     </div>
 
@@ -1092,6 +1088,25 @@ function selSonuc(val,btn){
   btn.classList.add('selected');
   const sb=document.getElementById('ucSaveBtn');
   sb.style.opacity='1';sb.style.pointerEvents='auto';
+  const cb=document.getElementById('ucClearBtn');
+  if(cb){cb.style.opacity='1';cb.style.pointerEvents='auto';}
+}
+
+async function clearResult(){
+  if(!selContact) return;
+  const r = await api('PUT','/api/contacts/'+selContact.id+'/result',{sonuc:null,donus:null,not_text:''});
+  if(r.error){alert(r.error);return;}
+  const idx = ucContacts.findIndex(c=>c.id===selContact.id);
+  if(idx>=0){ucContacts[idx].sonuc=null;ucContacts[idx].donus=null;ucContacts[idx].not_text='';}
+  selSonucVal=null; selDonusVal=null;
+  document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('ucNot').value='';
+  document.getElementById('ucSaveBtn').style.opacity='.5';
+  document.getElementById('ucSaveBtn').style.pointerEvents='none';
+  document.getElementById('ucClearBtn').style.opacity='.5';
+  document.getElementById('ucClearBtn').style.pointerEvents='none';
+  updateSingleRow(selContact.id);
+  updateUcProg();
 }
 
 async function saveResult(){
@@ -1113,16 +1128,20 @@ async function saveResult(){
     ucContacts[idx].not_text=not;
   }
   // Seçili diğer kişilere de uygula
-  if(selectedIds.size>1){
+  if(selectedIds.size>0){
     const others=[...selectedIds].filter(id=>id!==selContact.id);
-    for(const id of others){
-      await api('PUT','/api/contacts/'+id+'/result',payload);
-      const i2=ucContacts.findIndex(c=>c.id===id);
-      if(i2>=0){
-        if(selSonucVal)ucContacts[i2].sonuc=selSonucVal;
-        if(selDonusVal)ucContacts[i2].donus=selDonusVal;
-        ucContacts[i2].not_text=not;
-      }
+    if(others.length>0){
+      const promises=others.map(id=>api('PUT','/api/contacts/'+id+'/result',payload));
+      await Promise.all(promises);
+      others.forEach(id=>{
+        const i2=ucContacts.findIndex(c=>c.id===id);
+        if(i2>=0){
+          if(payload.sonuc)ucContacts[i2].sonuc=payload.sonuc;
+          if(payload.donus)ucContacts[i2].donus=payload.donus;
+          ucContacts[i2].not_text=payload.not_text||'';
+          updateSingleRow(id);
+        }
+      });
     }
   }
   // gsUrl'yi her seferinde settings'ten oku
@@ -1171,6 +1190,8 @@ function selectContact(id){
   // sekme korunuyor
   const sb=document.getElementById('ucSaveBtn');
   sb.style.opacity='1';sb.style.pointerEvents='auto';
+  const cb=document.getElementById('ucClearBtn');
+  if(cb){cb.style.opacity='1';cb.style.pointerEvents='auto';}
   clearInterval(timerIv);timerSec=0;
   document.getElementById('ctimer').style.color='var(--green)';
   timerIv=setInterval(()=>{
