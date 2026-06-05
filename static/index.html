@@ -981,7 +981,7 @@ function selectContact(id){
   document.getElementById('ucNot').value=selContact.not_text||'';
   selSonucVal=selContact.sonuc||null;
   selDonusVal=selContact.donus||null;
-  activeTab='sonuc'; switchTab('sonuc');
+  // sekme korunuyor
   const sb=document.getElementById('ucSaveBtn');
   sb.style.opacity='1';sb.style.pointerEvents='auto';
   clearInterval(timerIv);timerSec=0;
