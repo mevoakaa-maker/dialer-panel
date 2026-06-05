@@ -277,17 +277,31 @@ def add_to_google_contacts():
                 if r.status_code == 200:
                     added += r.text.count('"resourceName"')
                 elif r.status_code == 429 or 'RESOURCE_EXHAUSTED' in r.text:
-                    # Rate limit - bekle ve devam et
-                    import time as _t2
-                    _t2.sleep(5)
-                    errors += len(batch)
+                    # Rate limit - bekle ve tekrar dene
+                    _t.sleep(30)
+                    try:
+                        r2 = req_lib.post(
+                            'https://people.googleapis.com/batch',
+                            data=batch_body.encode('utf-8'),
+                            headers={
+                                'Authorization': f'Bearer {access_token}',
+                                'Content-Type': f'multipart/mixed; boundary={boundary}'
+                            },
+                            timeout=60
+                        )
+                        if r2.status_code == 200:
+                            added += r2.text.count('"resourceName"')
+                        else:
+                            errors += len(batch)
+                    except:
+                        errors += len(batch)
                 else:
                     errors += len(batch)
             except Exception as e:
                 app.logger.error(f'Batch error: {e}')
                 errors += len(batch)
 
-            _t.sleep(15)
+            _t.sleep(20)
 
         return jsonify({'ok': True, 'added': added, 'errors': errors, 'total_sent': len(contacts)})
     except Exception as e:
