@@ -172,8 +172,7 @@ def google_callback():
     email = userinfo.get('email','').lower()
     name  = userinfo.get('name','')
     if not email:
-        # Debug - userinfo içeriğini göster
-        return f'<pre>userinfo: {userinfo}<br>token_response: {tokens}</pre>'
+        return redirect('/?error=no_email')
     # Sistemde bu email var mı?
     user_res = sb.table('users').select('*').eq('email', email).execute()
     if not user_res.data:
@@ -187,7 +186,16 @@ def google_callback():
     }).eq('id', user['id']).execute()
     # JWT token oluştur
     jwt_token = make_token(user)
-    return redirect(f'/?token={jwt_token}')
+    # Redirect yerine HTML döndür - token URL problemi yaşanmasın
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<script>
+try{{
+  localStorage.setItem('token','{jwt_token}');
+}}catch(e){{}}
+window.location.replace('/');
+</script>
+</head><body>Yönlendiriliyor...</body></html>"""
 
 @app.route('/api/google/contacts/add', methods=['POST'])
 @require_auth
