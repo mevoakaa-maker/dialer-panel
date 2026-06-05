@@ -339,7 +339,7 @@ def sheets_send():
             if settings_res.data: gs_url = settings_res.data[0].get('gs_url','')
         if not gs_url:
             return jsonify({'error': 'Google Sheets URL ayarlanmamış'}), 400
-        resp = req_lib.post(gs_url, json=data, timeout=10)
+        resp = req_lib.post(gs_url, json=data, timeout=10, allow_redirects=True)
         return jsonify({'ok': True, 'response': resp.text})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
