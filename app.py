@@ -172,8 +172,8 @@ def google_callback():
     email = userinfo.get('email','').lower()
     name  = userinfo.get('name','')
     if not email:
-        app.logger.error(f'No email - userinfo: {userinfo} - access_token len: {len(access_token)}')
-        return redirect('/?error=no_email')
+        # Debug - userinfo içeriğini göster
+        return f'<pre>userinfo: {userinfo}<br>token_response: {tokens}</pre>'
     # Sistemde bu email var mı?
     user_res = sb.table('users').select('*').eq('email', email).execute()
     if not user_res.data:
