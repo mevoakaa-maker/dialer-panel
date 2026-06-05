@@ -1,4 +1,6 @@
 import os, json, bcrypt, jwt, base64, io, math
+from urllib.parse import urlencode
+import requests as req_lib
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -12,6 +14,10 @@ SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
 JWT_SECRET   = os.environ.get('JWT_SECRET', 'dialer-secret-2024')
 
 sb = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+GOOGLE_CLIENT_ID     = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+GOOGLE_REDIRECT_URI  = 'https://pasadialer.site/auth/google/callback'
 
 # ── AUTH ──────────────────────────────────────────────────
 def make_token(user):
@@ -112,6 +118,110 @@ def parse_xlsx():
                 'count': len(rows)
             }
         return jsonify({'sheets': valid, 'data': sheets_info})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ── GOOGLE LOGIN ─────────────────────────────────────────
+@app.route('/auth/google/login')
+def google_login():
+    params = {
+        'client_id': GOOGLE_CLIENT_ID,
+        'redirect_uri': GOOGLE_REDIRECT_URI,
+        'response_type': 'code',
+        'scope': 'openid email profile https://www.googleapis.com/auth/contacts',
+        'access_type': 'offline',
+        'prompt': 'consent',
+    }
+    from flask import redirect
+    return redirect('https://accounts.google.com/o/oauth2/v2/auth?' + urlencode(params))
+
+# ── GOOGLE OAUTH ─────────────────────────────────────────
+@app.route('/auth/google')
+@require_auth
+def google_auth():
+    params = {
+        'client_id': GOOGLE_CLIENT_ID,
+        'redirect_uri': GOOGLE_REDIRECT_URI,
+        'response_type': 'code',
+        'scope': 'https://www.googleapis.com/auth/contacts',
+        'access_type': 'offline',
+        'prompt': 'consent',
+        'state': request.headers.get('Authorization','').replace('Bearer ','')
+    }
+    return jsonify({'url': 'https://accounts.google.com/o/oauth2/v2/auth?' + urlencode(params)})
+
+@app.route('/auth/google/callback')
+def google_callback():
+    code = request.args.get('code')
+    if not code:
+        return redirect('/?error=no_code')
+    # Token al
+    token_res = req_lib.post('https://oauth2.googleapis.com/token', data={
+        'code': code,
+        'client_id': GOOGLE_CLIENT_ID,
+        'client_secret': GOOGLE_CLIENT_SECRET,
+        'redirect_uri': GOOGLE_REDIRECT_URI,
+        'grant_type': 'authorization_code'
+    })
+    tokens = token_res.json()
+    access_token  = tokens.get('access_token','')
+    refresh_token = tokens.get('refresh_token','')
+    # Kullanıcı bilgisini al
+    userinfo = req_lib.get('https://www.googleapis.com/oauth2/v2/userinfo',
+        headers={'Authorization': f'Bearer {access_token}'}).json()
+    email = userinfo.get('email','').lower()
+    name  = userinfo.get('name','')
+    if not email:
+        return redirect('/?error=no_email')
+    # Sistemde bu email var mı?
+    user_res = sb.table('users').select('*').eq('email', email).execute()
+    if not user_res.data:
+        return redirect('/?error=not_found')
+    user = user_res.data[0]
+    # Google tokenları kaydet
+    sb.table('users').update({
+        'google_access_token': access_token,
+        'google_refresh_token': refresh_token,
+        'name': name or user.get('name', '')
+    }).eq('id', user['id']).execute()
+    # JWT token oluştur
+    jwt_token = make_token(user)
+    from flask import redirect as redir
+    return redir(f'/?token={jwt_token}')
+
+@app.route('/api/google/contacts/add', methods=['POST'])
+@require_auth
+def add_to_google_contacts():
+    try:
+        data = request.json
+        user_id = request.user['id']
+        user_res = sb.table('users').select('google_access_token').eq('id', user_id).execute()
+        if not user_res.data or not user_res.data[0].get('google_access_token'):
+            return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
+        access_token = user_res.data[0]['google_access_token']
+        contacts = data.get('contacts', [])
+        added = 0
+        errors = 0
+        for c in contacts:
+            name = c.get('name','')
+            tel  = c.get('tel','')
+            if not tel: continue
+            body = {
+                'names': [{'displayName': name, 'givenName': name}],
+                'phoneNumbers': [{'value': tel, 'type': 'mobile'}]
+            }
+            r = req_lib.post(
+                'https://people.googleapis.com/v1/people:createContact',
+                json=body,
+                headers={'Authorization': f'Bearer {access_token}'}
+            )
+            if r.status_code == 200:
+                added += 1
+            elif r.status_code == 401:
+                return jsonify({'error': 'Token süresi doldu', 'needs_auth': True}), 401
+            else:
+                errors += 1
+        return jsonify({'ok': True, 'added': added, 'errors': errors})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
