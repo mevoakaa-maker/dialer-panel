@@ -324,8 +324,7 @@ def settings():
         res = sb.table('settings').select('*').limit(1).execute()
         if res.data: return jsonify(res.data[0])
         return jsonify({'timeout_sec': 25, 'delay_between_calls': 10, 'gs_url': ''})
-    if request.user['role'] != 'admin':
-        return jsonify({'error':'Yetkisiz'}), 403
+    # timeout ve delay herkes değiştirebilir, gs_url sadece admin
     data = request.json
     existing = sb.table('settings').select('id').limit(1).execute()
     if existing.data:
