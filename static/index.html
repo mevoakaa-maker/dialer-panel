@@ -1232,10 +1232,19 @@ async function exportAllToGoogle(){
   const total = ucContacts.filter(c=>c.tel).length;
   if(!confirm(total+' kişiyi Google Kişilere aktar?')) return;
   const contacts = ucContacts.map(c=>({name:c.name||'',tel:c.tel||''})).filter(c=>c.tel);
-  const r = await api('POST','/api/google/contacts/add',{contacts});
-  if(r.ok) alert(r.added+' kişi Google Kişilere eklendi!'+(r.errors?' ('+r.errors+' hata)':''));
-  else if(r.needs_auth) alert('Google bağlantısı gerekli');
-  else alert('Hata: '+r.error);
+  let totalAdded=0, totalErrors=0;
+  const batchSize=10;
+  for(let i=0; i<contacts.length; i+=batchSize){
+    const batch=contacts.slice(i,i+batchSize);
+    setStatus(`Google Kişiler: ${i}/${contacts.length} ekleniyor...`,'warn');
+    const r=await api('POST','/api/google/contacts/add',{contacts:batch});
+    if(r.needs_auth){alert('Google bağlantısı gerekli');return;}
+    if(r.error){alert('Hata: '+r.error);return;}
+    totalAdded+=r.added||0;
+    totalErrors+=r.errors||0;
+  }
+  setStatus('Bağlı','live');
+  alert(totalAdded+' kişi Google Kişilere eklendi!'+(totalErrors?' ('+totalErrors+' hata)':''));
 }
 </script>
 </body>
