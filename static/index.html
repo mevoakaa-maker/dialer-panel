@@ -1273,7 +1273,11 @@ function toggleSelectAll(cb){
 }
 
 function selectAll2(){
-  selectedIds = new Set(ucContacts.map(c=>c.id));
+  if(selectedIds.size===ucContacts.length){
+    selectedIds = new Set();
+  } else {
+    selectedIds = new Set(ucContacts.map(c=>c.id));
+  }
   renderUcTable();
   updateBulkToolbar();
 }
