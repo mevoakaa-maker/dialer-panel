@@ -387,6 +387,8 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
       <input type="text" id="ucSearch" placeholder="İsim veya numara ara..." oninput="renderUcTable()" style="flex:1;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:13px">
       <button class="btn" onclick="toggleHide()" id="hideBtn">✕ Bitti olanları gizle</button>
       <button class="btn b" onclick="exportAllToGoogle()" title="Tüm listeyi Google Kişilere aktar">📇 Tümünü Aktar</button>
+      <button class="btn" style="font-size:11px;border-color:#0f766e;color:#5eead4;background:#042f2e" onclick="syncAllToSheets()" title="Tüm işaretlemeleri Google Sheets'e gönder">📊 Sheets'e Aktar</button>
+      <button class="btn" style="font-size:11px" onclick="downloadMarked()" title="İşaretlenmiş kişileri CSV indir">⬇ İşaretlileri İndir</button>
       <div style="width:1px;height:16px;background:var(--border2)"></div>
       <div style="position:relative;display:inline-block">
         <button class="btn" style="font-size:11px" onclick="toggleFilterMenu(this)">☑ Filtrelenenleri Seç ▾</button>
@@ -516,6 +518,10 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     <div class="form-row"><label>Apps Script URL</label>
       <input type="text" id="nlGsUrl" placeholder="https://script.google.com/... (opsiyonel)">
     </div>
+    <div class="form-row"><label>Sheets ID</label>
+      <input type="text" id="nlSpreadsheetId" placeholder="Google Sheets ID (opsiyonel)">
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin:-4px 0 8px 88px">Sheets URL'sindeki /d/BURASI/edit kısmı</div>
   </div>
   <div class="mactions">
     <button class="btn" onclick="closeModal('addListModal');resetXlsx()">İptal</button>
@@ -811,10 +817,20 @@ async function loadLists(){
     <td style="font-family:var(--mono);font-size:12px">—</td>
     <td style="display:flex;gap:4px">
       <button class="btn b" style="font-size:11px" onclick="openAssign('${l.id}')">👤 Ata</button>
-        <button class="btn" style="font-size:11px" onclick="editGsUrl('${l.id}','${esc(l.gs_url||'')}')">🔗 URL</button>
+        <button class="btn" style="font-size:11px" onclick="editGsUrl('${l.id}','${esc(l.gs_url||'')}')">🔗 Script</button>
+        <button class="btn" style="font-size:11px;border-color:#0f766e;color:#5eead4;background:#042f2e" onclick="editSpreadsheetId('${l.id}','${esc(l.spreadsheet_id||'')}')">📊 Sheets</button>
         <button class="btn r" style="font-size:11px" onclick="deleteList('${l.id}')">Sil</button>
     </td></tr>`).join('');
 }
+async function editSpreadsheetId(lid, current){
+  const id = prompt('Google Sheets ID girin:
+(URL'deki /d/BURASI/edit kısmı)', current||'');
+  if(id === null) return;
+  await api('PUT','/api/lists/'+lid+'/spreadsheetid',{spreadsheet_id: id});
+  loadLists();
+  setStatus('Sheets ID güncellendi','live');
+}
+
 async function editGsUrl(lid, current){
   const url = prompt('Apps Script URL girin:', current||'');
   if(url === null) return;
@@ -869,7 +885,8 @@ async function addList(){
   if(!name)return alert('Data adı zorunlu');
   if(!xlsxSelSheet||!xlsxData[xlsxSelSheet])return alert('Sayfa seçin');
   const gsUrl=document.getElementById('nlGsUrl').value.trim();
-  const lst=await api('POST','/api/lists',{name,sheet:xlsxSelSheet,assigned_to:uid||null,gs_url:gsUrl});
+  const spreadsheetId=document.getElementById('nlSpreadsheetId').value.trim();
+  const lst=await api('POST','/api/lists',{name,sheet:xlsxSelSheet,assigned_to:uid||null,gs_url:gsUrl,spreadsheet_id:spreadsheetId});
   if(lst.id) await uploadContacts(lst.id,xlsxData[xlsxSelSheet]);
   closeModal('addListModal');resetXlsx();loadLists();loadDashboard();
 }
@@ -1019,22 +1036,24 @@ async function saveResult(){
   const settingsD = await api('GET','/api/settings');
   const currentGsUrl = settingsD?.gs_url || gsUrl;
   if(currentGsUrl) sendToSheets(selContact, selSonucVal, selDonusVal, not, currentGsUrl);
-  const saved=selContact;
-  selSonucVal=null;selDonusVal=null;
-  // activeTab korunuyor - sekme değişmiyor
-  // Aktif aranan kişiyi tekrar seç
-  const activeNum=document.getElementById('cnum').textContent;
-  if(activeNum&&activeNum!=='—'){
-    setTimeout(()=>autoSelectActiveContact(activeNum),100);
-  } else {
-    selContact=null;
-  }
-  document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
-  document.getElementById('ucNot').value='';
+  const savedContact = {...selContact};
+  // selContact'ı sıfırlama — aynı kişi seçili kalsın
+  selSonucVal=null; selDonusVal=null;
+  // Mevcut değerleri güncelle (kayıt sonrası)
+  selContact = ucContacts.find(c=>c.id===savedContact.id) || savedContact;
+  selContact._autoSelected = savedContact._autoSelected;
+  // Not alanını temizleme - kalıcı kalsın
+  // Sadece buton durumunu güncelle
   document.getElementById('ucSaveBtn').style.opacity='.5';
   document.getElementById('ucSaveBtn').style.pointerEvents='none';
-  document.getElementById('sonucLbl').textContent='Arama Sonucu';
-    updateSingleRow(saved?.id);
+  document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
+  // Mevcut sonucu göster
+  if(selContact.sonuc){
+    document.querySelectorAll('.sbtn').forEach(b=>{
+      if(b.textContent.trim()===selContact.sonuc) b.classList.add('selected');
+    });
+  }
+  updateSingleRow(savedContact.id);
   updateUcProg();
 }
 
@@ -1219,16 +1238,28 @@ async function saveLocalSettings(){
 
 async function sendToSheets(contact,sonuc,donus,not_text,url){
   try{
-    // Railway proxy üzerinden gönder (CORS sorunu olmaz)
-    await api('POST','/api/sheets/send',{
-      tel: contact.tel||'',
-      isim: contact.name||'',
-      sonuc: sonuc||'',
-      donus: donus||'',
-      not: not_text||'',
-      sheet: ucCurrentList?.sheet||'',
-      list_id: ucCurrentList?.id||''
-    });
+    // Sheets ID varsa direkt Sheets API kullan
+    if(ucCurrentList?.spreadsheet_id){
+      await api('POST','/api/sheets/write',{
+        spreadsheet_id: ucCurrentList.spreadsheet_id,
+        sheet: ucCurrentList.sheet||'',
+        tel: contact.tel||'',
+        sonuc: sonuc||'',
+        donus: donus||'',
+        not: not_text||''
+      });
+    } else if(ucCurrentList?.gs_url || url){
+      // Apps Script fallback
+      await api('POST','/api/sheets/send',{
+        tel: contact.tel||'',
+        isim: contact.name||'',
+        sonuc: sonuc||'',
+        donus: donus||'',
+        not: not_text||'',
+        sheet: ucCurrentList?.sheet||'',
+        list_id: ucCurrentList?.id||''
+      });
+    }
   }catch(e){ console.log('sheets error',e); }
 }
 
@@ -1419,6 +1450,59 @@ async function bulkMark(sonuc){
   renderUcTable();
   updateUcProg();
   setStatus(done+' kişi işaretlendi','live');
+}
+
+// ── DOWNLOAD MARKED ──────────────────────────────────────
+function downloadMarked(){
+  const marked = ucContacts.filter(c=>c.sonuc||c.donus||c.not_text);
+  if(!marked.length){alert('İşaretlenmiş kişi yok.');return;}
+  const header='İsim Soyisim,Tel No,Sonuç,Dönüş,NOTLAR';
+  const rows=marked.map(c=>[
+    '"'+(c.name||'').replace(/"/g,'""')+'"',
+    '"'+(c.tel||'')+'"',
+    '"'+(c.sonuc||'')+'"',
+    '"'+(c.donus||'')+'"',
+    '"'+(c.not_text||'').replace(/"/g,'""')+'"'
+  ].join(','));
+  const csv='﻿'+header+'
+'+rows.join('
+');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=(ucCurrentList?.name||'data')+'_isaretliler.csv';
+  a.click();
+}
+
+// ── SYNC TO SHEETS ───────────────────────────────────────
+async function syncAllToSheets(){
+  const withData = ucContacts.filter(c=>c.sonuc||c.donus||c.not_text);
+  if(!withData.length){alert('İşaretlenmiş kişi yok.');return;}
+  if(!confirm(withData.length+' kişinin işaretlemelerini Google Sheets'e gönder?'))return;
+  
+  const settingsD = await api('GET','/api/settings');
+  const currentGsUrl = settingsD?.gs_url || gsUrl;
+  if(!currentGsUrl){alert('Ayarlar'dan Apps Script URL'si girilmemiş.');return;}
+  
+  let done=0, errors=0;
+  setStatus('Sheets'e aktarılıyor...','warn');
+  
+  for(const c of withData){
+    try{
+      await api('POST','/api/sheets/send',{
+        tel: c.tel||'',
+        isim: c.name||'',
+        sonuc: c.sonuc||'',
+        donus: c.donus||'',
+        not: c.not_text||'',
+        sheet: ucCurrentList?.sheet||'',
+        list_id: ucCurrentList?.id||''
+      });
+      done++;
+    }catch(e){ errors++; }
+  }
+  
+  setStatus('Aktarım tamamlandı','live');
+  alert(done+' kişi Sheets'e aktarıldı!'+(errors?' ('+errors+' hata)':''));
 }
 
 // ── GOOGLE CONTACTS ───────────────────────────────────────
