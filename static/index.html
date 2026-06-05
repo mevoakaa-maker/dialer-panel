@@ -332,6 +332,13 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
         <div class="cnum" id="cnum">—</div>
         <div class="cextra" id="cextra"></div>
       </div>
+      <div id="googleProgress" style="display:none;flex-direction:column;gap:2px">
+        <div style="font-size:11px;font-family:var(--mono);color:#93c5fd">📇 Google Kişiler</div>
+        <div style="font-size:18px;font-weight:600;font-family:var(--mono);color:var(--green)" id="googleProgressTxt">0/0</div>
+        <div style="height:3px;background:var(--surface2);border-radius:2px;width:120px">
+          <div id="googleProgressBar" style="height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .3s"></div>
+        </div>
+      </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
         <div class="ctimer" id="ctimer" style="color:var(--muted)">—</div>
       </div>
@@ -380,6 +387,10 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
       <input type="text" id="ucSearch" placeholder="İsim veya numara ara..." oninput="renderUcTable()" style="flex:1;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:13px">
       <button class="btn" onclick="toggleHide()" id="hideBtn">✕ Bitti olanları gizle</button>
       <button class="btn b" onclick="exportAllToGoogle()" title="Tüm listeyi Google Kişilere aktar">📇 Tümünü Aktar</button>
+      <div style="width:1px;height:16px;background:var(--border2)"></div>
+      <button class="btn" style="font-size:11px" onclick="selectFiltered()">☑ Filtrelenenleri Seç</button>
+      <button class="btn" style="font-size:11px" onclick="selectEmpty()">☑ Boşları Seç</button>
+      <button class="btn" style="font-size:11px" onclick="selectAll2()">☑ Tümünü Seç</button>
     </div>
 
     <!-- PROGRESS -->
@@ -392,8 +403,27 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
 
     <!-- TABLO -->
     <div class="tbl-wrap">
+      <!-- TOPLU İŞLEM TOOLBAR -->
+      <div id="bulkToolbar" style="display:none;align-items:center;gap:6px;padding:6px 16px;background:#0c1a2e;border-bottom:1px solid var(--border);flex-shrink:0">
+        <span id="bulkCount" style="font-size:12px;font-family:var(--mono);color:#93c5fd">0 seçili</span>
+        <div class="sonuc-grid" style="margin:0;gap:4px" id="bulkSonucGrid">
+          <button class="sbtn ilgilenmiyor" onclick="bulkMark('İlgilenmiyor')">İlgilenmiyor</button>
+          <button class="sbtn link" onclick="bulkMark('Link Atıldı')">Link Atıldı</button>
+          <button class="sbtn cevapsiz" onclick="bulkMark('Cevapsız')">Cevapsız</button>
+          <button class="sbtn mesgul" onclick="bulkMark('Meşgul')">Meşgul</button>
+          <button class="sbtn ulasilamiyor" onclick="bulkMark('Ulaşılamıyor')">Ulaşılamıyor</button>
+          <button class="sbtn sonra" onclick="bulkMark('Sonra Aranacak')">Sonra Aranacak</button>
+          <button class="sbtn servis" onclick="bulkMark('Servis Dışı')">Servis Dışı</button>
+          <button class="sbtn gorisme" onclick="bulkMark('Görüşmeyi Sonlandırdı')">Görüşmeyi Sonlandırdı</button>
+          <button class="sbtn uyeoldu" onclick="bulkMark('Üye Oldu')">Üye Oldu</button>
+          <button class="sbtn mevcutaktif" onclick="bulkMark('Mevcut Üye Aktif')">Mevcut Üye Aktif</button>
+          <button class="sbtn mevcutedildi" onclick="bulkMark('Mevcut Üye Aktif Edildi')">Mevcut Üye Aktif Edildi</button>
+          <button class="sbtn numara" onclick="bulkMark('Numara Başkasına ait')">Numara Başkasına ait</button>
+        </div>
+        <button class="btn r" style="font-size:11px;margin-left:auto" onclick="clearSelection()">✕ İptal</button>
+      </div>
       <table class="tbl" style="width:100%">
-        <thead id="ucHead"><tr><th style="width:36px">#</th><th>İsim</th><th>Tel</th><th>Sonuç</th><th>Dönüş</th></tr></thead>
+        <thead id="ucHead"><tr><th style="width:28px"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)" style="cursor:pointer"></th><th style="width:36px">#</th><th>İsim</th><th>Tel</th><th>Sonuç</th><th>Dönüş</th></tr></thead>
         <tbody id="ucTbody"></tbody>
       </table>
     </div>
@@ -1036,6 +1066,7 @@ function renderUcTable(){
     const jumpBtn = `<button onclick="event.stopPropagation();jumpToContact(${ri})" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer" title="Bu kişiden başlat">→</button>`;
     const googleBtn = `<button onclick="event.stopPropagation();exportOneToGoogle('${c.id}')" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid #1d3a6e;background:#0c1a2e;color:#93c5fd;cursor:pointer" title="Google Kişilere Ekle">📇</button>`;
     return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isActive?'active-row'+(isSel?' sel-row':''):isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}">
+      <td style="width:28px" onclick="event.stopPropagation()"><input type="checkbox" class="row-cb" data-id="${c.id}" onchange="onCbChange()" style="cursor:pointer" ${selectedIds.has(c.id)?'checked':''}></td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
       <td>${esc(c.name||'—')}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(c.tel||'')}</td>
@@ -1090,6 +1121,21 @@ async function saveSettings(){
   el.style.color=r.ok?'var(--green)':'var(--red)';
   el.textContent=r.ok?'✓ Kaydedildi':'Hata: '+(r.error||'');
   setTimeout(()=>el.textContent='',3000);
+  // Local nextcall.bat güncelle
+  if(localOnline){
+    try{
+      const rb=await fetch(LOCAL+'/api/file?name=nextcall.bat');
+      if(rb.ok){
+        const d=await rb.json();
+        if(d.exists){
+          let c=d.content;
+          c=c.replace(/set "TIMEOUTSEC=\d+"/,`set "TIMEOUTSEC=${timeout}"`);
+          c=c.replace(/(if exist "%STARTFLAG%" \([\s\S]*?timeout \/t )\d+( \/nobreak >nul)/,`$1${delay}$2`);
+          await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.bat',content:c})});
+        }
+      }
+    }catch(e){}
+  }
 }
 
 function loadLocalSettings(){
@@ -1200,6 +1246,80 @@ async function loadAdminLists(){
   if(lists.length>0) loadUcList(lists[0], wrap.querySelector('.nav-btn'));
 }
 
+// ── BULK SELECTION ───────────────────────────────────────
+let selectedIds = new Set();
+
+function onCbChange(){
+  selectedIds = new Set();
+  document.querySelectorAll('.row-cb:checked').forEach(cb=>selectedIds.add(cb.dataset.id));
+  updateBulkToolbar();
+}
+
+function updateBulkToolbar(){
+  const toolbar = document.getElementById('bulkToolbar');
+  const count = document.getElementById('bulkCount');
+  if(selectedIds.size>0){
+    toolbar.style.display='flex';
+    count.textContent = selectedIds.size+' seçili';
+  } else {
+    toolbar.style.display='none';
+  }
+}
+
+function toggleSelectAll(cb){
+  const rows = document.querySelectorAll('.row-cb');
+  rows.forEach(r=>{ r.checked=cb.checked; if(cb.checked) selectedIds.add(r.dataset.id); else selectedIds.delete(r.dataset.id); });
+  updateBulkToolbar();
+}
+
+function selectAll2(){
+  selectedIds = new Set(ucContacts.map(c=>c.id));
+  renderUcTable();
+  updateBulkToolbar();
+}
+
+function selectFiltered(){
+  const q = document.getElementById('ucSearch').value.toLowerCase();
+  const filtered = ucContacts.filter(c=>{
+    if(ucHide&&c.sonuc) return false;
+    return !q||(c.name||'').toLowerCase().includes(q)||(c.tel||'').includes(q);
+  });
+  selectedIds = new Set(filtered.map(c=>c.id));
+  renderUcTable();
+  updateBulkToolbar();
+}
+
+function selectEmpty(){
+  selectedIds = new Set(ucContacts.filter(c=>!c.sonuc).map(c=>c.id));
+  renderUcTable();
+  updateBulkToolbar();
+}
+
+function clearSelection(){
+  selectedIds = new Set();
+  renderUcTable();
+  updateBulkToolbar();
+  const sa = document.getElementById('selectAll');
+  if(sa) sa.checked=false;
+}
+
+async function bulkMark(sonuc){
+  if(!selectedIds.size) return;
+  if(!confirm(selectedIds.size+' kişiye "'+sonuc+'" işaretlensin?')) return;
+  const ids = [...selectedIds];
+  let done=0;
+  for(const id of ids){
+    await api('PUT','/api/contacts/'+id+'/result',{sonuc});
+    const idx = ucContacts.findIndex(c=>c.id===id);
+    if(idx>=0) ucContacts[idx].sonuc=sonuc;
+    done++;
+  }
+  clearSelection();
+  renderUcTable();
+  updateUcProg();
+  setStatus(done+' kişi işaretlendi','live');
+}
+
 // ── GOOGLE CONTACTS ───────────────────────────────────────
 async function exportToGoogle(contacts){
   if(!contacts.length){alert('Aktarılacak kişi yok.');return;}
@@ -1234,16 +1354,25 @@ async function exportAllToGoogle(){
   const contacts = ucContacts.map(c=>({name:c.name||'',tel:c.tel||''})).filter(c=>c.tel);
   let totalAdded=0, totalErrors=0;
   const batchSize=10;
+  // Progress göster
+  const gpEl=document.getElementById('googleProgress');
+  const gpTxt=document.getElementById('googleProgressTxt');
+  const gpBar=document.getElementById('googleProgressBar');
+  gpEl.style.display='flex';
   for(let i=0; i<contacts.length; i+=batchSize){
     const batch=contacts.slice(i,i+batchSize);
-    setStatus(`Google Kişiler: ${i}/${contacts.length} ekleniyor...`,'warn');
+    const pct=Math.round(i/contacts.length*100);
+    gpTxt.textContent=(i)+'/'+contacts.length;
+    gpBar.style.width=pct+'%';
     const r=await api('POST','/api/google/contacts/add',{contacts:batch});
-    if(r.needs_auth){alert('Google bağlantısı gerekli');return;}
-    if(r.error){alert('Hata: '+r.error);return;}
+    if(r.needs_auth){gpEl.style.display='none';alert('Google bağlantısı gerekli');return;}
+    if(r.error){gpEl.style.display='none';alert('Hata: '+r.error);return;}
     totalAdded+=r.added||0;
     totalErrors+=r.errors||0;
   }
-  setStatus('Bağlı','live');
+  gpTxt.textContent=contacts.length+'/'+contacts.length;
+  gpBar.style.width='100%';
+  setTimeout(()=>gpEl.style.display='none',2000);
   alert(totalAdded+' kişi Google Kişilere eklendi!'+(totalErrors?' ('+totalErrors+' hata)':''));
 }
 </script>
