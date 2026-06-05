@@ -807,7 +807,10 @@ async function uploadContacts(lid,sheetData){
   const rows=sheetData.rows.map((r,i)=>{
     const extra={};
     sheetData.columns.forEach(c=>{if(!['İsim Soyisim','Tel No','Sonuç','Dönüş','NOTLAR'].includes(c))extra[c]=r[c];});
-    return {name:r['İsim Soyisim']||r['Kullanıcı Adı']||'',tel:r['Tel No']||'',extra,row_index:i+1,sonuc:r['Sonuç']||r['SONUÇ']||null,donus:r['Dönüş']||r['DÖNÜŞ']||null,not_text:r['NOTLAR']||null};
+    const sonucVal = r['Sonuç']||null; // Sadece kucuk Sonuç - Data Raporu SONUÇ degil
+    const donusVal = r['Dönüş']||null;
+    const notVal = r['NOTLAR']||null;
+    return {name:r['İsim Soyisim']||r['Kullanıcı Adı']||'',tel:r['Tel No']||'',extra,row_index:i+1,sonuc:sonucVal,donus:donusVal,not_text:notVal};
   }).filter(r=>r.tel);
   // 200'lük batch'lere böl
   const batchSize = 100;
