@@ -1034,7 +1034,8 @@ async function saveResult(){
   document.getElementById('ucSaveBtn').style.opacity='.5';
   document.getElementById('ucSaveBtn').style.pointerEvents='none';
   document.getElementById('sonucLbl').textContent='Arama Sonucu';
-  renderUcTable();updateUcProg();
+    updateSingleRow(saved?.id);
+  updateUcProg();
 }
 
 function selectContact(id){
@@ -1069,6 +1070,20 @@ function selectContact(id){
 }
 
 // ── TABLE ─────────────────────────────────────────────────
+function updateSingleRow(id){
+  const c=ucContacts.find(x=>x.id===id);
+  if(!c)return;
+  const row=document.getElementById('uc-'+id);
+  if(!row)return;
+  const bcls={'İlgilenmiyor':'bs-ilgilenmiyor','Link Atıldı':'bs-link','Cevapsız':'bs-cevapsiz','Meşgul':'bs-mesgul','Ulaşılamıyor':'bs-ulasilamiyor','Sonra Aranacak':'bs-sonra','Servis Dışı':'bs-servis','Görüşmeyi Sonlandırdı':'bs-gorisme','Üye Oldu':'bs-uyeoldu','Üye oldu':'bs-uyeoldu','Mevcut Üye Aktif':'bs-mevcutaktif','Mevcut Üye Aktif Edildi':'bs-mevcutedildi','Numara Başkasına ait':'bs-numara'};
+  const st=c.sonuc?`<span class="badge ${bcls[c.sonuc]||'badge-sonuc'}">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
+  const dt=c.donus?`<span class="badge ${bcls[c.donus]||'badge-sonuc'}">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
+  const tds=row.querySelectorAll('td');
+  if(tds[4])tds[4].innerHTML=st;
+  if(tds[5])tds[5].innerHTML=dt;
+  if(!row.classList.contains('active-row'))row.className=c.sonuc?'done':'';
+}
+
 function renderUcTable(){
   const q=document.getElementById('ucSearch').value.toLowerCase();
   const rows=ucContacts.filter(c=>{
