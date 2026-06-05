@@ -1036,7 +1036,8 @@ async function saveResult(){
   // gsUrl'yi her seferinde settings'ten oku
   const settingsD = await api('GET','/api/settings');
   const currentGsUrl = settingsD?.gs_url || gsUrl;
-  if(currentGsUrl) sendToSheets(selContact, selSonucVal, selDonusVal, not, currentGsUrl);
+  // Sheets ID veya gs_url varsa gönder
+  if(currentGsUrl || ucCurrentList?.spreadsheet_id) sendToSheets(selContact, selSonucVal, selDonusVal, not, currentGsUrl);
   const savedContact = {...selContact};
   // selContact'ı sıfırlama — aynı kişi seçili kalsın
   selSonucVal=null; selDonusVal=null;
