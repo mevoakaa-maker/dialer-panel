@@ -142,8 +142,8 @@ tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:
 tbody tr:hover{background:var(--surface2)}
 tbody tr.done{opacity:.45}
 tbody tr.current-row{background:#0c1a2e}
-tbody tr.sel-row{background:#0a2a0a;outline:1px solid var(--green)}
-tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:pulse-row 1.5s infinite}
+tbody tr.sel-row{background:#1e2530;outline:1px solid #363a44}
+tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green);animation:pulse-row 1.5s infinite}
 @keyframes pulse-row{0%,100%{background:#052e16}50%{background:#0a4a1a}}
 
 /* MODAL */
@@ -591,6 +591,11 @@ async function pollLocal(){
             const lines=d.content.trim().split('\n');
             const name=(lines[0]||'').trim();
             const num=(lines[1]||'').trim();
+            // Her poll'da aktif kişiyi güncelle
+            document.getElementById('cname').textContent=name;
+            document.getElementById('cnum').textContent=num;
+            document.getElementById('cavatar').textContent=initials(name);
+            // Numara değişince timer sıfırla ve highlight yap
             if(num&&num!==lastLocalNum){
               lastLocalName=name;
               lastLocalNum=num;
@@ -601,17 +606,14 @@ async function pollLocal(){
               localTimerIv=setInterval(()=>{
                 localTimerSec++;
                 const m=String(Math.floor(localTimerSec/60)).padStart(2,'0');
-                const s=String(localTimerSec%60).padStart(2,'0');
-                tel.textContent=m+':'+s;
+                const sc=String(localTimerSec%60).padStart(2,'0');
+                tel.textContent=m+':'+sc;
               },1000);
               highlightActiveContact(num);
-              // Aktif aranan kişiyi otomatik seç
               autoSelectActiveContact(num);
-            }
-            if(name){
-              document.getElementById('cname').textContent=name;
-              document.getElementById('cnum').textContent=num;
-              document.getElementById('cavatar').textContent=initials(name);
+            } else {
+              // Aynı kişi ama highlight güncelle
+              highlightActiveContact(num);
             }
           }
         }
@@ -999,12 +1001,12 @@ function renderUcTable(){
     const cleanTel=String(c.tel||'').replace(/\D/g,'');
     const cleanActive=lastLocalName?(String(document.getElementById('cnum').textContent||'').replace(/\D/g,'')):'' ;
     const isActive = cleanActive && (cleanTel===cleanActive || cleanTel.endsWith(cleanActive.slice(-10)) || cleanActive.endsWith(cleanTel.slice(-10)));
-    const isSel=selContact&&selContact.id===c.id;
+    const isSel = selContact && selContact.id===c.id && !isActive; // aktif arananı override etme
     const bcls={'İlgilenmiyor':'bs-ilgilenmiyor','Link Atıldı':'bs-link','Cevapsız':'bs-cevapsiz','Meşgul':'bs-mesgul','Ulaşılamıyor':'bs-ulasilamiyor','Sonra Aranacak':'bs-sonra','Servis Dışı':'bs-servis','Görüşmeyi Sonlandırdı':'bs-gorisme','Üye Oldu':'bs-uyeoldu','Üye oldu':'bs-uyeoldu','Mevcut Üye Aktif':'bs-mevcutaktif','Mevcut Üye Aktif Edildi':'bs-mevcutedildi','Numara Başkasına ait':'bs-numara'};
     const st=c.sonuc?`<span class="badge ${bcls[c.sonuc]||'badge-sonuc'}">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
     const dt=c.donus?`<span class="badge ${bcls[c.donus]||'badge-sonuc'}">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
     const jumpBtn = `<button onclick="event.stopPropagation();jumpToContact(${ri})" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer" title="Bu kişiden başlat">→</button>`;
-    return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isSel?'sel-row':isActive?'active-row':c.sonuc?'done':''}" id="uc-${c.id}">
+    return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isActive?'active-row'+(isSel?' sel-row':''):isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}">
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
       <td>${esc(c.name||'—')}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(c.tel||'')}</td>
