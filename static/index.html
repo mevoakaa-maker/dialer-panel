@@ -932,11 +932,13 @@ function renderUcTable(){
     const isSel=selContact&&selContact.id===c.id;
     const st=c.sonuc?`<span class="badge badge-sonuc">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
     const dt=c.donus?`<span class="badge badge-sonuc">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
-    return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}" title="Çift tıkla: bu kişiyi ara">
+    const jumpBtn = `<button onclick="event.stopPropagation();jumpToContact(${ri})" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer" title="Bu kişiden başlat">→</button>`;
+    return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}">
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
       <td>${esc(c.name||'—')}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(c.tel||'')}</td>
-      <td>${st}</td><td>${dt}</td></tr>`;
+      <td>${st}</td><td>${dt}</td>
+      <td style="width:36px">${jumpBtn}</td></tr>`;
   }).join('');
   document.getElementById('ucSearch').setAttribute('placeholder',`İsim veya numara ara... (${rows.length})`);
 }
