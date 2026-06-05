@@ -501,6 +501,7 @@ let localOnline=false;
 let localTimerIv=null;
 let localTimerSec=0;
 let lastLocalName='';
+let lastLocalNum='';
 
 // ── API ───────────────────────────────────────────────────
 async function api(method,path,data){
@@ -550,7 +551,7 @@ async function initApp(){
     loadUserLists();
     loadLocalSettings();
   }
-  setInterval(pollLocal,800); pollLocal();
+  setInterval(pollLocal,200); pollLocal();
 }
 
 // ── NAVIGATION ────────────────────────────────────────────
@@ -590,8 +591,9 @@ async function pollLocal(){
             const lines=d.content.trim().split('\n');
             const name=(lines[0]||'').trim();
             const num=(lines[1]||'').trim();
-            if(name&&name!==lastLocalName){
+            if(num&&num!==lastLocalNum){
               lastLocalName=name;
+              lastLocalNum=num;
               localTimerSec=0;
               clearInterval(localTimerIv);
               const tel=document.getElementById('ctimer');
@@ -887,7 +889,7 @@ async function loadUcList(list,btn){
   if(localOnline){
     const csv=contacts.map(c=>((c.name||'')+','+(c.tel||''))).join('\n');
     await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'contacts.csv',content:csv})}).catch(()=>{});
-    await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'index.txt',content:'0'})}).catch(()=>{});
+    // index.txt sıfırlamıyoruz - mevcut arama devam etsin
   }
 }
 
@@ -944,8 +946,8 @@ async function saveResult(){
   const currentGsUrl = settingsD?.gs_url || gsUrl;
   if(currentGsUrl) sendToSheets(selContact, selSonucVal, selDonusVal, not, currentGsUrl);
   const saved=selContact;
-  selContact=null;selSonucVal=null;selDonusVal=null;activeTab='sonuc'; // reset
-  switchTab('sonuc');
+  selContact=null;selSonucVal=null;selDonusVal=null;
+  // activeTab korunuyor - sekme değişmiyor
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('ucNot').value='';
   document.getElementById('ucSaveBtn').style.opacity='.5';
@@ -1076,6 +1078,13 @@ async function saveLocalSettings(){
         if(d.exists){
           let c=d.content;
           c=c.replace(/set "TIMEOUTSEC=\d+"/,`set "TIMEOUTSEC=${timeout}"`);
+          // DELAYSEC varsa güncelle, yoksa ekle
+          if(c.includes('DELAYSEC')){
+            c=c.replace(/set "DELAYSEC=\d+"/,`set "DELAYSEC=${delay}"`);
+          } else {
+            c=c.replace('set "CANCELFILE=',`set "DELAYSEC=${delay}"
+set "CANCELFILE=`);
+          }
           await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.bat',content:c})});
         }
       }
