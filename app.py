@@ -227,7 +227,7 @@ def get_contacts(lid):
         lst = sb.table('data_lists').select('assigned_to').eq('id', lid).execute()
         if not lst.data or lst.data[0]['assigned_to'] != user['id']:
             return jsonify({'error':'Yetkisiz'}), 403
-    res = sb.table('contacts').select('*').eq('list_id', lid).order('row_index').execute()
+    res = sb.table('contacts').select('*').eq('list_id', lid).order('row_index', desc=False).execute()
     return jsonify(res.data)
 
 @app.route('/api/lists/<lid>/contacts', methods=['POST'])
