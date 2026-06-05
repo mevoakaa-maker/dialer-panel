@@ -1080,13 +1080,8 @@ async function saveLocalSettings(){
         if(d.exists){
           let c=d.content;
           c=c.replace(/set "TIMEOUTSEC=\d+"/,`set "TIMEOUTSEC=${timeout}"`);
-          // DELAYSEC varsa güncelle, yoksa ekle
-          if(c.includes('DELAYSEC')){
-            c=c.replace(/set "DELAYSEC=\d+"/,`set "DELAYSEC=${delay}"`);
-          } else {
-            c=c.replace('set "CANCELFILE=',`set "DELAYSEC=${delay}"
-set "CANCELFILE=`);
-          }
+          // timeout /t N (STARTFLAG bloğu) - aramalar arası bekleme
+          c=c.replace(/(if exist "%STARTFLAG%" \([\s\S]*?timeout \/t )\d+( \/nobreak >nul)/,`$1${delay}$2`);
           await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.bat',content:c})});
         }
       }
