@@ -388,7 +388,19 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
       <button class="btn" onclick="toggleHide()" id="hideBtn">✕ Bitti olanları gizle</button>
       <button class="btn b" onclick="exportAllToGoogle()" title="Tüm listeyi Google Kişilere aktar">📇 Tümünü Aktar</button>
       <div style="width:1px;height:16px;background:var(--border2)"></div>
-      <button class="btn" style="font-size:11px" onclick="selectFiltered()">☑ Filtrelenenleri Seç</button>
+      <div style="position:relative;display:inline-block">
+        <button class="btn" style="font-size:11px" onclick="toggleFilterMenu(this)">☑ Filtrelenenleri Seç ▾</button>
+        <div id="filterMenu" style="display:none;position:absolute;top:100%;left:0;background:var(--surface);border:1px solid var(--border2);border-radius:6px;z-index:50;min-width:180px;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,.4)">
+          <div onclick="selectFiltered();closeFilterMenu()" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">☑ Filtrelenenleri Seç</div>
+          <div style="border-top:1px solid var(--border);margin:2px 0"></div>
+          <div onclick="selectBySonuc('Cevapsız')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#9ca3af" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Cevapsızları Seç</div>
+          <div onclick="selectBySonuc('Link Atıldı')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#c4b5fd" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Link Atıldıları Seç</div>
+          <div onclick="selectBySonuc('Meşgul')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#fcd34d" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Meşgulları Seç</div>
+          <div onclick="selectBySonuc('Ulaşılamıyor')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#7dd3fc" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Ulaşılamayanları Seç</div>
+          <div onclick="selectBySonuc('Sonra Aranacak')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#5eead4" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Sonra Aranacakları Seç</div>
+          <div onclick="selectBySonuc('İlgilenmiyor')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#fca5a5" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">İlgilenmiyor Seç</div>
+        </div>
+      </div>
       <button class="btn" style="font-size:11px" onclick="selectEmpty()">☑ Boşları Seç</button>
       <button class="btn" style="font-size:11px" onclick="selectAll2()">☑ Tümünü Seç</button>
     </div>
@@ -398,7 +410,10 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
       <div style="height:2px;background:var(--surface2);border-radius:1px">
         <div id="ucProg" style="height:100%;background:var(--accent);border-radius:1px;transition:width .3s;width:0%"></div>
       </div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px" id="ucProgLbl">—</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="ucProgLbl">—</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="dataReport"></div>
+      </div>
     </div>
 
     <!-- TABLO -->
@@ -662,6 +677,8 @@ async function pollLocal(){
                 tel.textContent=m+':'+sc;
               },1000);
               highlightActiveContact(num);
+              // Arama değişince manuel seçimi sıfırla, aktif arananı seç
+              if(selContact && !selContact._autoSelected) selContact=null;
               autoSelectActiveContact(num);
             } else {
               // Aynı kişi ama highlight güncelle
@@ -709,11 +726,14 @@ function highlightActiveContact(tel){
   if(idx<0) return;
   // Tabloyu yeniden render et — aktif satır yeşil görünsün
   renderUcTable();
-  // O satıra scroll yap
-  setTimeout(()=>{
-    const row = document.getElementById('uc-'+ucContacts[idx].id);
-    if(row) row.scrollIntoView({block:'center',behavior:'smooth'});
-  },300);
+  // Sadece ilk highlight'ta scroll yap (sonraki pollarda engelleme)
+  if(!window._lastHighlightId || window._lastHighlightId !== ucContacts[idx].id){
+    window._lastHighlightId = ucContacts[idx].id;
+    setTimeout(()=>{
+      const row = document.getElementById('uc-'+ucContacts[idx].id);
+      if(row) row.scrollIntoView({block:'center',behavior:'smooth'});
+    },300);
+  }
 }
 
 async function localCmd(cmd){
@@ -1083,6 +1103,16 @@ function updateUcProg(){
   const pct=total?Math.round(done/total*100):0;
   document.getElementById('ucProg').style.width=pct+'%';
   document.getElementById('ucProgLbl').textContent=`${done} / ${total} tamamlandı (${pct}%)`;
+  // Data raporu
+  const counts={};
+  ucContacts.forEach(c=>{ if(c.sonuc){ counts[c.sonuc]=(counts[c.sonuc]||0)+1; }});
+  const bcls={'İlgilenmiyor':'bs-ilgilenmiyor','Link Atıldı':'bs-link','Cevapsız':'bs-cevapsiz','Meşgul':'bs-mesgul','Ulaşılamıyor':'bs-ulasilamiyor','Sonra Aranacak':'bs-sonra','Servis Dışı':'bs-servis','Görüşmeyi Sonlandırdı':'bs-gorisme','Üye Oldu':'bs-uyeoldu','Mevcut Üye Aktif':'bs-mevcutaktif','Mevcut Üye Aktif Edildi':'bs-mevcutedildi','Numara Başkasına ait':'bs-numara'};
+  const report=document.getElementById('dataReport');
+  if(report){
+    report.innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([k,v])=>
+      `<span class="badge ${bcls[k]||'badge-sonuc'}" style="cursor:pointer" onclick="selectBySonuc('${k}')" title="${k}">${v}</span>`
+    ).join('');
+  }
 }
 
 async function jumpToContact(ri){
@@ -1291,7 +1321,31 @@ function selectFiltered(){
   selectedIds = new Set(filtered.map(c=>c.id));
   renderUcTable();
   updateBulkToolbar();
+  closeFilterMenu();
 }
+
+function selectBySonuc(sonuc){
+  selectedIds = new Set(ucContacts.filter(c=>c.sonuc===sonuc).map(c=>c.id));
+  // Arama kutusuna filtre uygula
+  document.getElementById('ucSearch').value='';
+  renderUcTable();
+  updateBulkToolbar();
+  closeFilterMenu();
+}
+
+function toggleFilterMenu(btn){
+  const m = document.getElementById('filterMenu');
+  m.style.display = m.style.display==='none' ? 'block' : 'none';
+}
+function closeFilterMenu(){
+  const m = document.getElementById('filterMenu');
+  if(m) m.style.display='none';
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#filterMenu') && !e.target.onclick?.toString().includes('toggleFilterMenu')){
+    closeFilterMenu();
+  }
+});
 
 function selectEmpty(){
   selectedIds = new Set(ucContacts.filter(c=>!c.sonuc).map(c=>c.id));
