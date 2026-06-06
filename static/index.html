@@ -1077,15 +1077,20 @@ function switchTab(tab){
   // Aktif sekmenin değeri - boşsa diğer sekmeden kopyala
   let curVal = isSonuc ? selSonucVal : selDonusVal;
   const otherVal = isSonuc ? selDonusVal : selSonucVal;
-  if(!curVal && otherVal) curVal = otherVal;
+  const displayVal = curVal || otherVal;
   document.querySelectorAll('.sbtn').forEach(b=>{
     const txt=b.textContent.trim();
     b.classList.remove('selected');
     b.style.opacity='';
-    if(txt===curVal){
-      b.classList.add('selected');
-    }
+    if(txt===displayVal) b.classList.add('selected');
   });
+  // Diğer sekmeden değer varsa kaydet butonunu aktif et
+  if(displayVal){
+    const sb=document.getElementById('ucSaveBtn');
+    if(sb){sb.style.opacity='1';sb.style.pointerEvents='auto';}
+    const cb=document.getElementById('ucClearBtn');
+    if(cb){cb.style.opacity='1';cb.style.pointerEvents='auto';}
+  }
 }
 
 function selSonuc(val,btn){
