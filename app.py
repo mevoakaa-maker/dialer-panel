@@ -491,6 +491,8 @@ def sheets_import():
         spreadsheet_id = data.get('spreadsheet_id','')
         sheet_name = data.get('sheet','')
         list_name = data.get('name','')
+        list_id = data.get('list_id', None)
+        update_only = data.get('update_only', False)
         
         if not spreadsheet_id or not sheet_name:
             return jsonify({'error': 'spreadsheet_id ve sheet gerekli'}), 400
@@ -528,19 +530,24 @@ def sheets_import():
 
         values = r.json().get('values', [])
         
-        # Liste oluştur
-        lst_res = sb.table('data_lists').insert({
-            'name': list_name,
-            'sheet': sheet_name,
-            'assigned_to': user_id,
-            'created_by': user_id,
-            'spreadsheet_id': spreadsheet_id
-        }).execute()
-        
-        if not lst_res.data:
-            return jsonify({'error': 'Liste oluşturulamadı'}), 500
-        
-        lid = lst_res.data[0]['id']
+        # Liste oluştur veya güncelle
+        if update_only and list_id:
+            lid = list_id
+            # Mevcut kişileri sil, yeniden ekle
+            sb.table('contacts').delete().eq('list_id', lid).execute()
+        else:
+            lst_res = sb.table('data_lists').insert({
+                'name': list_name,
+                'sheet': sheet_name,
+                'assigned_to': user_id,
+                'created_by': user_id,
+                'spreadsheet_id': spreadsheet_id
+            }).execute()
+            
+            if not lst_res.data:
+                return jsonify({'error': 'Liste oluşturulamadı'}), 500
+            
+            lid = lst_res.data[0]['id']
         
         # Kişileri ekle
         batch = []
@@ -637,8 +644,20 @@ def create_user():
 @app.route('/api/users/<uid>', methods=['DELETE'])
 @require_admin
 def delete_user(uid):
-    sb.table('users').delete().eq('id', uid).execute()
-    return jsonify({'ok': True})
+    try:
+        # Önce kullanıcının datalarını bul
+        lists = sb.table('data_lists').select('id').eq('assigned_to', uid).execute()
+        for lst in (lists.data or []):
+            lid = lst['id']
+            contacts = sb.table('contacts').select('id').eq('list_id', lid).execute()
+            for c in (contacts.data or []):
+                sb.table('results').delete().eq('contact_id', c['id']).execute()
+            sb.table('contacts').delete().eq('list_id', lid).execute()
+        sb.table('data_lists').delete().eq('assigned_to', uid).execute()
+        sb.table('users').delete().eq('id', uid).execute()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/users/<uid>/password', methods=['PUT'])
 @require_admin
@@ -785,6 +804,7 @@ def get_stats():
             'list_id': lst['id'],
             'list_name': lst['name'],
             'assigned_to': lst.get('users', {}).get('name','') if lst.get('users') else '',
+            'user_name': lst.get('users', {}).get('name','') if lst.get('users') else '',
             'total': total,
             'done': done,
             'pct': round(done/total*100) if total else 0,
