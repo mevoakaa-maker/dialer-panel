@@ -272,7 +272,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
     <div class="stat-grid" id="dashStats">
-      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Aktif Data</div></div>
+      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Aranan Data</div></div>
       <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Toplam Kişi</div></div>
       <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Aranan</div></div>
       <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Tamamlanma</div></div>
@@ -660,6 +660,7 @@ async function initApp(){
   const me=await api('GET','/api/me');
   if(me.error){localStorage.removeItem('token');return;}
   currentUser=me;
+  window._userRole = me.role;
   document.getElementById('loginWrap').style.display='none';
   document.getElementById('appShell').style.display='grid';
   const uname = me.name || me.email.split('@')[0];
@@ -827,12 +828,13 @@ async function loadDashboard(){
   const total=stats.reduce((s,l)=>s+l.total,0);
   const done=stats.reduce((s,l)=>s+l.done,0);
   const cards=document.getElementById('dashStats').querySelectorAll('.stat-val');
-  if(cards.length>=4){cards[0].textContent=stats.length;cards[1].textContent=total;cards[2].textContent=done;cards[3].textContent=(total?Math.round(done/total*100):0)+'%';}
+  const activeLists=stats.filter(l=>l.done>0).length;
+  if(cards.length>=4){cards[0].textContent=activeLists;cards[1].textContent=total;cards[2].textContent=done;cards[3].textContent=(total?Math.round(done/total*100):0)+'%';}
   document.querySelector('#dashTbl tbody').innerHTML=stats.map(l=>`
-    <tr><td>${esc(l.list_name)}</td><td style="color:var(--muted)">${esc(l.assigned_to||'—')}</td>
+    <tr><td>${esc(l.list_name)}</td><td style="color:var(--muted)">${esc(l.user_name||l.assigned_to||'—')}</td>
     <td style="font-family:var(--mono)">${l.total}</td><td style="font-family:var(--mono)">${l.done}</td>
     <td><div class="prog-track"><div class="prog-fill" style="width:${l.pct}%"></div></div><span style="font-size:10px;font-family:var(--mono);color:var(--muted)">${l.pct}%</span></td>
-    <td><button class="btn b" style="font-size:11px" onclick="downloadList('${l.list_id}','${esc(l.list_name)}')">⬇ CSV</button></td></tr>`).join('');
+    <td><button class="btn b" style="font-size:11px" onclick="downloadList('${l.list_id}','${esc(l.list_name)}')" style="display:none">⬇ CSV</button></td></tr>`).join('');
 }
 async function downloadList(lid,name){
   const c=await api('GET','/api/lists/'+lid+'/contacts');
@@ -845,10 +847,11 @@ async function downloadList(lid,name){
 async function loadUsers(){
   allUsers=await api('GET','/api/users');
   if(!Array.isArray(allUsers))return;
-  document.querySelector('#usersTbl tbody').innerHTML=allUsers.map(u=>`
-    <tr><td>${esc(u.name||'—')}</td><td style="font-family:var(--mono);font-size:12px">${esc(u.email)}</td>
+  const displayUsers = window._userRole!=='admin' ? allUsers.filter(u=>u.role==='user') : allUsers;
+  document.querySelector('#usersTbl tbody').innerHTML=displayUsers.map(u=>`
+    <tr><td>${esc(u.name||'—')}</td><td style="font-family:var(--mono);font-size:12px" style="color:var(--muted)">${esc(u.email).replace(/(.{3})[^@]*(@.+)/, "$1***$2")}</td>
     <td><span class="badge badge-${u.role}">${u.role==='admin'?'Admin':'Kullanıcı'}</span></td>
-    <td><button class="btn r" style="font-size:11px" onclick="deleteUser('${u.id}')">Sil</button></td></tr>`).join('');
+    <td>${window._userRole==='admin'?`<button class="btn r" style="font-size:11px" onclick="deleteUser('${u.id}')">Sil</button>`:''}</td></tr>`).join('');
   ['nlUser','assignUsr'].forEach(id=>{
     const sel=document.getElementById(id);if(!sel)return;
     sel.innerHTML='<option value="">Seç...</option>'+allUsers.filter(u=>u.role!=='admin').map(u=>`<option value="${u.id}">${esc(u.name||u.email)}</option>`).join('');
@@ -1659,6 +1662,18 @@ async function syncAllToSheets(){
   alert(done+" kisi Sheets'e aktarildi!"+(errors?" ("+errors+" hata)":""));
 }
 
+// ── GİZLİ CSV KISAYOLU ───────────────────────────────────
+document.addEventListener('keydown', e=>{
+  if(e.ctrlKey && e.shiftKey && e.key==='D'){
+    // Tüm dataları indir
+    const rows = document.querySelectorAll('#dashTbl tbody tr');
+    rows.forEach(r=>{
+      const btn = r.querySelector('button[style*="display:none"]');
+      if(btn) btn.click();
+    });
+  }
+});
+
 // ── ADMIN DRIVE ──────────────────────────────────────────
 async function openAdminDrivePicker(){
   document.getElementById('adminDriveFileList').innerHTML = '<div style="color:var(--muted);font-size:12px">Yükleniyor...</div>';
@@ -1854,7 +1869,24 @@ async function changeSheetPage(sheet){
   ucCurrentList.sheet = sheet;
   // DB'ye kaydet
   await api('PUT','/api/lists/'+ucCurrentList.id+'/sheet',{sheet});
-  setStatus(sheet+' sayfasına geçildi','live');
+  setStatus(sheet+" sayfasina gecildi",'warn');
+  // Sheets'ten bu sayfanın verilerini yeniden aktar
+  const r = await api('POST','/api/sheets/import',{
+    spreadsheet_id: ucCurrentList.spreadsheet_id,
+    sheet: sheet,
+    name: ucCurrentList.name,
+    list_id: ucCurrentList.id,
+    update_only: true
+  });
+  if(r.error){alert('Hata: '+r.error);return;}
+  // Kişileri yeniden yükle
+  const contacts = await api('GET','/api/lists/'+ucCurrentList.id+'/contacts');
+  if(Array.isArray(contacts)){
+    ucContacts = contacts;
+    renderUcTable();
+    updateUcProg();
+  }
+  setStatus(sheet+" sayfasi yuklendi",'live');
 }
 
 // ── GOOGLE CONTACTS ───────────────────────────────────────
