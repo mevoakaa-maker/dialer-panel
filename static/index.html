@@ -35,7 +35,7 @@ header{grid-column:1/-1;display:flex;align-items:center;padding:0 20px;gap:12px;
 /* SIDEBAR */
 aside{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .slabel{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;padding:12px 12px 4px}
-.nav-btn{width:calc(100% - 12px);margin:1px 6px;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:5px;border:none;background:transparent;color:var(--muted);font-size:13px;font-family:var(--sans);cursor:pointer;text-align:left;transition:all .12s}
+.nav-btn{width:calc(100% - 12px);margin:1px 6px;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:20px;border:none;background:transparent;color:var(--muted);font-size:13px;font-family:var(--sans);cursor:pointer;text-align:left;transition:all .18s}
 .nav-btn:hover{background:var(--surface2);color:var(--text)}
 .nav-btn.active{background:var(--accent-dim);color:#93c5fd}
 .nav-badge{margin-left:auto;font-family:var(--mono);font-size:11px;background:var(--bg);padding:1px 6px;border-radius:3px;color:var(--muted)}
@@ -64,9 +64,9 @@ main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
 
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:4px;font-size:12px;font-family:var(--sans);cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:all .12s;white-space:nowrap}
-.btn:hover{background:var(--surface2)}
-.btn:active{transform:scale(.97)}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:12px;font-family:var(--sans);cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:all .18s;white-space:nowrap;letter-spacing:.02em}
+.btn:hover{background:var(--surface2);transform:translateY(-1px)}
+.btn:active{transform:scale(.97) translateY(0)}
 .btn.g{border-color:var(--green-dim);color:var(--green);background:#052e16}.btn.g:hover{background:var(--green-dim)}
 .btn.r{border-color:var(--red-dim);color:var(--red);background:#450a0a}.btn.r:hover{background:var(--red-dim)}
 .btn.b{border-color:var(--accent-dim);color:#93c5fd;background:#0c1a2e}.btn.b:hover{background:var(--accent-dim)}
@@ -100,11 +100,11 @@ main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .form-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .form-row label{font-size:12px;color:var(--muted);min-width:80px;flex-shrink:0}
 .form-row input,.form-row select{flex:1;padding:7px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:13px;font-family:var(--sans)}
-.form-row input:focus,.form-row select:focus{outline:none;border-color:var(--accent)}
+.form-row input:focus,.form-row select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(59,130,246,.2)}
 
 /* CALL STRIP */
 .callstrip{display:flex;align-items:center;gap:16px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
-.cavatar{width:52px;height:52px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:16px;font-weight:600;color:#93c5fd;flex-shrink:0;border:1px solid #1d3a6e}
+.cavatar{width:54px;height:54px;border-radius:50%;box-shadow:0 0 0 3px rgba(59,130,246,.2);background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:16px;font-weight:600;color:#93c5fd;flex-shrink:0;border:1px solid #1d3a6e}
 .cinfo{flex:1;min-width:0}
 .cname{font-size:22px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em}
 .cnum{font-family:var(--mono);font-size:15px;color:#93c5fd;margin-top:3px;letter-spacing:0.05em}
@@ -115,9 +115,9 @@ main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .sonuc-panel{padding:10px 16px;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0}
 .sonuc-label{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:7px}
 .sonuc-grid{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px}
-.sbtn{padding:5px 11px;border-radius:4px;font-size:12px;font-family:var(--sans);cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:all .12s;white-space:nowrap}
-.sbtn:hover{filter:brightness(1.2)}
-.sbtn.selected{outline:2px solid rgba(255,255,255,.3);filter:brightness(1.2)}
+.sbtn{padding:5px 14px;border-radius:20px;font-size:12px;font-family:var(--sans);cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:all .18s;white-space:nowrap;letter-spacing:.01em}
+.sbtn:hover{filter:brightness(1.25);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.sbtn.selected{outline:2px solid rgba(255,255,255,.4);filter:brightness(1.25);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .sbtn.ilgilenmiyor{border-color:#7f1d1d;color:#fca5a5;background:#450a0a}
 .sbtn.link{border-color:#5b21b6;color:#c4b5fd;background:#2e1065}
 .sbtn.cevapsiz{border-color:#374151;color:#9ca3af;background:#1f2937}
@@ -138,17 +138,20 @@ main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .tbl-wrap{flex:1;overflow-y:auto}
 .tbl-wrap::-webkit-scrollbar{width:4px}
 .tbl-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer}
+tbody tr{border-bottom:1px solid var(--border);transition:all .15s;cursor:pointer}
 tbody tr:hover{background:var(--surface2)}
 tbody tr.done{opacity:.45}
 tbody tr.current-row{background:#0c1a2e}
 tbody tr.sel-row{background:#1e2530;outline:1px solid #363a44}
-tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green);animation:pulse-row 1.5s infinite}
-@keyframes pulse-row{0%,100%{background:#052e16}50%{background:#0a4a1a}}
+tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green);box-shadow:0 0 8px rgba(34,197,94,.15);animation:pulse-row 2s infinite}
+@keyframes pulse-row{0%,100%{background:#052e16;box-shadow:0 0 8px rgba(34,197,94,.15)}50%{background:#0a4a1a;box-shadow:0 0 16px rgba(34,197,94,.3)}}
 
 /* MODAL */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center}
-.overlay.open{display:flex}
+.overlay.open{display:flex;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.overlay.open .modal{animation:slideUp .15s ease}
+@keyframes slideUp{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
 .modal{background:var(--surface);border:1px solid var(--border2);border-radius:8px;width:500px;max-width:96vw;padding:22px;max-height:90vh;overflow-y:auto}
 .modal h3{font-size:15px;font-weight:500;margin-bottom:14px}
 .mactions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
@@ -404,7 +407,6 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
       <button class="btn" onclick="toggleHide()" id="hideBtn">✕ Bitti olanları gizle</button>
       <button class="btn b" onclick="exportAllToGoogle()" title="Tüm listeyi Google Kişilere aktar">📇 Kişileri Aktar</button>
       <button class="btn" style="font-size:11px;border-color:#0f766e;color:#5eead4;background:#042f2e" onclick="syncAllToSheets()" title="Tüm işaretlemeleri Google Sheets'e gönder">📊 Sheets'e Aktar</button>
-      <button class="btn" style="font-size:11px" onclick="downloadMarked()" title="İşaretlenmiş kişileri CSV indir">⬇ İşaretlileri İndir</button>
       <div style="width:1px;height:16px;background:var(--border2)"></div>
       <div style="position:relative;display:inline-block">
         <button class="btn" style="font-size:11px" onclick="toggleFilterMenu(this)">☑ Filtrelenenleri Seç ▾</button>
@@ -1161,22 +1163,17 @@ async function saveResult(){
   // Sheets ID veya gs_url varsa gönder
   if(currentGsUrl || ucCurrentList?.spreadsheet_id) sendToSheets(selContact, selSonucVal, selDonusVal, not, currentGsUrl);
   const savedContact = {...selContact};
-  // selContact'ı sıfırlama — aynı kişi seçili kalsın
-  selSonucVal=null; selDonusVal=null;
-  // Mevcut değerleri güncelle (kayıt sonrası)
+  // selContact'ı güncelle
   selContact = ucContacts.find(c=>c.id===savedContact.id) || savedContact;
   selContact._autoSelected = savedContact._autoSelected;
-  // Not alanını temizleme - kalıcı kalsın
-  // Sadece buton durumunu güncelle
+  // selSonucVal/selDonusVal'i kayıt sonrası değerlerle güncelle
+  selSonucVal = selContact.sonuc || null;
+  selDonusVal = selContact.donus || null;
+  // Buton durumu
   document.getElementById('ucSaveBtn').style.opacity='.5';
   document.getElementById('ucSaveBtn').style.pointerEvents='none';
-  document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
-  // Mevcut sonucu göster
-  if(selContact.sonuc){
-    document.querySelectorAll('.sbtn').forEach(b=>{
-      if(b.textContent.trim()===selContact.sonuc) b.classList.add('selected');
-    });
-  }
+  // Aktif sekmenin seçimini göster
+  switchTab(activeTab);
   updateSingleRow(savedContact.id);
   updateUcProg();
 }
