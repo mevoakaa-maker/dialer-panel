@@ -853,7 +853,13 @@ async function loadUsers(){
   document.querySelector('#usersTbl tbody').innerHTML=displayUsers.map(u=>`
     <tr><td>${esc(u.name||'—')}</td><td style="font-family:var(--mono);font-size:12px" style="color:var(--muted)">${esc(u.email).replace(/(.{3})[^@]*(@.+)/, "$1***$2")}</td>
     <td><span class="badge badge-${u.role}">${u.role==='admin'?'Admin':'Kullanıcı'}</span></td>
-    <td>${window._userRole==='admin'?`<button class="btn r" style="font-size:11px" onclick="deleteUser('${u.id}')">Sil</button>`:''}</td></tr>`).join('');
+    <td style="display:flex;gap:4px">${window._userRole==='admin'?`
+      <select onchange="changeUserRole('${u.id}',this.value)" style="padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text);font-size:11px">
+        <option value="user" ${u.role==='user'?'selected':''}>Kullanıcı</option>
+        <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+      </select>
+      <button class="btn r" style="font-size:11px" onclick="deleteUser('${u.id}')">Sil</button>
+    `:''}</td></tr>`).join('');
   ['nlUser','assignUsr'].forEach(id=>{
     const sel=document.getElementById(id);if(!sel)return;
     sel.innerHTML='<option value="">Seç...</option>'+allUsers.filter(u=>u.role!=='admin').map(u=>`<option value="${u.id}">${esc(u.name||u.email)}</option>`).join('');
@@ -871,6 +877,13 @@ async function addUser(){
   ['nuName','nuEmail','nuPass'].forEach(id=>document.getElementById(id).value='');
   loadUsers();
 }
+async function changeUserRole(uid, role){
+  const r = await api('PUT','/api/users/'+uid+'/role',{role});
+  if(r.ok) setStatus('Rol güncellendi','live');
+  else alert('Hata: '+(r.error||''));
+  loadUsers();
+}
+
 async function deleteUser(uid){if(!confirm('Sil?'))return;await api('DELETE','/api/users/'+uid);loadUsers();}
 
 // ── ADMIN: LISTS ──────────────────────────────────────────
