@@ -142,8 +142,8 @@ tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:
 tbody tr:hover{background:var(--surface2)}
 tbody tr.done{opacity:.45}
 tbody tr.current-row{background:#0c1a2e}
-tbody tr.sel-row{background:#0a2a0a;outline:1px solid var(--green)}
-tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:pulse-row 1.5s infinite}
+tbody tr.sel-row{background:#1e2530;outline:1px solid #363a44}
+tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green);animation:pulse-row 1.5s infinite}
 @keyframes pulse-row{0%,100%{background:#052e16}50%{background:#0a4a1a}}
 
 /* MODAL */
@@ -165,12 +165,15 @@ tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:
 <!-- LOGIN -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
-    <div class="login-logo">DIALER//PANEL</div>
-    <div class="login-sub">Hesabınıza giriş yapın</div>
+    <div style="display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+      <img src="https://cdn.pasacasino609.com/theme/pasacasino/assets/images/logo.png" style="height:48px;object-fit:contain" alt="Paşa Casino">
+    </div>
+    <div class="login-sub" style="margin-bottom:24px">Google hesabınızla giriş yapın</div>
     <div class="login-err" id="loginErr"></div>
-    <input type="email" id="loginEmail" placeholder="E-posta" autocomplete="email">
-    <input type="password" id="loginPass" placeholder="Şifre" autocomplete="current-password">
-    <button class="btn primary" style="width:100%;justify-content:center;padding:9px" onclick="doLogin()">Giriş Yap</button>
+    <a href="/auth/google/login" class="btn" style="width:100%;justify-content:center;padding:10px;gap:10px;font-size:14px;border-color:var(--border2);text-decoration:none">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Google ile Giriş Yap
+    </a>
   </div>
 </div>
 
@@ -178,11 +181,8 @@ tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:
 <div class="shell" id="appShell">
 <header>
   <div style="display:flex;align-items:center;gap:10px">
-    <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#1d3a6e,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🎰</div>
-    <div>
-      <div style="font-family:var(--mono);font-size:15px;font-weight:600;color:var(--text);letter-spacing:.06em;line-height:1.2">PAŞA CASINO</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.14em;line-height:1.2">DIALER PANEL</div>
-    </div>
+    <img src="https://cdn.pasacasino609.com/theme/pasacasino/assets/images/logo.png" style="height:36px;object-fit:contain" alt="Paşa Casino">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.14em;line-height:1.2">DIALER PANEL</div>
   </div>
   <div class="sep"></div>
   <div class="hstatus" id="hstatus"><span class="hdot"></span><span id="hstatustxt">Bağlanıyor...</span></div>
@@ -210,26 +210,56 @@ tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:
     <button class="nav-btn" onclick="showPage('users')"><span style="width:18px;text-align:center">👥</span>Kullanıcılar</button>
     <button class="nav-btn" onclick="showPage('lists')"><span style="width:18px;text-align:center">📋</span>Datalar</button>
     <button class="nav-btn" onclick="showPage('settings')"><span style="width:18px;text-align:center">⚙️</span>Ayarlar</button>
+      <div style="border-top:1px solid var(--border);margin:6px 0"></div>
+      <button class="nav-btn" onclick="showPage('dialer');loadAdminLists()"><span style="width:18px;text-align:center">📞</span>Dialer</button>
+  </div>
+
+  <!-- ADMIN DIALER LIST -->
+  <div id="adminDialerNav" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 8px 4px">
+      <span class="slabel" style="padding:0">Datalar</span>
+    </div>
+    <div id="adminListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1"></div>
   </div>
 
   <!-- USER NAV -->
   <div id="userNav" style="display:none;flex:1;flex-direction:column;overflow:hidden;display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 8px 4px">
-      <span class="slabel" style="padding:0">Datalarım</span>
-      <button class="btn g" style="font-size:11px;padding:3px 8px" onclick="openModal('userUploadModal')">+ Yükle</button>
+    <!-- Tab seçici -->
+    <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0">
+      <button id="tabMyData" onclick="switchNavTab('mydata')" style="flex:1;padding:7px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:var(--accent-dim);color:#93c5fd;border-bottom:2px solid var(--accent)">📋 Datalarım</button>
+      <button id="tabDrive" onclick="switchNavTab('drive')" style="flex:1;padding:7px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:2px solid transparent">📊 Drive</button>
     </div>
-    <div id="userListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1"></div>
+
+    <!-- Datalarım -->
+    <div id="navMyData" style="flex:1;flex-direction:column;overflow:hidden;display:flex">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px 4px">
+        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Listeler</span>
+        <button class="btn g" style="font-size:10px;padding:2px 7px" onclick="openModal('userUploadModal')">+ Yükle</button>
+      </div>
+      <div id="userListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1"></div>
+    </div>
+
+    <!-- Drive -->
+    <div id="navDrive" style="flex:1;flex-direction:column;overflow:hidden;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px 4px">
+        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Google Drive</span>
+        <button class="btn" style="font-size:10px;padding:2px 7px" onclick="loadDriveFiles()">↻</button>
+      </div>
+      <div id="driveFileNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1">
+        <div style="font-size:11px;color:var(--muted);padding:8px">Yükleniyor...</div>
+      </div>
+    </div>
   </div>
 
-  <!-- FOOTER (sadece user için) -->
-  <div id="userFooter" style="display:none">
-    <div class="sfooter">
-      <div class="slabel" style="padding:0 0 4px">Ayarlar</div>
-      <div class="srow"><span>Timeout</span><span><input type="number" id="cfgTimeoutU" min="5" max="120" value="25"> sn</span></div>
-      <div class="srow" style="margin-top:4px"><span>Aramalar arası</span><span><input type="number" id="cfgDelayU" min="0" max="120" value="10"> sn</span></div>
-      <button class="btn" style="margin-top:8px;justify-content:center;font-size:12px;width:100%" onclick="saveLocalSettings()">💾 Kaydet</button>
-    </div>
+  <!-- User Ayarlar -->
+  <div id="userSettings" style="display:none;border-top:1px solid var(--border);padding:10px 8px;flex-shrink:0">
+    <div class="slabel" style="padding:0 0 6px">Ayarlar</div>
+    <div class="srow"><span>Timeout</span><span><input type="number" id="cfgTimeoutU" min="5" max="120" value="25" style="width:50px"> sn</span></div>
+    <div class="srow" style="margin-top:4px"><span>Aramalar arasi</span><span><input type="number" id="cfgDelayU" min="0" max="120" value="10" style="width:50px"> sn</span></div>
+    <button class="btn" style="margin-top:8px;justify-content:center;font-size:11px;width:100%" onclick="saveLocalSettings()">Kaydet</button>
   </div>
+
+
 </aside>
 
 <main>
@@ -270,7 +300,10 @@ tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <h3 style="margin:0">Datalar</h3>
-        <button class="btn g" onclick="openModal('addListModal')">+ Data Ekle</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn" style="border-color:#0f766e;color:#5eead4;background:#042f2e" onclick="openAdminDrivePicker()">📊 Drive'dan Aktar</button>
+          <button class="btn g" onclick="openModal('addListModal')">+ Data Ekle</button>
+        </div>
       </div>
       <table class="tbl" id="listsTbl">
         <thead><tr><th>Data</th><th>Sayfa</th><th>Atanan</th><th>Kişi</th><th>İşlem</th></tr></thead>
@@ -293,12 +326,7 @@ tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:
         <input type="number" id="cfgDelay" min="0" max="120" value="10" style="width:80px;flex:none">
         <span style="font-size:12px;color:var(--muted);margin-left:6px">saniye</span>
       </div>
-      <div style="border-top:1px solid var(--border);margin:14px 0"></div>
-      <div class="form-row">
-        <label style="min-width:160px">Google Apps Script URL</label>
-        <input type="text" id="gsUrlInput" placeholder="https://script.google.com/macros/s/...">
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin:4px 0 12px 164px">Sonuçlar bu URL'ye otomatik gönderilir.</div>
+
       <button class="btn g" onclick="saveSettings()">💾 Kaydet</button>
       <div style="font-size:12px;font-family:var(--mono);margin-top:8px" id="gsUrlStatus"></div>
     </div>
@@ -315,7 +343,14 @@ tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:
         <div class="cnum" id="cnum">—</div>
         <div class="cextra" id="cextra"></div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+      <div id="googleProgress" style="display:none;flex-direction:column;gap:2px">
+        <div style="font-size:11px;font-family:var(--mono);color:#93c5fd">📇 Google Kişiler</div>
+        <div style="font-size:18px;font-weight:600;font-family:var(--mono);color:var(--green)" id="googleProgressTxt">0/0</div>
+        <div style="height:3px;background:var(--surface2);border-radius:2px;width:120px">
+          <div id="googleProgressBar" style="height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .3s"></div>
+        </div>
+      </div>
+      <div style="display:none">
         <div class="ctimer" id="ctimer" style="color:var(--muted)">—</div>
       </div>
     </div>
@@ -355,13 +390,37 @@ tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:
       <div class="not-row">
         <input type="text" id="ucNot" placeholder="Not ekle (opsiyonel)...">
         <button class="btn g" id="ucSaveBtn" onclick="saveResult()" style="opacity:.5;pointer-events:none">✓ Kaydet</button>
+    <button class="btn r" id="ucClearBtn" onclick="clearResult()" style="opacity:.5;pointer-events:none">✕ Kaldır</button>
       </div>
     </div>
 
     <!-- TABLO TOOLBAR -->
     <div style="display:flex;align-items:center;gap:8px;padding:7px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
       <input type="text" id="ucSearch" placeholder="İsim veya numara ara..." oninput="renderUcTable()" style="flex:1;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:13px">
+      <div id="sheetPageWrap" style="display:none;align-items:center;gap:6px">
+        <span style="font-size:11px;color:var(--muted)">Sayfa:</span>
+        <select id="sheetPageSelector" onchange="changeSheetPage(this.value)" style="padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px"></select>
+      </div>
       <button class="btn" onclick="toggleHide()" id="hideBtn">✕ Bitti olanları gizle</button>
+      <button class="btn b" onclick="exportAllToGoogle()" title="Tüm listeyi Google Kişilere aktar">📇 Kişileri Aktar</button>
+      <button class="btn" style="font-size:11px;border-color:#0f766e;color:#5eead4;background:#042f2e" onclick="syncAllToSheets()" title="Tüm işaretlemeleri Google Sheets'e gönder">📊 Sheets'e Aktar</button>
+      <button class="btn" style="font-size:11px" onclick="downloadMarked()" title="İşaretlenmiş kişileri CSV indir">⬇ İşaretlileri İndir</button>
+      <div style="width:1px;height:16px;background:var(--border2)"></div>
+      <div style="position:relative;display:inline-block">
+        <button class="btn" style="font-size:11px" onclick="toggleFilterMenu(this)">☑ Filtrelenenleri Seç ▾</button>
+        <div id="filterMenu" style="display:none;position:absolute;top:100%;left:0;background:var(--surface);border:1px solid var(--border2);border-radius:6px;z-index:50;min-width:180px;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,.4)">
+          <div onclick="selectFiltered();closeFilterMenu()" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">☑ Filtrelenenleri Seç</div>
+          <div style="border-top:1px solid var(--border);margin:2px 0"></div>
+          <div onclick="selectBySonuc('Cevapsız')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#9ca3af" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Cevapsızları Seç</div>
+          <div onclick="selectBySonuc('Link Atıldı')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#c4b5fd" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Link Atıldıları Seç</div>
+          <div onclick="selectBySonuc('Meşgul')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#fcd34d" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Meşgulları Seç</div>
+          <div onclick="selectBySonuc('Ulaşılamıyor')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#7dd3fc" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Ulaşılamayanları Seç</div>
+          <div onclick="selectBySonuc('Sonra Aranacak')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#5eead4" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Sonra Aranacakları Seç</div>
+          <div onclick="selectBySonuc('İlgilenmiyor')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#fca5a5" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">İlgilenmiyor Seç</div>
+        </div>
+      </div>
+      <button class="btn" style="font-size:11px" onclick="selectEmpty()">☑ Boşları Seç</button>
+      <button class="btn" style="font-size:11px" onclick="selectAll2()">☑ Tümünü Seç</button>
     </div>
 
     <!-- PROGRESS -->
@@ -369,13 +428,35 @@ tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:
       <div style="height:2px;background:var(--surface2);border-radius:1px">
         <div id="ucProg" style="height:100%;background:var(--accent);border-radius:1px;transition:width .3s;width:0%"></div>
       </div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px" id="ucProgLbl">—</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="ucProgLbl">—</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="dataReport"></div>
+      </div>
     </div>
 
     <!-- TABLO -->
     <div class="tbl-wrap">
+      <!-- TOPLU İŞLEM TOOLBAR -->
+      <div id="bulkToolbar" style="display:none;align-items:center;gap:6px;padding:6px 16px;background:#0c1a2e;border-bottom:1px solid var(--border);flex-shrink:0">
+        <span id="bulkCount" style="font-size:12px;font-family:var(--mono);color:#93c5fd">0 seçili</span>
+        <div class="sonuc-grid" style="margin:0;gap:4px" id="bulkSonucGrid">
+          <button class="sbtn ilgilenmiyor" onclick="bulkMark('İlgilenmiyor')">İlgilenmiyor</button>
+          <button class="sbtn link" onclick="bulkMark('Link Atıldı')">Link Atıldı</button>
+          <button class="sbtn cevapsiz" onclick="bulkMark('Cevapsız')">Cevapsız</button>
+          <button class="sbtn mesgul" onclick="bulkMark('Meşgul')">Meşgul</button>
+          <button class="sbtn ulasilamiyor" onclick="bulkMark('Ulaşılamıyor')">Ulaşılamıyor</button>
+          <button class="sbtn sonra" onclick="bulkMark('Sonra Aranacak')">Sonra Aranacak</button>
+          <button class="sbtn servis" onclick="bulkMark('Servis Dışı')">Servis Dışı</button>
+          <button class="sbtn gorisme" onclick="bulkMark('Görüşmeyi Sonlandırdı')">Görüşmeyi Sonlandırdı</button>
+          <button class="sbtn uyeoldu" onclick="bulkMark('Üye Oldu')">Üye Oldu</button>
+          <button class="sbtn mevcutaktif" onclick="bulkMark('Mevcut Üye Aktif')">Mevcut Üye Aktif</button>
+          <button class="sbtn mevcutedildi" onclick="bulkMark('Mevcut Üye Aktif Edildi')">Mevcut Üye Aktif Edildi</button>
+          <button class="sbtn numara" onclick="bulkMark('Numara Başkasına ait')">Numara Başkasına ait</button>
+        </div>
+        <button class="btn r" style="font-size:11px;margin-left:auto" onclick="clearSelection()">✕ İptal</button>
+      </div>
       <table class="tbl" style="width:100%">
-        <thead id="ucHead"><tr><th style="width:36px">#</th><th>İsim</th><th>Tel</th><th>Sonuç</th><th>Dönüş</th></tr></thead>
+        <thead id="ucHead"><tr><th style="width:28px"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)" style="cursor:pointer"></th><th style="width:36px">#</th><th>İsim</th><th>Tel</th><th>Sonuç</th><th>Dönüş</th></tr></thead>
         <tbody id="ucTbody"></tbody>
       </table>
     </div>
@@ -384,6 +465,42 @@ tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:
 
 </main>
 </div><!-- /shell -->
+
+<!-- ADMIN DRIVE MODAL -->
+<div class="overlay" id="adminDriveModal">
+<div class="modal">
+  <h3>📊 Drive'dan Data Aktar</h3>
+  <div id="adminDriveFileList" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:6px"></div>
+  <div class="mactions">
+    <button class="btn" onclick="closeModal('adminDriveModal')">İptal</button>
+  </div>
+</div>
+</div>
+
+<!-- DRIVE SHEET SELECT MODAL -->
+<div class="overlay" id="driveSheetSelectModal">
+<div class="modal">
+  <h3>📊 Sayfa Seç</h3>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:10px" id="driveSheetFileName"></div>
+  <div id="driveSheetList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:6px"></div>
+  <div class="mactions">
+    <button class="btn" onclick="closeModal('driveSheetSelectModal')">İptal</button>
+  </div>
+</div>
+</div>
+
+<!-- DRIVE PICKER MODAL -->
+<div class="overlay" id="drivePickerModal">
+<div class="modal" id="drivePicker">
+  <h3>🔍 Google Drive'dan Sheets Seç</h3>
+  <input type="hidden" id="drivePickerListId">
+  <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Erişiminiz olan tüm Google Sheets dosyaları:</div>
+  <div id="driveFileList" style="max-height:350px;overflow-y:auto;border:1px solid var(--border);border-radius:6px"></div>
+  <div class="mactions">
+    <button class="btn" onclick="closeModal('drivePickerModal')">Kapat</button>
+  </div>
+</div>
+</div>
 
 <!-- USER UPLOAD MODAL -->
 <div class="overlay" id="userUploadModal">
@@ -453,6 +570,10 @@ tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:
     <div class="form-row"><label>Apps Script URL</label>
       <input type="text" id="nlGsUrl" placeholder="https://script.google.com/... (opsiyonel)">
     </div>
+    <div class="form-row"><label>Sheets ID</label>
+      <input type="text" id="nlSpreadsheetId" placeholder="Google Sheets ID (opsiyonel)">
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin:-4px 0 8px 88px">Sheets URL'sindeki /d/BURASI/edit kısmı</div>
   </div>
   <div class="mactions">
     <button class="btn" onclick="closeModal('addListModal');resetXlsx()">İptal</button>
@@ -478,6 +599,11 @@ tbody tr.active-row{background:#052e16;outline:2px solid var(--green);animation:
 
 <script>
 const API='';
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('googleLoginBtn');
+  if(btn) btn.onclick=()=>window.location.href='/auth/google/login';
+});
 const LOCAL='http://localhost:8080';
 let token=localStorage.getItem('token')||'';
 let currentUser=null;
@@ -512,7 +638,6 @@ async function api(method,path,data){
 }
 
 // ── AUTH ──────────────────────────────────────────────────
-document.getElementById('loginPass').onkeydown=e=>{if(e.key==='Enter')doLogin()};
 async function doLogin(){
   const email=document.getElementById('loginEmail').value.trim();
   const pass=document.getElementById('loginPass').value;
@@ -546,6 +671,7 @@ async function initApp(){
     await loadUsers(); await loadLists(); loadDashboard();
   } else {
     document.getElementById('userNav').style.display='flex';
+    document.getElementById('userSettings').style.display='block';
     document.getElementById('userFooter').style.display='block';
     showPage('dialer');
     loadUserLists();
@@ -559,7 +685,9 @@ function showPage(name){
   document.querySelectorAll('.page,.page-full').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name)?.classList.add('active');
-  document.querySelector(`.nav-btn[onclick="showPage('${name}')"]`)?.classList.add('active');
+  document.querySelector(`.nav-btn[onclick^="showPage('${name}')"]`)?.classList.add('active');
+  const adn=document.getElementById('adminDialerNav');
+  if(adn) adn.style.display=(name==='dialer')?'flex':'none';
 }
 
 // ── STATUS ────────────────────────────────────────────────
@@ -591,27 +719,32 @@ async function pollLocal(){
             const lines=d.content.trim().split('\n');
             const name=(lines[0]||'').trim();
             const num=(lines[1]||'').trim();
+            // Her poll'da aktif kişiyi güncelle
+            document.getElementById('cname').textContent=name;
+            document.getElementById('cnum').textContent=num;
+            document.getElementById('cavatar').textContent=initials(name);
+            // Numara değişince timer sıfırla ve highlight yap
             if(num&&num!==lastLocalNum){
               lastLocalName=name;
               lastLocalNum=num;
               localTimerSec=0;
               clearInterval(localTimerIv);
-              const tel=document.getElementById('ctimer');
-              tel.style.color='var(--green)';
+              const timerEl=document.getElementById('ctimer');
+              if(timerEl) timerEl.style.color='var(--green)';
               localTimerIv=setInterval(()=>{
                 localTimerSec++;
                 const m=String(Math.floor(localTimerSec/60)).padStart(2,'0');
-                const s=String(localTimerSec%60).padStart(2,'0');
-                tel.textContent=m+':'+s;
+                const sc=String(localTimerSec%60).padStart(2,'0');
+                const el=document.getElementById('ctimer');
+                if(el) el.textContent=m+':'+sc;
               },1000);
               highlightActiveContact(num);
-              // Aktif aranan kişiyi otomatik seç
+              // Arama değişince manuel seçimi sıfırla, aktif arananı seç
+              if(selContact && !selContact._autoSelected) selContact=null;
               autoSelectActiveContact(num);
-            }
-            if(name){
-              document.getElementById('cname').textContent=name;
-              document.getElementById('cnum').textContent=num;
-              document.getElementById('cavatar').textContent=initials(name);
+            } else {
+              // Aynı kişi ama highlight güncelle
+              highlightActiveContact(num);
             }
           }
         }
@@ -627,20 +760,21 @@ async function pollLocal(){
 
 function autoSelectActiveContact(tel){
   if(!tel||!ucContacts.length) return;
+  // Manuel seçimden 5sn geçmediyse auto-select yapma
+  if(Date.now() - manualSelectTime < 5000 && selContact && !selContact._autoSelected) return;
   const clean = tel.replace(/\D/g,'');
   const contact = ucContacts.find(c=>{
     const ct = String(c.tel||'').replace(/\D/g,'');
     return ct===clean || ct.endsWith(clean.slice(-10)) || clean.endsWith(ct.slice(-10));
   });
   if(!contact) return;
-  // Sadece başka biri manuel seçilmediyse otomatik seç
+  // Başka biri manuel seçilmemişse otomatik seç
   if(!selContact || selContact._autoSelected){
     selContact = {...contact, _autoSelected: true};
     document.getElementById('sonucLbl').textContent='✏️ '+(contact.name||'');
     document.getElementById('ucNot').value=contact.not_text||'';
     selSonucVal = contact.sonuc||null;
     selDonusVal = contact.donus||null;
-    activeTab='sonuc'; switchTab('sonuc');
     const sb=document.getElementById('ucSaveBtn');
     sb.style.opacity='1'; sb.style.pointerEvents='auto';
   }
@@ -656,11 +790,14 @@ function highlightActiveContact(tel){
   if(idx<0) return;
   // Tabloyu yeniden render et — aktif satır yeşil görünsün
   renderUcTable();
-  // O satıra scroll yap
-  setTimeout(()=>{
-    const row = document.getElementById('uc-'+ucContacts[idx].id);
-    if(row) row.scrollIntoView({block:'center',behavior:'smooth'});
-  },300);
+  // Sadece ilk highlight'ta scroll yap (sonraki pollarda engelleme)
+  if(!window._lastHighlightId || window._lastHighlightId !== ucContacts[idx].id){
+    window._lastHighlightId = ucContacts[idx].id;
+    setTimeout(()=>{
+      const row = document.getElementById('uc-'+ucContacts[idx].id);
+      if(row) row.scrollIntoView({block:'center',behavior:'smooth'});
+    },300);
+  }
 }
 
 async function localCmd(cmd){
@@ -737,10 +874,19 @@ async function loadLists(){
     <td style="font-family:var(--mono);font-size:12px">—</td>
     <td style="display:flex;gap:4px">
       <button class="btn b" style="font-size:11px" onclick="openAssign('${l.id}')">👤 Ata</button>
-        <button class="btn" style="font-size:11px" onclick="editGsUrl('${l.id}','${esc(l.gs_url||'')}')">🔗 URL</button>
+        <button class="btn" style="font-size:11px" onclick="editGsUrl('${l.id}','${esc(l.gs_url||'')}')">🔗 Script</button>
+        <button class="btn" style="font-size:11px;border-color:#0f766e;color:#5eead4;background:#042f2e" onclick="editSpreadsheetId('${l.id}','${esc(l.spreadsheet_id||'')}')">📊 Sheets</button>
         <button class="btn r" style="font-size:11px" onclick="deleteList('${l.id}')">Sil</button>
     </td></tr>`).join('');
 }
+async function editSpreadsheetId(lid, current){
+  const id = prompt("Sheets ID - URL\u2019deki /d/XXX/edit kismi:", current||"");
+  if(id === null) return;
+  await api('PUT','/api/lists/'+lid+'/spreadsheetid',{spreadsheet_id: id});
+  loadLists();
+  setStatus('Sheets ID güncellendi','live');
+}
+
 async function editGsUrl(lid, current){
   const url = prompt('Apps Script URL girin:', current||'');
   if(url === null) return;
@@ -795,7 +941,8 @@ async function addList(){
   if(!name)return alert('Data adı zorunlu');
   if(!xlsxSelSheet||!xlsxData[xlsxSelSheet])return alert('Sayfa seçin');
   const gsUrl=document.getElementById('nlGsUrl').value.trim();
-  const lst=await api('POST','/api/lists',{name,sheet:xlsxSelSheet,assigned_to:uid||null,gs_url:gsUrl});
+  const spreadsheetId=document.getElementById('nlSpreadsheetId').value.trim();
+  const lst=await api('POST','/api/lists',{name,sheet:xlsxSelSheet,assigned_to:uid||null,gs_url:gsUrl,spreadsheet_id:spreadsheetId});
   if(lst.id) await uploadContacts(lst.id,xlsxData[xlsxSelSheet]);
   closeModal('addListModal');resetXlsx();loadLists();loadDashboard();
 }
@@ -873,7 +1020,21 @@ async function loadUserLists(){
       btn.classList.add('active');
       loadUcList(l,btn);
     };
+    // Sheets ID butonu
+    const sheetsBtn = document.createElement('button');
+    sheetsBtn.className='btn';
+    sheetsBtn.style.cssText='font-size:10px;padding:2px 6px;margin:1px 6px;width:calc(100% - 12px);border-color:#0f766e;color:#5eead4;background:#042f2e';
+    sheetsBtn.textContent = (l.spreadsheet_id ? '📊 Sheets ID ✓' : '📊 Sheets ID ekle');
+    sheetsBtn.onclick=()=>editSpreadsheetId(l.id, l.spreadsheet_id||'');
+    // Drive'dan seç butonu
+    const driveBtn = document.createElement('button');
+    driveBtn.className='btn';
+    driveBtn.style.cssText='font-size:10px;padding:2px 6px;margin:1px 6px;width:calc(100% - 12px);border-color:#1d3a6e;color:#93c5fd;background:#0c1a2e';
+    driveBtn.textContent="🔍 Drive'dan Sec";
+    driveBtn.onclick=()=>openDrivePicker(l.id);
     wrap.appendChild(btn);
+    wrap.appendChild(sheetsBtn);
+    wrap.appendChild(driveBtn);
   });
   if(lists.length>0)loadUcList(lists[0],wrap.querySelector('.nav-btn'));
 }
@@ -885,6 +1046,8 @@ async function loadUcList(list,btn){
   ucContacts=contacts;
   if(btn){const b=btn.querySelector('.nav-badge');if(b)b.textContent=contacts.length;}
   renderUcTable();updateUcProg();
+  // Sheets ID varsa sayfaları yükle
+  if(list.spreadsheet_id) loadSheetPages(list);
   // CSV'ye yaz
   if(localOnline){
     const csv=contacts.map(c=>((c.name||'')+','+(c.tel||''))).join('\n');
@@ -907,10 +1070,17 @@ function switchTab(tab){
   document.getElementById('tabDonus').style.background=!isSonuc?'var(--accent)':'var(--surface)';
   document.getElementById('tabDonus').style.color=!isSonuc?'#fff':'var(--muted)';
   document.getElementById('tabDonus').style.borderColor=!isSonuc?'var(--accent)':'var(--border2)';
-  const cur=isSonuc?selSonucVal:selDonusVal;
+  const curVal=isSonuc?selSonucVal:selDonusVal;
+  const otherVal=isSonuc?selDonusVal:selSonucVal;
   document.querySelectorAll('.sbtn').forEach(b=>{
+    const txt=b.textContent.trim();
     b.classList.remove('selected');
-    if(b.textContent.trim()===cur)b.classList.add('selected');
+    b.style.opacity='';
+    if(txt===curVal){
+      b.classList.add('selected');
+    } else if(txt===otherVal){
+      b.style.opacity='0.45'; // Diğer sekmenin seçimi soluk
+    }
   });
 }
 
@@ -921,10 +1091,37 @@ function selSonuc(val,btn){
   btn.classList.add('selected');
   const sb=document.getElementById('ucSaveBtn');
   sb.style.opacity='1';sb.style.pointerEvents='auto';
+  const cb=document.getElementById('ucClearBtn');
+  if(cb){cb.style.opacity='1';cb.style.pointerEvents='auto';}
+}
+
+async function clearResult(){
+  if(!selContact) return;
+  
+  // Seçili kişiler varsa hepsini kaldır, yoksa sadece aktif kişiyi
+  const ids = selectedIds.size > 0 ? [...selectedIds] : [selContact.id];
+  
+  const promises = ids.map(id => api('PUT','/api/contacts/'+id+'/result',{sonuc:null,donus:null,not_text:''}));
+  await Promise.all(promises);
+  
+  ids.forEach(id => {
+    const idx = ucContacts.findIndex(c=>c.id===id);
+    if(idx>=0){ucContacts[idx].sonuc=null;ucContacts[idx].donus=null;ucContacts[idx].not_text='';}
+  });
+  renderUcTable(); // Hepsini tek seferde güncelle
+  
+  selSonucVal=null; selDonusVal=null;
+  document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('ucNot').value='';
+  document.getElementById('ucSaveBtn').style.opacity='.5';
+  document.getElementById('ucSaveBtn').style.pointerEvents='none';
+  document.getElementById('ucClearBtn').style.opacity='.5';
+  document.getElementById('ucClearBtn').style.pointerEvents='none';
+  updateUcProg();
 }
 
 async function saveResult(){
-  if(!selContact){alert('Önce bir kişi seçin');return;}
+  if(!selContact){return;} // Sessizce çık, uyarı verme
   const not=document.getElementById('ucNot').value.trim();
   const payload={not_text:not};
   if(selSonucVal!==null) payload.sonuc=selSonucVal;
@@ -941,25 +1138,55 @@ async function saveResult(){
     if(selDonusVal)ucContacts[idx].donus=selDonusVal;
     ucContacts[idx].not_text=not;
   }
+  // Seçili diğer kişilere de uygula
+  if(selectedIds.size>0){
+    const others=[...selectedIds].filter(id=>id!==selContact.id);
+    if(others.length>0){
+      const promises=others.map(id=>api('PUT','/api/contacts/'+id+'/result',payload));
+      await Promise.all(promises);
+      others.forEach(id=>{
+        const i2=ucContacts.findIndex(c=>c.id===id);
+        if(i2>=0){
+          if(payload.sonuc)ucContacts[i2].sonuc=payload.sonuc;
+          if(payload.donus)ucContacts[i2].donus=payload.donus;
+          ucContacts[i2].not_text=payload.not_text||'';
+        }
+      });
+      renderUcTable(); // Hepsini tek seferde güncelle
+    }
+  }
   // gsUrl'yi her seferinde settings'ten oku
   const settingsD = await api('GET','/api/settings');
   const currentGsUrl = settingsD?.gs_url || gsUrl;
-  if(currentGsUrl) sendToSheets(selContact, selSonucVal, selDonusVal, not, currentGsUrl);
-  const saved=selContact;
-  selContact=null;selSonucVal=null;selDonusVal=null;
-  // activeTab korunuyor - sekme değişmiyor
-  document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
-  document.getElementById('ucNot').value='';
+  // Sheets ID veya gs_url varsa gönder
+  if(currentGsUrl || ucCurrentList?.spreadsheet_id) sendToSheets(selContact, selSonucVal, selDonusVal, not, currentGsUrl);
+  const savedContact = {...selContact};
+  // selContact'ı sıfırlama — aynı kişi seçili kalsın
+  selSonucVal=null; selDonusVal=null;
+  // Mevcut değerleri güncelle (kayıt sonrası)
+  selContact = ucContacts.find(c=>c.id===savedContact.id) || savedContact;
+  selContact._autoSelected = savedContact._autoSelected;
+  // Not alanını temizleme - kalıcı kalsın
+  // Sadece buton durumunu güncelle
   document.getElementById('ucSaveBtn').style.opacity='.5';
   document.getElementById('ucSaveBtn').style.pointerEvents='none';
-  document.getElementById('sonucLbl').textContent='Arama Sonucu';
-  renderUcTable();updateUcProg();
+  document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
+  // Mevcut sonucu göster
+  if(selContact.sonuc){
+    document.querySelectorAll('.sbtn').forEach(b=>{
+      if(b.textContent.trim()===selContact.sonuc) b.classList.add('selected');
+    });
+  }
+  updateSingleRow(savedContact.id);
+  updateUcProg();
 }
 
+let manualSelectTime = 0;
 function selectContact(id){
   selContact=ucContacts.find(c=>c.id===id);
   if(!selContact)return;
   delete selContact._autoSelected; // Manuel seçim
+  manualSelectTime = Date.now(); // Son manuel seçim zamanı
   document.getElementById('cname').textContent=selContact.name||'—';
   document.getElementById('cnum').textContent=selContact.tel||'—';
   document.getElementById('cavatar').textContent=initials(selContact.name||'?');
@@ -973,9 +1200,11 @@ function selectContact(id){
   document.getElementById('ucNot').value=selContact.not_text||'';
   selSonucVal=selContact.sonuc||null;
   selDonusVal=selContact.donus||null;
-  activeTab='sonuc'; switchTab('sonuc');
+  // sekme korunuyor
   const sb=document.getElementById('ucSaveBtn');
   sb.style.opacity='1';sb.style.pointerEvents='auto';
+  const cb=document.getElementById('ucClearBtn');
+  if(cb){cb.style.opacity='1';cb.style.pointerEvents='auto';}
   clearInterval(timerIv);timerSec=0;
   document.getElementById('ctimer').style.color='var(--green)';
   timerIv=setInterval(()=>{
@@ -988,10 +1217,28 @@ function selectContact(id){
 }
 
 // ── TABLE ─────────────────────────────────────────────────
+function updateSingleRow(id){
+  const c=ucContacts.find(x=>x.id===id);
+  if(!c)return;
+  const row=document.getElementById('uc-'+id);
+  if(!row)return;
+  const bcls={'İlgilenmiyor':'bs-ilgilenmiyor','Link Atıldı':'bs-link','Cevapsız':'bs-cevapsiz','Meşgul':'bs-mesgul','Ulaşılamıyor':'bs-ulasilamiyor','Sonra Aranacak':'bs-sonra','Servis Dışı':'bs-servis','Görüşmeyi Sonlandırdı':'bs-gorisme','Üye Oldu':'bs-uyeoldu','Üye oldu':'bs-uyeoldu','Mevcut Üye Aktif':'bs-mevcutaktif','Mevcut Üye Aktif Edildi':'bs-mevcutedildi','Numara Başkasına ait':'bs-numara'};
+  const st=c.sonuc?`<span class="badge ${bcls[c.sonuc]||'badge-sonuc'}">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
+  const dt=c.donus?`<span class="badge ${bcls[c.donus]||'badge-sonuc'}">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
+  const tds=row.querySelectorAll('td');
+  if(tds[4])tds[4].innerHTML=st;
+  if(tds[5])tds[5].innerHTML=dt;
+  if(!row.classList.contains('active-row'))row.className=c.sonuc?'done':'';
+}
+
 function renderUcTable(){
   const q=document.getElementById('ucSearch').value.toLowerCase();
   const rows=ucContacts.filter(c=>{
     if(ucHide&&c.sonuc)return false;
+    if(activeFilter&&activeFilter!=='filtered'&&activeFilter!=='empty'){
+      if(c.sonuc!==activeFilter)return false;
+    }
+    if(activeFilter==='empty'&&c.sonuc)return false;
     return !q||(c.name||'').toLowerCase().includes(q)||(c.tel||'').includes(q);
   });
   document.getElementById('ucTbody').innerHTML=rows.map(c=>{
@@ -999,17 +1246,20 @@ function renderUcTable(){
     const cleanTel=String(c.tel||'').replace(/\D/g,'');
     const cleanActive=lastLocalName?(String(document.getElementById('cnum').textContent||'').replace(/\D/g,'')):'' ;
     const isActive = cleanActive && (cleanTel===cleanActive || cleanTel.endsWith(cleanActive.slice(-10)) || cleanActive.endsWith(cleanTel.slice(-10)));
-    const isSel=selContact&&selContact.id===c.id;
+    const isSel = selContact && selContact.id===c.id && !isActive; // aktif arananı override etme
     const bcls={'İlgilenmiyor':'bs-ilgilenmiyor','Link Atıldı':'bs-link','Cevapsız':'bs-cevapsiz','Meşgul':'bs-mesgul','Ulaşılamıyor':'bs-ulasilamiyor','Sonra Aranacak':'bs-sonra','Servis Dışı':'bs-servis','Görüşmeyi Sonlandırdı':'bs-gorisme','Üye Oldu':'bs-uyeoldu','Üye oldu':'bs-uyeoldu','Mevcut Üye Aktif':'bs-mevcutaktif','Mevcut Üye Aktif Edildi':'bs-mevcutedildi','Numara Başkasına ait':'bs-numara'};
     const st=c.sonuc?`<span class="badge ${bcls[c.sonuc]||'badge-sonuc'}">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
     const dt=c.donus?`<span class="badge ${bcls[c.donus]||'badge-sonuc'}">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
     const jumpBtn = `<button onclick="event.stopPropagation();jumpToContact(${ri})" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer" title="Bu kişiden başlat">→</button>`;
-    return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isSel?'sel-row':isActive?'active-row':c.sonuc?'done':''}" id="uc-${c.id}">
+    const googleBtn = `<button onclick="event.stopPropagation();exportOneToGoogle('${c.id}')" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid #1d3a6e;background:#0c1a2e;color:#93c5fd;cursor:pointer" title="Google Kişilere Ekle">📇</button>`;
+    return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isActive?'active-row'+(isSel?' sel-row':''):isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}">
+      <td style="width:28px" onclick="event.stopPropagation()"><input type="checkbox" class="row-cb" data-id="${c.id}" onchange="onCbChange(this)" style="cursor:pointer" ${selectedIds.has(c.id)?'checked':''}></td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
       <td>${esc(c.name||'—')}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(c.tel||'')}</td>
       <td>${st}</td><td>${dt}</td>
-      <td style="width:36px">${jumpBtn}</td></tr>`;
+      <td style="width:36px">${jumpBtn}</td>
+      <td style="width:36px">${googleBtn}</td></tr>`;
   }).join('');
   document.getElementById('ucSearch').setAttribute('placeholder',`İsim veya numara ara... (${rows.length})`);
 }
@@ -1020,6 +1270,16 @@ function updateUcProg(){
   const pct=total?Math.round(done/total*100):0;
   document.getElementById('ucProg').style.width=pct+'%';
   document.getElementById('ucProgLbl').textContent=`${done} / ${total} tamamlandı (${pct}%)`;
+  // Data raporu
+  const counts={};
+  ucContacts.forEach(c=>{ if(c.sonuc){ counts[c.sonuc]=(counts[c.sonuc]||0)+1; }});
+  const bcls={'İlgilenmiyor':'bs-ilgilenmiyor','Link Atıldı':'bs-link','Cevapsız':'bs-cevapsiz','Meşgul':'bs-mesgul','Ulaşılamıyor':'bs-ulasilamiyor','Sonra Aranacak':'bs-sonra','Servis Dışı':'bs-servis','Görüşmeyi Sonlandırdı':'bs-gorisme','Üye Oldu':'bs-uyeoldu','Mevcut Üye Aktif':'bs-mevcutaktif','Mevcut Üye Aktif Edildi':'bs-mevcutedildi','Numara Başkasına ait':'bs-numara'};
+  const report=document.getElementById('dataReport');
+  if(report){
+    report.innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([k,v])=>
+      `<span class="badge ${bcls[k]||'badge-sonuc'}" style="cursor:pointer" onclick="selectBySonuc('${k}')" title="${k}">${v}</span>`
+    ).join('');
+  }
 }
 
 async function jumpToContact(ri){
@@ -1058,6 +1318,21 @@ async function saveSettings(){
   el.style.color=r.ok?'var(--green)':'var(--red)';
   el.textContent=r.ok?'✓ Kaydedildi':'Hata: '+(r.error||'');
   setTimeout(()=>el.textContent='',3000);
+  // Local nextcall.bat güncelle
+  if(localOnline){
+    try{
+      const rb=await fetch(LOCAL+'/api/file?name=nextcall.bat');
+      if(rb.ok){
+        const d=await rb.json();
+        if(d.exists){
+          let c=d.content;
+          c=c.replace(/set "TIMEOUTSEC=\d+"/,`set "TIMEOUTSEC=${timeout}"`);
+          c=c.replace(/(if exist "%STARTFLAG%" \([\s\S]*?timeout \/t )\d+( \/nobreak >nul)/,`$1${delay}$2`);
+          await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.bat',content:c})});
+        }
+      }
+    }catch(e){}
+  }
 }
 
 function loadLocalSettings(){
@@ -1078,13 +1353,8 @@ async function saveLocalSettings(){
         if(d.exists){
           let c=d.content;
           c=c.replace(/set "TIMEOUTSEC=\d+"/,`set "TIMEOUTSEC=${timeout}"`);
-          // DELAYSEC varsa güncelle, yoksa ekle
-          if(c.includes('DELAYSEC')){
-            c=c.replace(/set "DELAYSEC=\d+"/,`set "DELAYSEC=${delay}"`);
-          } else {
-            c=c.replace('set "CANCELFILE=',`set "DELAYSEC=${delay}"
-set "CANCELFILE=`);
-          }
+          // timeout /t N (STARTFLAG bloğu) - aramalar arası bekleme
+          c=c.replace(/(if exist "%STARTFLAG%" \([\s\S]*?timeout \/t )\d+( \/nobreak >nul)/,`$1${delay}$2`);
           await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.bat',content:c})});
         }
       }
@@ -1096,16 +1366,28 @@ set "CANCELFILE=`);
 
 async function sendToSheets(contact,sonuc,donus,not_text,url){
   try{
-    // Railway proxy üzerinden gönder (CORS sorunu olmaz)
-    await api('POST','/api/sheets/send',{
-      tel: contact.tel||'',
-      isim: contact.name||'',
-      sonuc: sonuc||'',
-      donus: donus||'',
-      not: not_text||'',
-      sheet: ucCurrentList?.sheet||'',
-      list_id: ucCurrentList?.id||''
-    });
+    // Sheets ID varsa direkt Sheets API kullan
+    if(ucCurrentList?.spreadsheet_id){
+      await api('POST','/api/sheets/write',{
+        spreadsheet_id: ucCurrentList.spreadsheet_id,
+        sheet: ucCurrentList.sheet||'',
+        tel: contact.tel||'',
+        sonuc: sonuc||'',
+        donus: donus||'',
+        not: not_text||''
+      });
+    } else if(ucCurrentList?.gs_url || url){
+      // Apps Script fallback
+      await api('POST','/api/sheets/send',{
+        tel: contact.tel||'',
+        isim: contact.name||'',
+        sonuc: sonuc||'',
+        donus: donus||'',
+        not: not_text||'',
+        sheet: ucCurrentList?.sheet||'',
+        list_id: ucCurrentList?.id||''
+      });
+    }
   }catch(e){ console.log('sheets error',e); }
 }
 
@@ -1133,7 +1415,495 @@ function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
 
+// URL'den token al (Google OAuth callback)
+const urlParams = new URLSearchParams(window.location.search);
+const urlToken = urlParams.get('token');
+const urlError = urlParams.get('error');
+if(urlToken){
+  token = urlToken;
+  localStorage.setItem('token', token);
+  window.history.replaceState({}, '', '/');
+}
+if(urlError){
+  const errEl = document.getElementById('loginErr');
+  if(errEl){
+    const msgs = {not_found:'Bu Google hesabı sisteme kayıtlı değil. Adminle iletişime geçin.', no_email:'Email alınamadı.', no_code:'Giriş iptal edildi.'};
+    errEl.textContent = msgs[urlError] || 'Giriş hatası: '+urlError;
+  }
+}
 if(token)initApp();
+
+// ── ADMIN DIALER ─────────────────────────────────────────
+async function loadAdminLists(){
+  // Admin nav'ı gizle, dialer list nav'ı göster
+  document.getElementById('adminDialerNav').style.display='flex';
+  const lists = await api('GET','/api/lists');
+  if(!Array.isArray(lists)) return;
+  const wrap = document.getElementById('adminListNav');
+  wrap.innerHTML='';
+  lists.forEach((l,i)=>{
+    const btn = document.createElement('button');
+    btn.className='nav-btn'+(i===0?' active':'');
+    btn.innerHTML=`<span style="width:18px;text-align:center">📋</span>${esc(l.name)}<span class="nav-badge">—</span>`;
+    btn.onclick=()=>{
+      document.querySelectorAll('#adminListNav .nav-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      loadUcList(l,btn);
+    };
+    wrap.appendChild(btn);
+  });
+  if(lists.length>0) loadUcList(lists[0], wrap.querySelector('.nav-btn'));
+}
+
+// ── BULK SELECTION ───────────────────────────────────────
+let selectedIds = new Set();
+let activeFilter = null; // null = tümü, string = filtre
+
+function onCbChange(cb){
+  if(!cb) return;
+  const id = cb.dataset.id;
+  if(cb.checked) selectedIds.add(id);
+  else selectedIds.delete(id);
+  updateBulkToolbar();
+}
+
+function updateBulkToolbar(){
+  const toolbar = document.getElementById('bulkToolbar');
+  const count = document.getElementById('bulkCount');
+  if(selectedIds.size>0){
+    toolbar.style.display='flex';
+    count.textContent = selectedIds.size+' seçili';
+  } else {
+    toolbar.style.display='none';
+  }
+}
+
+function toggleSelectAll(cb){
+  if(cb.checked){
+    ucContacts.forEach(c=>selectedIds.add(c.id));
+  } else {
+    selectedIds.clear();
+  }
+  // DOM'u güncelle
+  document.querySelectorAll('.row-cb').forEach(r=>{
+    r.checked = selectedIds.has(r.dataset.id);
+  });
+  updateBulkToolbar();
+}
+
+function selectAll2(){
+  if(selectedIds.size===ucContacts.length){
+    selectedIds = new Set();
+  } else {
+    selectedIds = new Set(ucContacts.map(c=>c.id));
+  }
+  renderUcTable();
+  updateBulkToolbar();
+}
+
+function selectFiltered(){
+  const q = document.getElementById('ucSearch').value.toLowerCase();
+  const filtered = ucContacts.filter(c=>{
+    if(ucHide&&c.sonuc) return false;
+    return !q||(c.name||'').toLowerCase().includes(q)||(c.tel||'').includes(q);
+  });
+  selectedIds = new Set(filtered.map(c=>c.id));
+  activeFilter = 'filtered';
+  renderUcTable();
+  updateBulkToolbar();
+  closeFilterMenu();
+}
+
+function selectBySonuc(sonuc){
+  if(activeFilter===sonuc){
+    // Aynı filtreye tekrar tıklandı - kaldır
+    activeFilter=null;
+    selectedIds=new Set();
+  } else {
+    selectedIds = new Set(ucContacts.filter(c=>c.sonuc===sonuc).map(c=>c.id));
+    activeFilter = sonuc;
+  }
+  document.getElementById('ucSearch').value='';
+  renderUcTable();
+  updateBulkToolbar();
+  closeFilterMenu();
+}
+
+function toggleFilterMenu(btn){
+  const m = document.getElementById('filterMenu');
+  m.style.display = m.style.display==='none' ? 'block' : 'none';
+}
+function closeFilterMenu(){
+  const m = document.getElementById('filterMenu');
+  if(m) m.style.display='none';
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#filterMenu') && !e.target.onclick?.toString().includes('toggleFilterMenu')){
+    closeFilterMenu();
+  }
+});
+
+function selectEmpty(){
+  if(activeFilter==='empty'){
+    activeFilter=null;
+    selectedIds=new Set();
+  } else {
+    selectedIds = new Set(ucContacts.filter(c=>!c.sonuc).map(c=>c.id));
+    activeFilter='empty';
+  }
+  renderUcTable();
+  updateBulkToolbar();
+}
+
+function clearSelection(){
+  selectedIds = new Set();
+  activeFilter = null;
+  renderUcTable();
+  updateBulkToolbar();
+  const sa = document.getElementById('selectAll');
+  if(sa) sa.checked=false;
+}
+
+async function bulkMark(sonuc){
+  if(!selectedIds.size) return;
+  if(!confirm(selectedIds.size+' kisiye "'+sonuc+'" isaretlensin?')) return;
+  const ids = [...selectedIds];
+  // Hepsini paralel gönder
+  await Promise.all(ids.map(id => api('PUT','/api/contacts/'+id+'/result',{sonuc})));
+  // Local tek seferde güncelle
+  ids.forEach(id=>{
+    const idx = ucContacts.findIndex(c=>c.id===id);
+    if(idx>=0) ucContacts[idx].sonuc=sonuc;
+  });
+  clearSelection();
+  renderUcTable();
+  updateUcProg();
+  setStatus(ids.length+' kisi isaretlendi','live');
+}
+
+// ── DOWNLOAD MARKED ──────────────────────────────────────
+function downloadMarked(){
+  const marked = ucContacts.filter(c=>c.sonuc||c.donus||c.not_text);
+  if(!marked.length){alert('İşaretlenmiş kişi yok.');return;}
+  const header='İsim Soyisim,Tel No,Sonuç,Dönüş,NOTLAR';
+  const rows=marked.map(c=>[
+    '"'+(c.name||'').replace(/"/g,'""')+'"',
+    '"'+(c.tel||'')+'"',
+    '"'+(c.sonuc||'')+'"',
+    '"'+(c.donus||'')+'"',
+    '"'+(c.not_text||'').replace(/"/g,'""')+'"'
+  ].join(','));
+  const csv='\uFEFF'+header+'\n'+rows.join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=(ucCurrentList?.name||'data')+'_isaretliler.csv';
+  a.click();
+}
+
+// ── SYNC TO SHEETS ───────────────────────────────────────
+async function syncAllToSheets(){
+  const withData = ucContacts.filter(c=>c.sonuc||c.donus||c.not_text);
+  if(!withData.length){alert('Isaretlenmis kisi yok.');return;}
+  if(!confirm(withData.length+" kisinin isaretlemelerini Sheets'e gonder?"))return;
+  
+  const hasSheetId = ucCurrentList?.spreadsheet_id;
+  const settingsD = await api('GET','/api/settings');
+  const currentGsUrl = settingsD?.gs_url || gsUrl;
+  
+  if(!hasSheetId && !currentGsUrl){
+    alert('Bu dataya Sheets ID veya Apps Script URL girilmemis.');
+    return;
+  }
+  
+  let done=0, errors=0;
+  setStatus("Sheets aktariliyor...",'warn');
+  
+  for(const c of withData){
+    try{
+      if(hasSheetId){
+        await api('POST','/api/sheets/write',{
+          spreadsheet_id: ucCurrentList.spreadsheet_id,
+          sheet: ucCurrentList.sheet||'',
+          tel: c.tel||'',
+          sonuc: c.sonuc||'',
+          donus: c.donus||'',
+          not: c.not_text||''
+        });
+      } else {
+        await api('POST','/api/sheets/send',{
+          tel: c.tel||'',
+          isim: c.name||'',
+          sonuc: c.sonuc||'',
+          donus: c.donus||'',
+          not: c.not_text||'',
+          sheet: ucCurrentList?.sheet||'',
+          list_id: ucCurrentList?.id||''
+        });
+      }
+      done++;
+    }catch(e){ errors++; }
+  }
+  
+  setStatus('Tamamlandi','live');
+  alert(done+" kisi Sheets'e aktarildi!"+(errors?" ("+errors+" hata)":""));
+}
+
+// ── ADMIN DRIVE ──────────────────────────────────────────
+async function openAdminDrivePicker(){
+  document.getElementById('adminDriveFileList').innerHTML = '<div style="color:var(--muted);font-size:12px">Yükleniyor...</div>';
+  openModal('adminDriveModal');
+  const r = await api('GET','/api/drive/sheets');
+  if(r.error){
+    document.getElementById('adminDriveFileList').innerHTML = '<div style="color:var(--red);font-size:12px">'+r.error+'</div>';
+    return;
+  }
+  const files = r.files || [];
+  document.getElementById('adminDriveFileList').innerHTML = files.map(f=>
+    `<div onclick="selectAdminDriveFile('${f.id}','${esc(f.name)}')"
+      style="padding:8px 10px;cursor:pointer;border-radius:4px;font-size:13px;border-bottom:1px solid var(--border)"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      📊 ${esc(f.name)}
+    </div>`
+  ).join('');
+}
+
+async function selectAdminDriveFile(fileId, fileName){
+  const r = await api('GET','/api/sheets/pages?spreadsheet_id='+fileId);
+  if(r.error){alert('Hata: '+r.error);return;}
+  const sheets = r.sheets || [];
+  document.getElementById('adminDriveFileList').innerHTML = 
+    `<div style="font-size:12px;color:var(--muted);margin-bottom:8px">📊 ${esc(fileName)} - Sayfa seçin:</div>` +
+    sheets.map(sh=>
+      `<div onclick="importAdminDriveSheet('${fileId}','${esc(sh)}','${esc(fileName)}')"
+        style="padding:8px 10px;cursor:pointer;border-radius:4px;font-size:13px;border-bottom:1px solid var(--border)"
+        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        📋 ${esc(sh)}
+      </div>`
+    ).join('');
+}
+
+async function importAdminDriveSheet(spreadsheetId, sheetName, fileName){
+  const listName = fileName + ' - ' + sheetName;
+  setStatus('Veri aktariliyor...','warn');
+  const r = await api('POST','/api/sheets/import',{
+    spreadsheet_id: spreadsheetId,
+    sheet: sheetName,
+    name: listName
+  });
+  if(r.error){alert('Hata: '+r.error);return;}
+  closeModal('adminDriveModal');
+  setStatus(r.count+' kisi eklendi','live');
+  loadLists(); loadDashboard();
+}
+
+// ── DRIVE NAV ────────────────────────────────────────────
+let driveFiles = [];
+let selectedDriveFile = null;
+let driveSheets = [];
+
+function switchNavTab(tab){
+  const isMyData = tab === 'mydata';
+  document.getElementById('navMyData').style.display = isMyData ? 'flex' : 'none';
+  document.getElementById('navDrive').style.display = isMyData ? 'none' : 'flex';
+  document.getElementById('tabMyData').style.background = isMyData ? 'var(--accent-dim)' : 'transparent';
+  document.getElementById('tabMyData').style.color = isMyData ? '#93c5fd' : 'var(--muted)';
+  document.getElementById('tabMyData').style.borderBottomColor = isMyData ? 'var(--accent)' : 'transparent';
+  document.getElementById('tabDrive').style.background = !isMyData ? 'var(--accent-dim)' : 'transparent';
+  document.getElementById('tabDrive').style.color = !isMyData ? '#93c5fd' : 'var(--muted)';
+  document.getElementById('tabDrive').style.borderBottomColor = !isMyData ? 'var(--accent)' : 'transparent';
+  if(!isMyData && driveFiles.length === 0) loadDriveFiles();
+}
+
+async function loadDriveFiles(){
+  const wrap = document.getElementById('driveFileNav');
+  wrap.innerHTML = '<div style="font-size:11px;color:var(--muted);padding:8px">Yükleniyor...</div>';
+  const r = await api('GET','/api/drive/sheets');
+  if(r.error){
+    wrap.innerHTML = `<div style="font-size:11px;color:var(--red);padding:8px">${r.error}</div>`;
+    return;
+  }
+  driveFiles = r.files || [];
+  if(!driveFiles.length){
+    wrap.innerHTML = "<div style='font-size:11px;color:var(--muted);padding:8px'>Sheets bulunamadi.</div>";
+    return;
+  }
+  wrap.innerHTML = driveFiles.map(f=>`
+    <button class="nav-btn" onclick="selectDriveNav('${f.id}','${esc(f.name)}')">
+      <span style="width:18px;text-align:center">📊</span>${esc(f.name)}
+    </button>`).join('');
+}
+
+async function selectDriveNav(fileId, fileName){
+  selectedDriveFile = {id: fileId, name: fileName};
+  // Sayfaları yükle
+  const r = await api('GET','/api/sheets/pages?spreadsheet_id='+fileId);
+  if(r.error){alert('Hata: '+r.error);return;}
+  driveSheets = r.sheets || [];
+  // Sayfa seçim modalını göster
+  const modal = document.getElementById('driveSheetSelectModal');
+  document.getElementById('driveSheetFileName').textContent = fileName;
+  document.getElementById('driveSheetList').innerHTML = driveSheets.map(sh=>`
+    <div onclick="importDriveSheet('${fileId}','${esc(sh)}','${esc(fileName)}')"
+      style="padding:10px;cursor:pointer;border-radius:4px;border-bottom:1px solid var(--border);font-size:13px"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      📋 ${esc(sh)}
+    </div>`).join('');
+  openModal('driveSheetSelectModal');
+}
+
+async function importDriveSheet(spreadsheetId, sheetName, fileName){
+  // Bu sayfanın verilerini çek ve data olarak ekle
+  const listName = fileName + ' - ' + sheetName;
+  
+  // Sheets'ten veriyi oku
+  setStatus('Veri okunuyor...', 'warn');
+  const r = await api('POST', '/api/sheets/import', {
+    spreadsheet_id: spreadsheetId,
+    sheet: sheetName,
+    name: listName
+  });
+  
+  if(r.error){
+    alert('Hata: ' + r.error);
+    setStatus('Hata','err');
+    return;
+  }
+  
+  closeModal('driveSheetSelectModal');
+  setStatus(r.count + ' kisi eklendi', 'live');
+  switchNavTab('mydata');
+  await loadUserLists();
+  // Yeni eklenen listeye geç
+  const lists = await api('GET','/api/lists');
+  if(Array.isArray(lists)){
+    const newList = lists.find(l=>l.name===listName);
+    if(newList){
+      const btn = document.querySelector('#userListNav .nav-btn');
+      if(btn) btn.click();
+    }
+  }
+}
+
+// ── DRIVE PICKER ─────────────────────────────────────────
+async function openDrivePicker(listId){
+  const el = document.getElementById('drivePicker');
+  if(!el) return;
+  document.getElementById('drivePickerListId').value = listId;
+  document.getElementById('driveFileList').innerHTML = '<div style="color:var(--muted);font-size:12px">Yükleniyor...</div>';
+  openModal('drivePickerModal');
+  const r = await api('GET','/api/drive/sheets');
+  if(r.error){
+    if(r.needs_auth) alert('Google hesabınızla giriş yapın.');
+    else alert('Hata: '+r.error);
+    closeModal('drivePickerModal');
+    return;
+  }
+  const files = r.files || [];
+  if(!files.length){
+    document.getElementById('driveFileList').innerHTML = '<div style="color:var(--muted);font-size:12px">Sheets dosyası bulunamadı.</div>';
+    return;
+  }
+  document.getElementById('driveFileList').innerHTML = files.map(f=>
+    `<div onclick="selectDriveFile('${f.id}','${esc(f.name)}',document.getElementById('drivePickerListId').value)"
+      style="padding:8px 10px;cursor:pointer;border-radius:4px;font-size:13px;border-bottom:1px solid var(--border)"
+      onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      📊 ${esc(f.name)}
+    </div>`
+  ).join('');
+}
+
+async function selectDriveFile(spreadsheetId, name, listId){
+  await api('PUT','/api/lists/'+listId+'/spreadsheetid',{spreadsheet_id: spreadsheetId});
+  // ucCurrentList güncelle
+  if(ucCurrentList && ucCurrentList.id === listId){
+    ucCurrentList.spreadsheet_id = spreadsheetId;
+    loadSheetPages(ucCurrentList);
+  }
+  closeModal('drivePickerModal');
+  setStatus(name+' seçildi','live');
+  loadUserLists();
+}
+
+async function loadSheetPages(list){
+  if(!list.spreadsheet_id) return;
+  const r = await api('GET','/api/sheets/pages?spreadsheet_id='+list.spreadsheet_id);
+  if(!r.sheets || !r.sheets.length) return;
+  // Sayfa seçici göster
+  const el = document.getElementById('sheetPageSelector');
+  if(!el) return;
+  el.innerHTML = r.sheets.map(sh=>
+    `<option value="${esc(sh)}" ${sh===list.sheet?'selected':''}>${esc(sh)}</option>`
+  ).join('');
+  el.style.display = '';
+  document.getElementById('sheetPageWrap').style.display='flex';
+}
+
+async function changeSheetPage(sheet){
+  if(!ucCurrentList) return;
+  ucCurrentList.sheet = sheet;
+  // DB'ye kaydet
+  await api('PUT','/api/lists/'+ucCurrentList.id+'/sheet',{sheet});
+  setStatus(sheet+' sayfasına geçildi','live');
+}
+
+// ── GOOGLE CONTACTS ───────────────────────────────────────
+async function exportToGoogle(contacts){
+  if(!contacts.length){alert('Aktarılacak kişi yok.');return;}
+  const r = await api('POST','/api/google/contacts/add',{contacts});
+  if(r.error && r.needs_auth){
+    // Google bağlantısı yok, OAuth başlat
+    const w = window.open('/auth/google/login','_blank','width=500,height=600');
+    window.addEventListener('message', async (e)=>{
+      if(e.data==='google_connected'){
+        w.close();
+        // Tekrar dene
+        const r2 = await api('POST','/api/google/contacts/add',{contacts});
+        if(r2.ok) alert(r2.added+' kişi Google Kişilere eklendi!');
+        else alert('Hata: '+r2.error);
+      }
+    },{once:true});
+    return;
+  }
+  if(r.ok) alert(r.added+' kişi Google Kişilere eklendi!'+(r.errors?' ('+r.errors+' hata)':''));
+  else alert('Hata: '+r.error);
+}
+
+async function exportOneToGoogle(id){
+  const c = ucContacts.find(x=>x.id===id);
+  if(!c) return;
+  await exportToGoogle([{name:c.name||'',tel:c.tel||''}]);
+}
+
+async function exportAllToGoogle(){
+  const total = ucContacts.filter(c=>c.tel).length;
+  if(!confirm(total+" kişiyi Google Kişilere aktar?")) return;
+  const contacts = ucContacts.map(c=>({name:c.name||'',tel:c.tel||''})).filter(c=>c.tel);
+  let totalAdded=0, totalErrors=0;
+  const batchSize=50; // backend batch API halleder
+  const gpEl=document.getElementById('googleProgress');
+  const gpTxt=document.getElementById('googleProgressTxt');
+  const gpBar=document.getElementById('googleProgressBar');
+  gpEl.style.display='flex';
+  for(let i=0; i<contacts.length; i+=batchSize){
+    const batch=contacts.slice(i,i+batchSize);
+    const pct=Math.round(i/contacts.length*100);
+    gpTxt.textContent=i+'/'+contacts.length;
+    gpBar.style.width=pct+'%';
+    try{
+      const r=await api('POST','/api/google/contacts/add',{contacts:batch});
+      if(r && r.needs_auth){gpEl.style.display='none';alert('Google bağlantısı gerekli');return;}
+      if(r && r.error){gpEl.style.display='none';alert('Hata: '+r.error);return;}
+      if(r && r.ok){totalAdded+=r.added||0;totalErrors+=r.errors||0;}
+    }catch(e){
+      totalErrors+=batch.length;
+    }
+
+  }
+  gpTxt.textContent=contacts.length+'/'+contacts.length;
+  gpBar.style.width='100%';
+  setTimeout(()=>gpEl.style.display='none',2000);
+  alert(totalAdded+' kişi Google Kişilere eklendi!'+(totalErrors?' ('+totalErrors+' hata)':''));
+}
 </script>
 </body>
 </html>
