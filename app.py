@@ -41,7 +41,7 @@ def require_admin(f):
     def wrapper(*args, **kwargs):
         user = verify_token()
         if not user: return jsonify({'error':'Giriş gerekli'}), 401
-        if user.get('role') != 'admin': return jsonify({'error':'Yetkisiz'}), 403
+        if user.get('role') not in ('admin','super_admin'): return jsonify({'error':'Yetkisiz'}), 403
         request.user = user
         return f(*args, **kwargs)
     return wrapper
@@ -355,9 +355,14 @@ def me():
 @require_auth
 def get_users():
     user = request.user
-    if user['role'] == 'admin':
+    if user['role'] == 'super_admin':
+        # Super admin herkesi görür
         res = sb.table('users').select('id,email,name,role,created_at').execute()
+    elif user['role'] == 'admin':
+        # Admin super_admin'leri görmez
+        res = sb.table('users').select('id,email,name,role,created_at').neq('role','super_admin').execute()
     else:
+        # Kullanıcılar sadece user rolündekileri görür
         res = sb.table('users').select('id,name,role').eq('role','user').execute()
     return jsonify(res.data)
 
@@ -386,7 +391,14 @@ def delete_user(uid):
 @require_admin
 def change_role(uid):
     data = request.json
-    sb.table('users').update({'role': data.get('role','user')}).eq('id', uid).execute()
+    new_role = data.get('role','user')
+    # super_admin rolü atanamaz, sadece super_admin kendi rolünü değiştirebilir
+    if new_role == 'super_admin': return jsonify({'error':'Yetkisiz'}), 403
+    # super_admin kullanıcısı değiştirilemez
+    target = sb.table('users').select('role').eq('id', uid).execute()
+    if target.data and target.data[0]['role'] == 'super_admin':
+        return jsonify({'error':'Yetkisiz'}), 403
+    sb.table('users').update({'role': new_role}).eq('id', uid).execute()
     return jsonify({'ok': True})
 
 @app.route('/api/users/<uid>/password', methods=['PUT'])
@@ -402,10 +414,13 @@ def change_password(uid):
 @require_auth
 def get_lists():
     user = request.user
-    if user['role'] == 'admin':
+    scope = request.args.get('scope','')
+    # super_admin tüm dataları görür (Datalar sayfası için)
+    if user['role'] in ('admin','super_admin') and scope == 'all':
         res = sb.table('data_lists').select('*,users!assigned_to(name,email)').order('created_at', desc=True).execute()
     else:
-        res = sb.table('data_lists').select('*').eq('assigned_to', user['id']).order('created_at', desc=True).execute()
+        # Dialer için sadece kendi datası
+        res = sb.table('data_lists').select('*,users!assigned_to(name,email)').eq('assigned_to', user['id']).order('created_at', desc=True).execute()
     return jsonify(res.data)
 
 @app.route('/api/lists', methods=['POST'])
