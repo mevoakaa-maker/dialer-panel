@@ -165,12 +165,8 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
 <!-- LOGIN -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
-    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:6px">
-      <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#1d3a6e,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:18px">🎰</div>
-      <div>
-        <div style="font-family:var(--mono);font-size:15px;font-weight:600;color:var(--text);letter-spacing:.06em">PAŞA CASINO</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.14em">DIALER PANEL</div>
-      </div>
+    <div style="display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+      <img src="https://cdn.pasacasino609.com/theme/pasacasino/assets/images/logo.png" style="height:48px;object-fit:contain" alt="Paşa Casino">
     </div>
     <div class="login-sub" style="margin-bottom:24px">Google hesabınızla giriş yapın</div>
     <div class="login-err" id="loginErr"></div>
@@ -185,11 +181,8 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
 <div class="shell" id="appShell">
 <header>
   <div style="display:flex;align-items:center;gap:10px">
-    <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#1d3a6e,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🎰</div>
-    <div>
-      <div style="font-family:var(--mono);font-size:15px;font-weight:600;color:var(--text);letter-spacing:.06em;line-height:1.2">PAŞA CASINO</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.14em;line-height:1.2">DIALER PANEL</div>
-    </div>
+    <img src="https://cdn.pasacasino609.com/theme/pasacasino/assets/images/logo.png" style="height:36px;object-fit:contain" alt="Paşa Casino">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.14em;line-height:1.2">DIALER PANEL</div>
   </div>
   <div class="sep"></div>
   <div class="hstatus" id="hstatus"><span class="hdot"></span><span id="hstatustxt">Bağlanıyor...</span></div>
@@ -258,15 +251,15 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     </div>
   </div>
 
-  <!-- FOOTER (sadece user için) -->
-  <div id="userFooter" style="display:none">
-    <div class="sfooter">
-      <div class="slabel" style="padding:0 0 4px">Ayarlar</div>
-      <div class="srow"><span>Timeout</span><span><input type="number" id="cfgTimeoutU" min="5" max="120" value="25"> sn</span></div>
-      <div class="srow" style="margin-top:4px"><span>Aramalar arası</span><span><input type="number" id="cfgDelayU" min="0" max="120" value="10"> sn</span></div>
-      <button class="btn" style="margin-top:8px;justify-content:center;font-size:12px;width:100%" onclick="saveLocalSettings()">💾 Kaydet</button>
-    </div>
+  <!-- User Ayarlar -->
+  <div id="userSettings" style="display:none;border-top:1px solid var(--border);padding:10px 8px;flex-shrink:0">
+    <div class="slabel" style="padding:0 0 6px">Ayarlar</div>
+    <div class="srow"><span>Timeout</span><span><input type="number" id="cfgTimeoutU" min="5" max="120" value="25" style="width:50px"> sn</span></div>
+    <div class="srow" style="margin-top:4px"><span>Aramalar arasi</span><span><input type="number" id="cfgDelayU" min="0" max="120" value="10" style="width:50px"> sn</span></div>
+    <button class="btn" style="margin-top:8px;justify-content:center;font-size:11px;width:100%" onclick="saveLocalSettings()">Kaydet</button>
   </div>
+
+
 </aside>
 
 <main>
@@ -678,6 +671,7 @@ async function initApp(){
     await loadUsers(); await loadLists(); loadDashboard();
   } else {
     document.getElementById('userNav').style.display='flex';
+    document.getElementById('userSettings').style.display='block';
     document.getElementById('userFooter').style.display='block';
     showPage('dialer');
     loadUserLists();
@@ -766,6 +760,8 @@ async function pollLocal(){
 
 function autoSelectActiveContact(tel){
   if(!tel||!ucContacts.length) return;
+  // Manuel seçimden 5sn geçmediyse auto-select yapma
+  if(Date.now() - manualSelectTime < 5000 && selContact && !selContact._autoSelected) return;
   const clean = tel.replace(/\D/g,'');
   const contact = ucContacts.find(c=>{
     const ct = String(c.tel||'').replace(/\D/g,'');
@@ -1074,10 +1070,17 @@ function switchTab(tab){
   document.getElementById('tabDonus').style.background=!isSonuc?'var(--accent)':'var(--surface)';
   document.getElementById('tabDonus').style.color=!isSonuc?'#fff':'var(--muted)';
   document.getElementById('tabDonus').style.borderColor=!isSonuc?'var(--accent)':'var(--border2)';
-  const cur=isSonuc?selSonucVal:selDonusVal;
+  const curVal=isSonuc?selSonucVal:selDonusVal;
+  const otherVal=isSonuc?selDonusVal:selSonucVal;
   document.querySelectorAll('.sbtn').forEach(b=>{
+    const txt=b.textContent.trim();
     b.classList.remove('selected');
-    if(b.textContent.trim()===cur)b.classList.add('selected');
+    b.style.opacity='';
+    if(txt===curVal){
+      b.classList.add('selected');
+    } else if(txt===otherVal){
+      b.style.opacity='0.45'; // Diğer sekmenin seçimi soluk
+    }
   });
 }
 
@@ -1094,10 +1097,19 @@ function selSonuc(val,btn){
 
 async function clearResult(){
   if(!selContact) return;
-  const r = await api('PUT','/api/contacts/'+selContact.id+'/result',{sonuc:null,donus:null,not_text:''});
-  if(r.error){alert(r.error);return;}
-  const idx = ucContacts.findIndex(c=>c.id===selContact.id);
-  if(idx>=0){ucContacts[idx].sonuc=null;ucContacts[idx].donus=null;ucContacts[idx].not_text='';}
+  
+  // Seçili kişiler varsa hepsini kaldır, yoksa sadece aktif kişiyi
+  const ids = selectedIds.size > 0 ? [...selectedIds] : [selContact.id];
+  
+  const promises = ids.map(id => api('PUT','/api/contacts/'+id+'/result',{sonuc:null,donus:null,not_text:''}));
+  await Promise.all(promises);
+  
+  ids.forEach(id => {
+    const idx = ucContacts.findIndex(c=>c.id===id);
+    if(idx>=0){ucContacts[idx].sonuc=null;ucContacts[idx].donus=null;ucContacts[idx].not_text='';}
+  });
+  renderUcTable(); // Hepsini tek seferde güncelle
+  
   selSonucVal=null; selDonusVal=null;
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
   document.getElementById('ucNot').value='';
@@ -1105,12 +1117,11 @@ async function clearResult(){
   document.getElementById('ucSaveBtn').style.pointerEvents='none';
   document.getElementById('ucClearBtn').style.opacity='.5';
   document.getElementById('ucClearBtn').style.pointerEvents='none';
-  updateSingleRow(selContact.id);
   updateUcProg();
 }
 
 async function saveResult(){
-  if(!selContact){alert('Önce bir kişi seçin');return;}
+  if(!selContact){return;} // Sessizce çık, uyarı verme
   const not=document.getElementById('ucNot').value.trim();
   const payload={not_text:not};
   if(selSonucVal!==null) payload.sonuc=selSonucVal;
@@ -1139,9 +1150,9 @@ async function saveResult(){
           if(payload.sonuc)ucContacts[i2].sonuc=payload.sonuc;
           if(payload.donus)ucContacts[i2].donus=payload.donus;
           ucContacts[i2].not_text=payload.not_text||'';
-          updateSingleRow(id);
         }
       });
+      renderUcTable(); // Hepsini tek seferde güncelle
     }
   }
   // gsUrl'yi her seferinde settings'ten oku
@@ -1170,10 +1181,12 @@ async function saveResult(){
   updateUcProg();
 }
 
+let manualSelectTime = 0;
 function selectContact(id){
   selContact=ucContacts.find(c=>c.id===id);
   if(!selContact)return;
   delete selContact._autoSelected; // Manuel seçim
+  manualSelectTime = Date.now(); // Son manuel seçim zamanı
   document.getElementById('cname').textContent=selContact.name||'—';
   document.getElementById('cnum').textContent=selContact.tel||'—';
   document.getElementById('cavatar').textContent=initials(selContact.name||'?');
@@ -1240,7 +1253,7 @@ function renderUcTable(){
     const jumpBtn = `<button onclick="event.stopPropagation();jumpToContact(${ri})" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer" title="Bu kişiden başlat">→</button>`;
     const googleBtn = `<button onclick="event.stopPropagation();exportOneToGoogle('${c.id}')" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid #1d3a6e;background:#0c1a2e;color:#93c5fd;cursor:pointer" title="Google Kişilere Ekle">📇</button>`;
     return `<tr onclick="selectContact('${c.id}')" ondblclick="jumpToContact(${ri})" class="${isActive?'active-row'+(isSel?' sel-row':''):isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}">
-      <td style="width:28px" onclick="event.stopPropagation()"><input type="checkbox" class="row-cb" data-id="${c.id}" onchange="onCbChange()" style="cursor:pointer" ${selectedIds.has(c.id)?'checked':''}></td>
+      <td style="width:28px" onclick="event.stopPropagation()"><input type="checkbox" class="row-cb" data-id="${c.id}" onchange="onCbChange(this)" style="cursor:pointer" ${selectedIds.has(c.id)?'checked':''}></td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
       <td>${esc(c.name||'—')}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(c.tel||'')}</td>
@@ -1446,9 +1459,11 @@ async function loadAdminLists(){
 let selectedIds = new Set();
 let activeFilter = null; // null = tümü, string = filtre
 
-function onCbChange(){
-  selectedIds = new Set();
-  document.querySelectorAll('.row-cb:checked').forEach(cb=>selectedIds.add(cb.dataset.id));
+function onCbChange(cb){
+  if(!cb) return;
+  const id = cb.dataset.id;
+  if(cb.checked) selectedIds.add(id);
+  else selectedIds.delete(id);
   updateBulkToolbar();
 }
 
@@ -1464,8 +1479,15 @@ function updateBulkToolbar(){
 }
 
 function toggleSelectAll(cb){
-  const rows = document.querySelectorAll('.row-cb');
-  rows.forEach(r=>{ r.checked=cb.checked; if(cb.checked) selectedIds.add(r.dataset.id); else selectedIds.delete(r.dataset.id); });
+  if(cb.checked){
+    ucContacts.forEach(c=>selectedIds.add(c.id));
+  } else {
+    selectedIds.clear();
+  }
+  // DOM'u güncelle
+  document.querySelectorAll('.row-cb').forEach(r=>{
+    r.checked = selectedIds.has(r.dataset.id);
+  });
   updateBulkToolbar();
 }
 
@@ -1544,27 +1566,19 @@ function clearSelection(){
 
 async function bulkMark(sonuc){
   if(!selectedIds.size) return;
-  if(!confirm(selectedIds.size+' kişiye "'+sonuc+'" işaretlensin?')) return;
+  if(!confirm(selectedIds.size+' kisiye "'+sonuc+'" isaretlensin?')) return;
   const ids = [...selectedIds];
-  let done=0;
-  // Hepsini aynı anda gönder
-  const promises = ids.map(id => api('PUT','/api/contacts/'+id+'/result',{sonuc}));
-  await Promise.all(promises);
-  // Local güncelle
+  // Hepsini paralel gönder
+  await Promise.all(ids.map(id => api('PUT','/api/contacts/'+id+'/result',{sonuc})));
+  // Local tek seferde güncelle
   ids.forEach(id=>{
     const idx = ucContacts.findIndex(c=>c.id===id);
-    if(idx>=0){
-      ucContacts[idx].sonuc=sonuc;
-      done++;
-      // Google Sheets'e gönder
-      const c = ucContacts[idx];
-      sendToSheets(c, sonuc, c.donus||'', c.not_text||'', null);
-    }
+    if(idx>=0) ucContacts[idx].sonuc=sonuc;
   });
   clearSelection();
   renderUcTable();
   updateUcProg();
-  setStatus(done+' kişi işaretlendi','live');
+  setStatus(ids.length+' kisi isaretlendi','live');
 }
 
 // ── DOWNLOAD MARKED ──────────────────────────────────────
