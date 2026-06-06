@@ -1091,12 +1091,10 @@ function switchTab(tab){
 function selSonuc(val,btn){
   if(activeTab==='sonuc'){
     selSonucVal=val;
-    // Dönüş sekmesi boşsa aynı değeri varsayılan olarak set et
-    if(!selDonusVal) selDonusVal=val;
+    // selDonusVal'i SET ETME — sadece görsel olarak göster
   } else {
     selDonusVal=val;
-    // Sonuç sekmesi boşsa aynı değeri varsayılan olarak set et
-    if(!selSonucVal) selSonucVal=val;
+    // selSonucVal'i SET ETME — sadece görsel olarak göster
   }
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
@@ -1136,7 +1134,9 @@ async function saveResult(){
   const not=document.getElementById('ucNot').value.trim();
   const payload={not_text:not};
   if(selSonucVal!==null) payload.sonuc=selSonucVal;
+  // Dönüş seçilmediyse Sonuç değerini kullan (kolaylık için)
   if(selDonusVal!==null) payload.donus=selDonusVal;
+  else if(selSonucVal!==null) payload.donus=selSonucVal;
   // Mevcut degerleri de koru
   if(!payload.sonuc&&selContact.sonuc) payload.sonuc=selContact.sonuc;
   if(!payload.donus&&selContact.donus) payload.donus=selContact.donus;
