@@ -677,7 +677,7 @@ async function initApp(){
   } else {
     document.getElementById('userNav').style.display='flex';
     document.getElementById('userSettings').style.display='block';
-    document.getElementById('userFooter').style.display='block';
+    const uf=document.getElementById('userFooter'); if(uf) uf.style.display='block';
     showPage('dialer');
     loadUserLists();
     loadLocalSettings();
@@ -793,13 +793,15 @@ function highlightActiveContact(tel){
     return ct===clean || ct.endsWith(clean.slice(-10)) || clean.endsWith(ct.slice(-10));
   });
   if(idx<0) return;
-  // Tabloyu yeniden render et — aktif satır yeşil görünsün
-  renderUcTable();
-  // Sadece ilk highlight'ta scroll yap (sonraki pollarda engelleme)
-  if(!window._lastHighlightId || window._lastHighlightId !== ucContacts[idx].id){
-    window._lastHighlightId = ucContacts[idx].id;
+  const c = ucContacts[idx];
+  // Sadece active-row class'ını güncelle, tüm tabloyu render etme
+  document.querySelectorAll('tbody tr.active-row').forEach(r=>r.classList.remove('active-row'));
+  const row = document.getElementById('uc-'+c.id);
+  if(row) row.classList.add('active-row');
+  // Sadece ilk highlight'ta scroll yap
+  if(!window._lastHighlightId || window._lastHighlightId !== c.id){
+    window._lastHighlightId = c.id;
     setTimeout(()=>{
-      const row = document.getElementById('uc-'+ucContacts[idx].id);
       if(row) row.scrollIntoView({block:'center',behavior:'smooth'});
     },300);
   }
