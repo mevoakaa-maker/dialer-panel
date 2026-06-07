@@ -608,7 +608,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const btn=document.getElementById('googleLoginBtn');
   if(btn) btn.onclick=()=>window.location.href='/auth/google/login';
 });
-const LOCAL='http://localhost:8080';
+const LOCAL='http://127.0.0.1:8080';
 let token=localStorage.getItem('token')||'';
 let currentUser=null;
 let allUsers=[];
