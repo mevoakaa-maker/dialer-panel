@@ -2,6 +2,8 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+  <title>Paşa Casino Dialer</title>
+  <link rel="icon" type="image/png" href="https://cdn.pasacasino609.com/theme/pasacasino/assets/images/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -407,6 +409,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
           <div onclick="selectBySonuc('Ulaşılamıyor')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#7dd3fc" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Ulaşılamayanları Seç</div>
           <div onclick="selectBySonuc('Sonra Aranacak')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#5eead4" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Sonra Aranacakları Seç</div>
           <div onclick="selectBySonuc('İlgilenmiyor')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#fca5a5" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">İlgilenmiyor Seç</div>
+          <div onclick="selectBySonuc('Servis Dışı')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#94a3b8" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">Servis Dışı Seç</div>
         </div>
       </div>
       <button onclick="selectEmpty()" style="padding:4px 12px;background:transparent;border:1px solid var(--border2);border-radius:20px;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='#93c5fd'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">Boşları Seç</button>
@@ -1070,10 +1073,17 @@ async function loadUcList(list,btn){
   renderUcTable();updateUcProg();
   // Sheets ID varsa sayfaları yükle
   if(list.spreadsheet_id) loadSheetPages(list);
-  // CSV'ye yaz
+  // CSV'ye yaz - filtre aktifse sadece filtrelenenleri yaz
   if(localOnline){
-    const csv=contacts.map(c=>((c.name||'')+','+(c.tel||''))).join('\n');
+    const csvContacts = (activeFilter && activeFilter!=='filtered') 
+      ? contacts.filter(c=>{
+          if(activeFilter==='empty') return !c.sonuc;
+          return c.sonuc===activeFilter;
+        })
+      : contacts;
+    const csv=csvContacts.map(c=>((c.name||'')+','+(c.tel||''))).join('\n');
     await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'contacts.csv',content:csv})}).catch(()=>{});
+    await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'index.txt',content:'0'})}).catch(()=>{});
     // index.txt sıfırlamıyoruz - mevcut arama devam etsin
   }
 }
@@ -1275,7 +1285,7 @@ function renderUcTable(){
     return !q||(c.name||'').toLowerCase().includes(q)||(c.tel||'').includes(q);
   });
   document.getElementById('ucTbody').innerHTML=rows.map(c=>{
-    const ri=ucContacts.indexOf(c)+1;
+    const ri=rows.indexOf(c)+1; // Görsel index - filtrelenince 1,2,3...
     const cleanTel=String(c.tel||'').replace(/\D/g,'');
     const cleanActive=lastLocalName?(String(document.getElementById('cnum').textContent||'').replace(/\D/g,'')):'' ;
     const isActive = cleanActive && (cleanTel===cleanActive || cleanTel.endsWith(cleanActive.slice(-10)) || cleanActive.endsWith(cleanTel.slice(-10)));
