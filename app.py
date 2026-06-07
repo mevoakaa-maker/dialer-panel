@@ -449,8 +449,15 @@ def update_list_gsurl(lid):
     return jsonify({'ok': True})
 
 @app.route('/api/lists/<lid>', methods=['DELETE'])
-@require_admin
+@require_auth
 def delete_list(lid):
+    user = request.user
+    # Admin her şeyi silebilir, kullanıcı sadece kendi oluşturduğunu
+    if user['role'] not in ('admin','super_admin'):
+        lst = sb.table('data_lists').select('created_by,assigned_to').eq('id', lid).execute()
+        if not lst.data: return jsonify({'error':'Bulunamadı'}), 404
+        if lst.data[0].get('created_by') != user['id'] and lst.data[0].get('assigned_to') != user['id']:
+            return jsonify({'error':'Yetkisiz'}), 403
     sb.table('contacts').delete().eq('list_id', lid).execute()
     sb.table('data_lists').delete().eq('id', lid).execute()
     return jsonify({'ok': True})
