@@ -608,7 +608,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const btn=document.getElementById('googleLoginBtn');
   if(btn) btn.onclick=()=>window.location.href='/auth/google/login';
 });
-const LOCAL='https://127.0.0.1:8443';
+const LOCAL='http://localhost:8080';
 let token=localStorage.getItem('token')||'';
 let currentUser=null;
 let allUsers=[];
@@ -708,16 +708,7 @@ function setStatus(msg,type){
 // ── LOCAL SERVER ──────────────────────────────────────────
 async function pollLocal(){
   try{
-    // XMLHttpRequest ile dene - Chrome Private Network Access sorunu yok
-    const r = await new Promise((res,rej)=>{
-      const x = new XMLHttpRequest();
-      x.open('GET', LOCAL+'/api/list');
-      x.timeout = 1500;
-      x.onload = ()=>res({ok:x.status===200, text:x.responseText});
-      x.onerror = ()=>rej(new Error('err'));
-      x.ontimeout = ()=>rej(new Error('timeout'));
-      x.send();
-    });
+    const r=await fetch(LOCAL+'/api/list',{signal:AbortSignal.timeout(1500)});
     if(r.ok){
       localOnline=true;
       const dot=document.getElementById('localDot');
