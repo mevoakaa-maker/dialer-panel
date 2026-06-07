@@ -1892,12 +1892,12 @@ async function quickSave(id, field, value){
   const idx = ucContacts.findIndex(c=>c.id===id);
   if(idx<0) return;
   const c = ucContacts[idx];
-  const payload = {not_text: c.not_text||''};
+  const payload = {};
   if(field==='sonuc') { payload.sonuc=value||null; c.sonuc=value||null; }
   else if(field==='donus') { payload.donus=value||null; c.donus=value||null; }
   else if(field==='not_text') { payload.not_text=value; c.not_text=value; }
   await api('PUT','/api/contacts/'+id+'/result', payload);
-  // Sheets'e gönder
+  // Sheets'e gönder - boş değerleri de gönder (silmek için)
   sendToSheets(c, c.sonuc||'', c.donus||'', c.not_text||'', null);
   // Satır class güncelle
   const row = document.getElementById('uc-'+id);
