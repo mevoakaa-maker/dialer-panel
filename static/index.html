@@ -1356,7 +1356,8 @@ function updateUcProg(){
 async function jumpToContact(ri, contactId){
   if(!localOnline){alert('Local server çalışmıyor.\nÖnce start.bat çalıştırın.');return;}
   const contact = contactId ? ucContacts.find(c=>c.id===contactId) : ucContacts[ri-1];
-  if(!confirm(contact?.name+' — bu kişiden başlat?'))return;
+  if(!contact){alert('Kişi bulunamadı');return;}
+  if(!confirm(contact.name+' — bu kişiden başlat?'))return;
   try{
     // Mevcut CSV dosyasını oku ve içinde bu kişinin pozisyonunu bul
     try{
@@ -1974,6 +1975,7 @@ async function changeSheetPage(sheet){
 
 // ── CSV GÜNCELLE ─────────────────────────────────────────
 async function updateLocalCsv(){
+  console.log('updateLocalCsv called, activeFilter:', activeFilter, 'localOnline:', localOnline);
   if(!localOnline || !ucContacts.length) return;
   let csvContacts;
   if(activeFilter && activeFilter!=='filtered'){
