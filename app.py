@@ -249,9 +249,9 @@ def sheets_write():
         if not row_num: return jsonify({'error': f'Tel bulunamadı: {tel}'}), 404
         sheet_prefix = f"'{sheet_name}'!" if sheet_name else ''
         updates = []
-        if sonuc: updates.append({'range': f'{sheet_prefix}C{row_num}', 'values': [[sonuc]]})
-        if donus: updates.append({'range': f'{sheet_prefix}D{row_num}', 'values': [[donus]]})
-        if not_text: updates.append({'range': f'{sheet_prefix}E{row_num}', 'values': [[not_text]]})
+        updates.append({'range': f'{sheet_prefix}C{row_num}', 'values': [[sonuc]]})
+        updates.append({'range': f'{sheet_prefix}D{row_num}', 'values': [[donus]]})
+        updates.append({'range': f'{sheet_prefix}E{row_num}', 'values': [[not_text]]})
         if updates:
             r2 = req_lib.post(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values:batchUpdate',
                 json={'valueInputOption': 'USER_ENTERED', 'data': updates}, headers=headers, timeout=15)
