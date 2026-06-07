@@ -227,41 +227,14 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
 </header>
 
 <aside>
-  <!-- DRIVE / DATALARIM - her zaman en üstte -->
-  <div id="topNavTabs" style="display:none;flex-direction:column;flex-shrink:0">
-    <div style="display:flex;border-bottom:1px solid var(--border)">
-      <button id="tabDrive2" onclick="switchNavTab('drive')" style="flex:1;padding:8px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:var(--accent-dim);color:#93c5fd;border-bottom:2px solid var(--accent)">☁️ Drive</button>
-      <button id="tabMyData2" onclick="switchNavTab('mydata')" style="flex:1;padding:8px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:2px solid transparent">📋 Datalarım</button>
-    </div>
-    <!-- Drive içerik -->
-    <div id="navDriveTop" style="flex-direction:column;overflow:hidden;display:flex">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px 4px">
-        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Google Drive</span>
-        <button class="btn" style="font-size:10px;padding:2px 7px" onclick="loadDriveFiles()">↻</button>
-      </div>
-      <div id="driveFileNavTop" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;max-height:300px">
-        <div style="font-size:11px;color:var(--muted);padding:8px">Drive'ı yüklemek için ↻ tıklayın</div>
-      </div>
-    </div>
-    <!-- Datalarım içerik -->
-    <div id="navMyDataTop" style="flex-direction:column;overflow:hidden;display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px 4px">
-        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Listeler</span>
-        <button class="btn g" style="font-size:10px;padding:2px 7px" onclick="openModal('userUploadModal')">+ Yükle</button>
-      </div>
-      <div id="userListNavTop" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;max-height:300px"></div>
-    </div>
-    <div style="border-bottom:1px solid var(--border);margin:4px 0"></div>
-  </div>
-
   <!-- ADMIN NAV -->
   <div id="adminNav" style="display:none">
     <div class="slabel">Yönetim</div>
     <button class="nav-btn active" onclick="showPage('dashboard')"><span style="width:18px;text-align:center">📊</span>Dashboard</button>
     <button class="nav-btn" onclick="showPage('users')"><span style="width:18px;text-align:center">👥</span>Kullanıcılar</button>
     <button class="nav-btn" onclick="showPage('settings')"><span style="width:18px;text-align:center">⚙️</span>Ayarlar</button>
-      <div style="border-top:1px solid var(--border);margin:6px 0"></div>
-      <button class="nav-btn" onclick="showPage('dialer');loadAdminLists()"><span style="width:18px;text-align:center">📞</span>Dialer</button>
+    <div style="border-top:1px solid var(--border);margin:6px 0"></div>
+    <button class="nav-btn" onclick="showPage('dialer');loadAdminLists()"><span style="width:18px;text-align:center">📞</span>Dialer</button>
   </div>
 
   <!-- ADMIN DIALER LIST -->
@@ -269,22 +242,40 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     <div id="adminListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;margin-top:4px"></div>
   </div>
 
-  <!-- USER NAV - gizli ama id'ler korunuyor -->
-  <div id="userNav" style="display:none">
-    <div id="navMyData" style="display:none"><div id="userListNav"></div></div>
-    <div id="navDrive" style="display:none"><div id="driveFileNav"></div></div>
-    <button id="tabMyData" style="display:none"></button>
-    <button id="tabDrive" style="display:none"></button>
+  <!-- USER NAV -->
+  <div id="userNav" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+    <!-- Tab seçici -->
+    <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0">
+      <button id="tabDrive" onclick="switchNavTab('drive')" style="flex:1;padding:8px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:var(--accent-dim);color:#93c5fd;border-bottom:2px solid var(--accent)">☁️ Drive</button>
+      <button id="tabMyData" onclick="switchNavTab('mydata')" style="flex:1;padding:8px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:2px solid transparent">📋 Datalarım</button>
+    </div>
+    <!-- Drive içerik -->
+    <div id="navDrive" style="flex:1;flex-direction:column;overflow:hidden;display:flex">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px 4px">
+        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Google Drive</span>
+        <button class="btn" style="font-size:10px;padding:2px 7px" onclick="loadDriveFiles()">↻</button>
+      </div>
+      <div id="driveFileNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1">
+        <div style="font-size:11px;color:var(--muted);padding:8px">Drive'ı yüklemek için ↻ tıklayın</div>
+      </div>
+    </div>
+    <!-- Datalarım içerik -->
+    <div id="navMyData" style="flex:1;flex-direction:column;overflow:hidden;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px 4px">
+        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Listeler</span>
+        <button class="btn g" style="font-size:10px;padding:2px 7px" onclick="openModal('userUploadModal')">+ Yükle</button>
+      </div>
+      <div id="userListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1"></div>
+    </div>
   </div>
 
   <!-- User Ayarlar -->
   <div id="userSettings" style="display:none;border-top:1px solid var(--border);padding:10px 8px;flex-shrink:0">
     <div class="slabel" style="padding:0 0 6px">Ayarlar</div>
     <div class="srow"><span>Arama Süresi</span><span><input type="number" id="cfgTimeoutU" min="5" max="120" value="" style="width:50px"> sn</span></div>
-    <div class="srow" style="margin-top:4px"><span>Aramalar arasi</span><span><input type="number" id="cfgDelayU" min="0" max="120" value="" style="width:50px"> sn</span></div>
+    <div class="srow" style="margin-top:4px"><span>Beklenecek Süre</span><span><input type="number" id="cfgDelayU" min="0" max="120" value="" style="width:50px"> sn</span></div>
     <button class="btn" style="margin-top:8px;justify-content:center;font-size:11px;width:100%" onclick="saveLocalSettings()">Kaydet</button>
   </div>
-
 
 </aside>
 
@@ -685,7 +676,7 @@ async function initApp(){
     showPage('dialer');
     loadUserLists();
     switchNavTab('drive');
-    const tt=document.getElementById('topNavTabs'); if(tt) tt.style.display='flex';
+
     loadLocalSettings();
   }
   setInterval(pollLocal,200); pollLocal();
@@ -702,9 +693,7 @@ function showPage(name){
   // Google Contacts butonu sadece dialer sayfasında göster
   const gcBtn=document.getElementById('googleContactsBtn');
   if(gcBtn) gcBtn.style.display='none'; // header'da artık yok
-  // topNavTabs - dialer'da göster
-  const topTabs = document.getElementById('topNavTabs');
-  if(topTabs) topTabs.style.display=(name==='dialer')?'flex':'none';
+
   const gcBtn2=document.getElementById('googleContactsBtn2');
   if(gcBtn2) gcBtn2.style.display=(name==='dialer')?'flex':'none';
 }
@@ -1827,27 +1816,14 @@ let driveSheets = [];
 function switchNavTab(tab){
   if(!tab) tab='drive';
   const isMyData = tab === 'mydata';
-  // Eski elementler
-  ['navMyData'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=isMyData?'flex':'none';});
-  ['navDrive'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=isMyData?'none':'flex';});
-  // Yeni top elementler
-  const nmt=document.getElementById('navMyDataTop');
-  const ndt=document.getElementById('navDriveTop');
-  if(nmt) nmt.style.display=isMyData?'flex':'none';
-  if(ndt) ndt.style.display=isMyData?'none':'flex';
-  // Tab butonları
-  ['tabMyData','tabMyData2'].forEach(id=>{
-    const el=document.getElementById(id); if(!el) return;
-    el.style.background=isMyData?'var(--accent-dim)':'transparent';
-    el.style.color=isMyData?'#93c5fd':'var(--muted)';
-    el.style.borderBottomColor=isMyData?'var(--accent)':'transparent';
-  });
-  ['tabDrive','tabDrive2'].forEach(id=>{
-    const el=document.getElementById(id); if(!el) return;
-    el.style.background=!isMyData?'var(--accent-dim)':'transparent';
-    el.style.color=!isMyData?'#93c5fd':'var(--muted)';
-    el.style.borderBottomColor=!isMyData?'var(--accent)':'transparent';
-  });
+  const nm=document.getElementById('navMyData');
+  const nd=document.getElementById('navDrive');
+  if(nm) nm.style.display=isMyData?'flex':'none';
+  if(nd) nd.style.display=isMyData?'none':'flex';
+  const tm=document.getElementById('tabMyData');
+  const td=document.getElementById('tabDrive');
+  if(tm){tm.style.background=isMyData?'var(--accent-dim)':'transparent';tm.style.color=isMyData?'#93c5fd':'var(--muted)';tm.style.borderBottomColor=isMyData?'var(--accent)':'transparent';}
+  if(td){td.style.background=!isMyData?'var(--accent-dim)':'transparent';td.style.color=!isMyData?'#93c5fd':'var(--muted)';td.style.borderBottomColor=!isMyData?'var(--accent)':'transparent';}
   if(!isMyData && driveFiles.length===0) loadDriveFiles();
 }
 
