@@ -1355,9 +1355,20 @@ function updateUcProg(){
 
 async function jumpToContact(ri){
   if(!localOnline){alert('Local server çalışmıyor.\nÖnce start.bat çalıştırın.');return;}
-  if(!confirm(ucContacts[ri-1]?.name+' — bu kişiden başlat?'))return;
+  const contact = ucContacts[ri-1];
+  if(!confirm(contact?.name+' — bu kişiden başlat?'))return;
   try{
-    await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'index.txt',content:String(ri-1)})});
+    // Filtrelenmiş CSV'deki pozisyonu bul
+    let csvContacts;
+    if(activeFilter && activeFilter!=='filtered'){
+      if(activeFilter==='empty') csvContacts = ucContacts.filter(c=>!c.sonuc);
+      else csvContacts = ucContacts.filter(c=>c.sonuc===activeFilter);
+    } else {
+      csvContacts = ucContacts;
+    }
+    const csvIdx = csvContacts.findIndex(c=>c.id===contact?.id);
+    const idxToWrite = csvIdx >= 0 ? csvIdx : ri-1;
+    await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'index.txt',content:String(idxToWrite)})});
     await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'paused.flag'})});
     await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.lock'})});
     await fetch(LOCAL+'/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd:'resume_after_manual.bat'})});
