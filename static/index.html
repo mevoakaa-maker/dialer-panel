@@ -708,7 +708,16 @@ function setStatus(msg,type){
 // ── LOCAL SERVER ──────────────────────────────────────────
 async function pollLocal(){
   try{
-    const r=await fetch(LOCAL+'/api/list',{signal:AbortSignal.timeout(1500)});
+    // XMLHttpRequest ile dene - Chrome Private Network Access sorunu yok
+    const r = await new Promise((res,rej)=>{
+      const x = new XMLHttpRequest();
+      x.open('GET', LOCAL+'/api/list');
+      x.timeout = 1500;
+      x.onload = ()=>res({ok:x.status===200, text:x.responseText});
+      x.onerror = ()=>rej(new Error('err'));
+      x.ontimeout = ()=>rej(new Error('timeout'));
+      x.send();
+    });
     if(r.ok){
       localOnline=true;
       const dot=document.getElementById('localDot');
@@ -888,7 +897,7 @@ async function deleteUser(uid){if(!confirm('Sil?'))return;await api('DELETE','/a
 
 // ── ADMIN: LISTS ──────────────────────────────────────────
 async function loadLists(){
-  allLists=await api('GET','/api/lists');
+  allLists=await api('GET','/api/lists?scope=all');
   if(!Array.isArray(allLists))return;
   document.querySelector('#listsTbl tbody').innerHTML=allLists.map(l=>`
     <tr><td>${esc(l.name)}</td><td style="font-size:12px;color:var(--muted)">${esc(l.sheet||'—')}</td>
