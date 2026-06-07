@@ -826,16 +826,15 @@ async function getDialerSettings(){
 async function localCmd(cmd){
   if(!localOnline){alert('Local server çalışmıyor.\nÖnce start.bat çalıştırın.');return;}
   try{
-    const settings = await getDialerSettings();
     if(cmd==='resume'){
-      const key = settings.key_resume || 'F10';
-      await fetch(LOCAL+'/api/ahk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
+      await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'paused.flag'})});
+      await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.lock'})});
+      await fetch(LOCAL+'/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd:'resume_after_manual.bat'})});
     }else if(cmd==='pause'){
-      const key = settings.key_pause || 'F9';
-      await fetch(LOCAL+'/api/ahk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
+      await fetch(LOCAL+'/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cmd:'pause.bat'})});
     }else if(cmd==='cancel_hangup'){
-      const key = settings.key_cancel_hangup || 'F8';
-      await fetch(LOCAL+'/api/ahk',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
+      await fetch(LOCAL+'/api/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'cancel_hangup.flag'})});
+      await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'cancel_hangup.flag',content:'1'})});
     }
   }catch(e){console.log('local err',e);}
 }
