@@ -147,7 +147,9 @@ main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 tbody tr{border-bottom:1px solid var(--border);transition:all .15s;cursor:pointer}
 tbody tr:hover{background:rgba(59,130,246,.05)}
 tbody tr.done{opacity:.45}
-.tbl-select{background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:11px;padding:3px 6px;font-family:var(--sans);cursor:pointer;width:100%;max-width:130px}
+.tbl-select{background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:11px;padding:3px 6px;font-family:var(--sans);cursor:pointer;width:100%;max-width:130px;transition:all .15s}
+.tbl-select.s-link{background:rgba(34,197,94,.15);border-color:#22c55e;color:#22c55e}
+.tbl-select.s-servis{background:rgba(239,68,68,.15);border-color:#ef4444;color:#ef4444}
 .tbl-select:focus{outline:none;border-color:var(--accent)}
 .tbl-input{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:12px;font-family:var(--sans);padding:2px 4px;width:100%;min-width:80px}
 .tbl-input:focus{outline:none;border-bottom-color:var(--accent)}
@@ -230,7 +232,6 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     <div class="slabel">Yönetim</div>
     <button class="nav-btn active" onclick="showPage('dashboard')"><span style="width:18px;text-align:center">📊</span>Dashboard</button>
     <button class="nav-btn" onclick="showPage('users')"><span style="width:18px;text-align:center">👥</span>Kullanıcılar</button>
-    <button class="nav-btn" onclick="showPage('lists')"><span style="width:18px;text-align:center">📋</span>Datalar</button>
     <button class="nav-btn" onclick="showPage('settings')"><span style="width:18px;text-align:center">⚙️</span>Ayarlar</button>
       <div style="border-top:1px solid var(--border);margin:6px 0"></div>
       <button class="nav-btn" onclick="showPage('dialer');loadAdminLists()"><span style="width:18px;text-align:center">📞</span>Dialer</button>
@@ -238,18 +239,15 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
 
   <!-- ADMIN DIALER LIST -->
   <div id="adminDialerNav" style="display:none;flex:1;flex-direction:column;overflow:hidden">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 8px 4px">
-      <span class="slabel" style="padding:0">Datalar</span>
-    </div>
-    <div id="adminListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1"></div>
+    <div id="adminListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;margin-top:4px"></div>
   </div>
 
   <!-- USER NAV -->
   <div id="userNav" style="display:none;flex:1;flex-direction:column;overflow:hidden;display:none">
     <!-- Tab seçici -->
     <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0">
-      <button id="tabMyData" onclick="switchNavTab('mydata')" style="flex:1;padding:7px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:var(--accent-dim);color:#93c5fd;border-bottom:2px solid var(--accent)">📋 Datalarım</button>
       <button id="tabDrive" onclick="switchNavTab('drive')" style="flex:1;padding:7px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:2px solid transparent">📊 Drive</button>
+      <button id="tabMyData" onclick="switchNavTab('mydata')" style="flex:1;padding:7px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:var(--accent-dim);color:#93c5fd;border-bottom:2px solid var(--accent)">📋 Datalarım</button>
     </div>
 
     <!-- Datalarım -->
@@ -406,6 +404,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
       </div>
       <button class="btn" onclick="toggleHide()" id="hideBtn">✕ Bitti olanları gizle</button>
       <button class="btn" style="font-size:11px;border-color:#0f766e;color:#5eead4;background:#042f2e" onclick="syncAllToSheets()" title="Tüm işaretlemeleri Google Sheets'e gönder">📊 Sheets'e Aktar</button>
+      <button onclick="addSelectedToGoogle()" style="border:1px solid #4285f4;color:#4285f4;background:transparent;border-radius:20px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:var(--sans)"><svg width="12" height="12" viewBox="0 0 48 48" style="vertical-align:middle;margin-right:3px"><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/></svg>Google'a Aktar</button>
       <div style="width:1px;height:16px;background:var(--border2)"></div>
       <div style="position:relative;display:inline-block">
         <button class="btn" style="font-size:11px" onclick="toggleFilterMenu(this)">☑ Filtrelenenleri Seç ▾</button>
@@ -679,6 +678,7 @@ async function initApp(){
     const uf=document.getElementById('userFooter'); if(uf) uf.style.display='block';
     showPage('dialer');
     loadUserLists();
+    switchNavTab('drive');
     loadLocalSettings();
   }
   setInterval(pollLocal,200); pollLocal();
@@ -1321,6 +1321,7 @@ function renderUcTable(){
     const jumpBtn = `<button onclick="event.stopPropagation();jumpToContact(${realIdx},'${c.id}')" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer" title="Bu kişiden başlat">→</button>`;
     const googleBtn = `<button onclick="event.stopPropagation();exportOneToGoogle('${c.id}')" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid #1d3a6e;background:#0c1a2e;color:#93c5fd;cursor:pointer" title="Google Kişilere Ekle">📇</button>`;
     const _sopts=['','İlgilenmiyor','Link Atıldı','Cevapsız','Meşgul','Ulaşılamıyor','Sonra Aranacak','Servis Dışı','Görüşmeyi Sonlandırdı','Üye Oldu','Mevcut Üye Aktif','Mevcut Üye Aktif Edildi','Numara Başkasına ait'];
+    const sonucColor = c.sonuc==='Link Atıldı'?'s-link':c.sonuc==='Servis Dışı'?'s-servis':'';
     const sonucSel=_sopts.map(o=>`<option value="${esc(o)}" ${c.sonuc===o?'selected':''}>${esc(o)||'—'}</option>`).join('');
     const donusSel=_sopts.map(o=>`<option value="${esc(o)}" ${c.donus===o?'selected':''}>${esc(o)||'—'}</option>`).join('');
     return `<tr onclick="selectContact('${c.id}')"  ondblclick="jumpToContact(${ri})" class="${isActive?'active-row'+(isSel?' sel-row':''):isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}">
@@ -1328,7 +1329,7 @@ function renderUcTable(){
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
       <td>${esc(c.name||'—')}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(c.tel||'')}</td>
-      <td onclick="event.stopPropagation()"><select class="tbl-select" onchange="quickSave('${c.id}','sonuc',this.value)">${sonucSel}</select></td>
+      <td onclick="event.stopPropagation()"><select class="tbl-select ${sonucColor}" onchange="quickSave('${c.id}','sonuc',this.value)">${sonucSel}</select></td>
       <td onclick="event.stopPropagation()"><select class="tbl-select" onchange="quickSave('${c.id}','donus',this.value)">${donusSel}</select></td>
       <td onclick="event.stopPropagation()"><input class="tbl-input" type="text" value="${esc(c.not_text||'')}" placeholder="Not..." onblur="quickSave('${c.id}','not_text',this.value)" onkeydown="if(event.key==='Enter')this.blur()"></td>
       <td style="width:36px" onclick="event.stopPropagation()">${jumpBtn}</td>
@@ -2032,6 +2033,13 @@ async function quickSave(id, field, value){
   const row = document.getElementById('uc-'+id);
   if(row && !row.classList.contains('active-row')){
     row.className = c.sonuc ? 'done' : '';
+  }
+  // Dropdown rengini güncelle
+  const sel = row?.querySelector('.tbl-select');
+  if(sel && field==='sonuc'){
+    sel.className = 'tbl-select';
+    if(c.sonuc==='Link Atıldı') sel.classList.add('s-link');
+    else if(c.sonuc==='Servis Dışı') sel.classList.add('s-servis');
   }
   updateUcProg();
 }
