@@ -1973,7 +1973,8 @@ async function updateLocalCsv(){
   }
   const csv = csvContacts.map(c=>((c.name||'')+','+(c.tel||''))).join('\n');
   await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'contacts.csv',content:csv})}).catch(()=>{});
-  // index.txt'e dokunmuyoruz
+  // Filtre değişince her zaman index sıfırla
+  await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'index.txt',content:'0'})}).catch(()=>{});
 }
 
 // ── QUICK SAVE ───────────────────────────────────────────
