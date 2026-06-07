@@ -210,6 +210,10 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     <div id="userAvatar" style="width:30px;height:30px;border-radius:50%;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:600;color:#93c5fd;border:1px solid #1d3a6e;display:none"></div>
     <span style="font-size:13px;font-weight:500;color:var(--text)" id="huser"></span>
   </div>
+  <button id="googleContactsBtn" onclick="exportAllToGoogle()" style="display:none;align-items:center;gap:8px;padding:7px 14px;background:transparent;border:1px solid #4285f4;border-radius:20px;color:#4285f4;font-size:13px;cursor:pointer;font-family:var(--sans);transition:all .15s" onmouseover="this.style.background='rgba(66,133,244,.1)'" onmouseout="this.style.background='transparent'">
+    <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/></svg>
+    Kişileri Aktar
+  </button>
   <button class="btn r" style="font-size:11px" onclick="logout()">Çıkış</button>
 </header>
 
@@ -381,14 +385,11 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     <!-- TABLO TOOLBAR -->
     <div style="display:flex;align-items:center;gap:8px;padding:7px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
       <input type="text" id="ucSearch" placeholder="İsim veya numara ara..." oninput="renderUcTable()" style="flex:1;min-width:0;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text);font-size:12px">
-      <input type="text" id="ucSearchSonuc" placeholder="Sonuç ara..." oninput="renderUcTable()" style="width:100px;padding:5px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;color:var(--text);font-size:11px">
-      <input type="text" id="ucSearchDonus" placeholder="Dönüş ara..." oninput="renderUcTable()" style="width:100px;padding:5px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;color:var(--text);font-size:11px">
       <div id="sheetPageWrap" style="display:none;align-items:center;gap:6px">
         <span style="font-size:11px;color:var(--muted)">Sayfa:</span>
         <select id="sheetPageSelector" onchange="changeSheetPage(this.value)" style="padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:12px"></select>
       </div>
       <button class="btn" onclick="toggleHide()" id="hideBtn">✕ Bitti olanları gizle</button>
-      <button class="btn b" onclick="exportAllToGoogle()" title="Tüm listeyi Google Kişilere aktar">📇 Kişileri Aktar</button>
       <button class="btn" style="font-size:11px;border-color:#0f766e;color:#5eead4;background:#042f2e" onclick="syncAllToSheets()" title="Tüm işaretlemeleri Google Sheets'e gönder">📊 Sheets'e Aktar</button>
       <div style="width:1px;height:16px;background:var(--border2)"></div>
       <div style="position:relative;display:inline-block">
@@ -404,8 +405,8 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
           <div onclick="selectBySonuc('İlgilenmiyor')" style="padding:6px 10px;cursor:pointer;font-size:12px;border-radius:4px;color:#fca5a5" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">İlgilenmiyor Seç</div>
         </div>
       </div>
-      <button class="btn" style="font-size:11px" onclick="selectEmpty()">☑ Boşları Seç</button>
-      <button class="btn" style="font-size:11px" onclick="selectAll2()">☑ Tümünü Seç</button>
+      <button onclick="selectEmpty()" style="padding:4px 12px;background:transparent;border:1px solid var(--border2);border-radius:20px;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='#93c5fd'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">Boşları Seç</button>
+      <button onclick="selectAll2()" style="padding:4px 12px;background:transparent;border:1px solid var(--border2);border-radius:20px;color:var(--muted);font-size:11px;cursor:pointer;font-family:var(--sans);transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='#93c5fd'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">Tümünü Seç</button>
     </div>
 
     <!-- PROGRESS -->
@@ -674,6 +675,9 @@ function showPage(name){
   document.querySelector(`.nav-btn[onclick^="showPage('${name}')"]`)?.classList.add('active');
   const adn=document.getElementById('adminDialerNav');
   if(adn) adn.style.display=(name==='dialer')?'flex':'none';
+  // Google Contacts butonu sadece dialer sayfasında göster
+  const gcBtn=document.getElementById('googleContactsBtn');
+  if(gcBtn) gcBtn.style.display=(name==='dialer')?'flex':'none';
 }
 
 // ── STATUS ────────────────────────────────────────────────
