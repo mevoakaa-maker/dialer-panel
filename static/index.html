@@ -239,7 +239,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
         <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Google Drive</span>
         <button class="btn" style="font-size:10px;padding:2px 7px" onclick="loadDriveFiles()">↻</button>
       </div>
-      <div id="driveFileNavTop" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;max-height:200px">
+      <div id="driveFileNavTop" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;max-height:300px">
         <div style="font-size:11px;color:var(--muted);padding:8px">Drive'ı yüklemek için ↻ tıklayın</div>
       </div>
     </div>
@@ -249,7 +249,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
         <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Listeler</span>
         <button class="btn g" style="font-size:10px;padding:2px 7px" onclick="openModal('userUploadModal')">+ Yükle</button>
       </div>
-      <div id="userListNavTop" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;max-height:200px"></div>
+      <div id="userListNavTop" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;max-height:300px"></div>
     </div>
     <div style="border-bottom:1px solid var(--border);margin:4px 0"></div>
   </div>
@@ -269,33 +269,12 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     <div id="adminListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;margin-top:4px"></div>
   </div>
 
-  <!-- USER NAV (eski - artık boş kalacak) -->
-  <div id="userNav" style="display:none;flex:1;flex-direction:column;overflow:hidden;display:none">
-    <!-- Tab seçici -->
-    <div style="display:flex;border-bottom:1px solid var(--border);flex-shrink:0">
-      <button id="tabDrive" onclick="switchNavTab('drive')" style="flex:1;padding:7px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:2px solid transparent">📊 Drive</button>
-      <button id="tabMyData" onclick="switchNavTab('mydata')" style="flex:1;padding:7px 4px;font-size:11px;font-family:var(--sans);cursor:pointer;border:none;background:var(--accent-dim);color:#93c5fd;border-bottom:2px solid var(--accent)">📋 Datalarım</button>
-    </div>
-
-    <!-- Datalarım -->
-    <div id="navMyData" style="flex:1;flex-direction:column;overflow:hidden;display:flex">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px 4px">
-        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Listeler</span>
-        <button class="btn g" style="font-size:10px;padding:2px 7px" onclick="openModal('userUploadModal')">+ Yükle</button>
-      </div>
-      <div id="userListNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1"></div>
-    </div>
-
-    <!-- Drive -->
-    <div id="navDrive" style="flex:1;flex-direction:column;overflow:hidden;display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px 4px">
-        <span style="font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);text-transform:uppercase">Google Drive</span>
-        <button class="btn" style="font-size:10px;padding:2px 7px" onclick="loadDriveFiles()">↻</button>
-      </div>
-      <div id="driveFileNav" style="padding:0 6px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1">
-        <div style="font-size:11px;color:var(--muted);padding:8px">Yükleniyor...</div>
-      </div>
-    </div>
+  <!-- USER NAV - gizli ama id'ler korunuyor -->
+  <div id="userNav" style="display:none">
+    <div id="navMyData" style="display:none"><div id="userListNav"></div></div>
+    <div id="navDrive" style="display:none"><div id="driveFileNav"></div></div>
+    <button id="tabMyData" style="display:none"></button>
+    <button id="tabDrive" style="display:none"></button>
   </div>
 
   <!-- User Ayarlar -->
