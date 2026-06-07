@@ -1412,7 +1412,7 @@ async function saveLocalSettings(){
         if(d.exists){
           let c=d.content;
           c=c.replace(/set "TIMEOUTSEC=\d+"/,`set "TIMEOUTSEC=${timeout}"`);
-          // timeout /t N (STARTFLAG bloğu) - aramalar arası bekleme
+          // timeout /t N (STARTFLAG bloğu) - Beklenecek Süre bekleme
           c=c.replace(/(if exist "%STARTFLAG%" \([\s\S]*?timeout \/t )\d+( \/nobreak >nul)/,`$1${delay}$2`);
           await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'nextcall.bat',content:c})});
         }
@@ -1586,6 +1586,7 @@ function selectBySonuc(sonuc){
   renderUcTable();
   updateBulkToolbar();
   closeFilterMenu();
+  updateLocalCsv();
 }
 
 function toggleFilterMenu(btn){
@@ -1612,6 +1613,7 @@ function selectEmpty(){
   }
   renderUcTable();
   updateBulkToolbar();
+  updateLocalCsv();
 }
 
 function clearSelection(){
@@ -1932,6 +1934,23 @@ async function changeSheetPage(sheet){
     updateUcProg();
   }
   setStatus(sheet+" sayfasi yuklendi",'live');
+}
+
+// ── CSV GÜNCELLE ─────────────────────────────────────────
+async function updateLocalCsv(){
+  if(!localOnline || !ucContacts.length) return;
+  let csvContacts;
+  if(activeFilter && activeFilter!=='filtered'){
+    if(activeFilter==='empty') csvContacts = ucContacts.filter(c=>!c.sonuc);
+    else csvContacts = ucContacts.filter(c=>c.sonuc===activeFilter);
+  } else {
+    const q = document.getElementById('ucSearch').value.toLowerCase();
+    if(q) csvContacts = ucContacts.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.tel||'').includes(q));
+    else csvContacts = ucContacts;
+  }
+  const csv = csvContacts.map(c=>((c.name||'')+','+(c.tel||''))).join('\n');
+  await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'contacts.csv',content:csv})}).catch(()=>{});
+  await fetch(LOCAL+'/api/file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'index.txt',content:'0'})}).catch(()=>{});
 }
 
 // ── QUICK SAVE ───────────────────────────────────────────
