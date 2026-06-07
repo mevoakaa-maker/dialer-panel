@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
   <title>Paşa Casino Dialer</title>
-  <link rel="icon" type="image/png" href="https://cdn.pasacasino609.com/theme/pasacasino/assets/images/logo.png">
+  <link rel="icon" type="image/png" href="https://yt3.googleusercontent.com/ytc/AIdro_mi__8VpeGUefddt0XHCMIYYsUqhkvON4GkRIPYi1348w=s900-c-k-c0x00ffffff-no-rj">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -107,8 +107,8 @@ main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .form-row input:focus,.form-row select:focus,input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(59,130,246,.15)}
 
 /* CALL STRIP */
-.callstrip{display:flex;align-items:center;gap:20px;padding:18px 22px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;min-height:90px}
-.cavatar{width:64px;height:64px;border-radius:50%;box-shadow:0 0 0 3px rgba(59,130,246,.2),0 0 20px rgba(59,130,246,.15);background:linear-gradient(135deg,#1d3a6e,#1e3a8a);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:20px;font-weight:700;color:#93c5fd;flex-shrink:0;border:1px solid #2563eb}
+.callstrip{display:flex;align-items:center;gap:20px;padding:22px 24px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;min-height:100px}
+.cavatar{width:72px;height:72px;border-radius:50%;box-shadow:0 0 0 3px rgba(59,130,246,.2),0 0 24px rgba(59,130,246,.15);background:linear-gradient(135deg,#1d3a6e,#1e3a8a);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:22px;font-weight:700;color:#93c5fd;flex-shrink:0;border:1px solid #2563eb}
 .cinfo{flex:1;min-width:0}
 .cname{font-size:22px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-0.02em}
 .cnum{font-family:var(--mono);font-size:15px;color:#93c5fd;margin-top:3px;letter-spacing:0.05em}
@@ -378,9 +378,9 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
 
     <!-- ARAMA KONTROL -->
     <div style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
-      <button class="btn g" onclick="localCmd('resume')">▶ Başlat / Devam <span class="kbd">F10</span></button>
-      <button class="btn a" onclick="localCmd('cancel_hangup')">🔕 Hangup iptal <span class="kbd">F8</span></button>
-      <button class="btn r" onclick="localCmd('pause')">■ Durdur <span class="kbd">F9</span></button>
+      <button class="btn g" onclick="localCmd('resume')">▶ Aramaya Devam Et</button>
+      <button class="btn a" onclick="localCmd('cancel_hangup')">✅ Cevaplandı</button>
+      <button class="btn r" onclick="localCmd('pause')">■ Durdur</button>
       <div style="flex:1"></div>
       <button class="btn" onclick="refreshContacts()">↻</button>
     </div>
@@ -1293,7 +1293,8 @@ function renderUcTable(){
     const bcls={'İlgilenmiyor':'bs-ilgilenmiyor','Link Atıldı':'bs-link','Cevapsız':'bs-cevapsiz','Meşgul':'bs-mesgul','Ulaşılamıyor':'bs-ulasilamiyor','Sonra Aranacak':'bs-sonra','Servis Dışı':'bs-servis','Görüşmeyi Sonlandırdı':'bs-gorisme','Üye Oldu':'bs-uyeoldu','Üye oldu':'bs-uyeoldu','Mevcut Üye Aktif':'bs-mevcutaktif','Mevcut Üye Aktif Edildi':'bs-mevcutedildi','Numara Başkasına ait':'bs-numara'};
     const st=c.sonuc?`<span class="badge ${bcls[c.sonuc]||'badge-sonuc'}">${esc(c.sonuc)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
     const dt=c.donus?`<span class="badge ${bcls[c.donus]||'badge-sonuc'}">${esc(c.donus)}</span>`:'<span style="color:var(--border2);font-size:16px">·</span>';
-    const jumpBtn = `<button onclick="event.stopPropagation();jumpToContact(${ri})" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer" title="Bu kişiden başlat">→</button>`;
+    const realIdx = ucContacts.indexOf(c)+1;
+    const jumpBtn = `<button onclick="event.stopPropagation();jumpToContact(${realIdx})" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer" title="Bu kişiden başlat">→</button>`;
     const googleBtn = `<button onclick="event.stopPropagation();exportOneToGoogle('${c.id}')" style="padding:2px 7px;font-size:11px;border-radius:3px;border:1px solid #1d3a6e;background:#0c1a2e;color:#93c5fd;cursor:pointer" title="Google Kişilere Ekle">📇</button>`;
     const _sopts=['','İlgilenmiyor','Link Atıldı','Cevapsız','Meşgul','Ulaşılamıyor','Sonra Aranacak','Servis Dışı','Görüşmeyi Sonlandırdı','Üye Oldu','Mevcut Üye Aktif','Mevcut Üye Aktif Edildi','Numara Başkasına ait'];
     const sonucSel=_sopts.map(o=>`<option value="${esc(o)}" ${c.sonuc===o?'selected':''}>${esc(o)||'—'}</option>`).join('');
