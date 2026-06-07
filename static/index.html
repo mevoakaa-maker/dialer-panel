@@ -267,45 +267,29 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
   </div>
 
   <!-- User Ayarlar -->
-  <div id="userSettings" style="display:none;border-top:1px solid var(--border);padding:14px 12px;flex-shrink:0;background:var(--surface)">
-    <!-- Arama Ayarları -->
-    <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:10px">⚙ Arama Ayarları</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <div style="background:var(--surface2);border-radius:10px;padding:10px;border:1px solid var(--border)">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Arama Süresi</div>
-        <div style="display:flex;align-items:center;gap:4px">
-          <input type="number" id="cfgTimeoutU" min="5" max="120" value="" style="width:100%;padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:var(--mono)">
-          <span style="font-size:11px;color:var(--muted);white-space:nowrap">sn</span>
-        </div>
+  <div id="userSettings" style="display:none;border-top:1px solid var(--border);padding:10px 10px;flex-shrink:0">
+    <div style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Arama</div>
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <div style="flex:1"><div style="font-size:9px;color:var(--muted);margin-bottom:2px">Süre (sn)</div><input type="number" id="cfgTimeoutU" min="5" max="120" value="" style="width:100%;padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--mono)"></div>
+      <div style="flex:1"><div style="font-size:9px;color:var(--muted);margin-bottom:2px">Bekleme (sn)</div><input type="number" id="cfgDelayU" min="0" max="120" value="" style="width:100%;padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--mono)"></div>
+    </div>
+    <button onclick="saveLocalSettings()" style="width:100%;padding:5px;background:rgba(59,130,246,.1);border:1px solid var(--accent);border-radius:8px;color:#93c5fd;font-size:11px;font-family:var(--sans);cursor:pointer">Kaydet</button>
+    <div style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:10px 0 6px">Kısayollar</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:11px;color:var(--muted)">▶ Devam</span>
+        <input type="text" id="keyResume" placeholder="F10" style="width:58px;padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:#93c5fd;font-size:11px;font-family:var(--mono);text-align:center">
       </div>
-      <div style="background:var(--surface2);border-radius:10px;padding:10px;border:1px solid var(--border)">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">Beklenecek Süre</div>
-        <div style="display:flex;align-items:center;gap:4px">
-          <input type="number" id="cfgDelayU" min="0" max="120" value="" style="width:100%;padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:var(--mono)">
-          <span style="font-size:11px;color:var(--muted);white-space:nowrap">sn</span>
-        </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:11px;color:var(--muted)">■ Durdur</span>
+        <input type="text" id="keyPause" placeholder="F9" style="width:58px;padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:#ef4444;font-size:11px;font-family:var(--mono);text-align:center">
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:11px;color:var(--muted)">✅ Cevaplandı</span>
+        <input type="text" id="keyCancelHangup" placeholder="F8" style="width:58px;padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:#22c55e;font-size:11px;font-family:var(--mono);text-align:center">
       </div>
     </div>
-    <button onclick="saveLocalSettings()" style="width:100%;padding:7px;background:rgba(59,130,246,.15);border:1px solid var(--accent);border-radius:10px;color:#93c5fd;font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(59,130,246,.25)'" onmouseout="this.style.background='rgba(59,130,246,.15)'">Kaydet</button>
-
-    <!-- Kısayollar -->
-    <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:14px 0 10px">⌨ Kısayollar</div>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:10px;padding:8px 10px;border:1px solid var(--border)">
-        <span style="font-size:12px;color:var(--text)">▶ Aramaya Devam</span>
-        <input type="text" id="keyResume" placeholder="F10" style="width:64px;padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:#93c5fd;font-size:12px;font-family:var(--mono);text-align:center">
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:10px;padding:8px 10px;border:1px solid var(--border)">
-        <span style="font-size:12px;color:var(--text)">■ Durdur</span>
-        <input type="text" id="keyPause" placeholder="F9" style="width:64px;padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:#ef4444;font-size:12px;font-family:var(--mono);text-align:center">
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:10px;padding:8px 10px;border:1px solid var(--border)">
-        <span style="font-size:12px;color:var(--text)">✅ Cevaplandı</span>
-        <input type="text" id="keyCancelHangup" placeholder="F8" style="width:64px;padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:#22c55e;font-size:12px;font-family:var(--mono);text-align:center">
-      </div>
-    </div>
-    <button onclick="saveHotkeys()" style="width:100%;padding:7px;background:rgba(34,197,94,.1);border:1px solid #22c55e;border-radius:10px;color:#22c55e;font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(34,197,94,.2)'" onmouseout="this.style.background='rgba(34,197,94,.1)'">Kısayolları Kaydet</button>
-    <div style="font-size:10px;color:var(--muted);margin-top:6px;text-align:center">Kaydettikten sonra AHK'yı yeniden başlatın</div>
+    <button onclick="saveHotkeys()" style="width:100%;padding:5px;background:rgba(34,197,94,.1);border:1px solid #22c55e;border-radius:8px;color:#22c55e;font-size:11px;font-family:var(--sans);cursor:pointer">Kaydet → AHK yeniden başlat</button>
   </div>
 
 </aside>
