@@ -272,6 +272,13 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     <div class="srow"><span>Arama Süresi</span><span><input type="number" id="cfgTimeoutU" min="5" max="120" value="" style="width:50px"> sn</span></div>
     <div class="srow" style="margin-top:4px"><span>Beklenecek Süre</span><span><input type="number" id="cfgDelayU" min="0" max="120" value="" style="width:50px"> sn</span></div>
     <button class="btn" style="margin-top:8px;justify-content:center;font-size:11px;width:100%" onclick="saveLocalSettings()">Kaydet</button>
+    <div style="border-top:1px solid var(--border);margin:10px 0 6px"></div>
+    <div class="slabel" style="padding:0 0 6px">Kısayollar</div>
+    <div class="srow"><span>▶ Devam</span><span><input type="text" id="keyResume" placeholder="F10" style="width:70px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-family:var(--mono)"></span></div>
+    <div class="srow" style="margin-top:4px"><span>■ Durdur</span><span><input type="text" id="keyPause" placeholder="F9" style="width:70px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-family:var(--mono)"></span></div>
+    <div class="srow" style="margin-top:4px"><span>✅ Cevaplandı</span><span><input type="text" id="keyCancelHangup" placeholder="F8" style="width:70px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;font-family:var(--mono)"></span></div>
+    <button class="btn" style="margin-top:8px;justify-content:center;font-size:11px;width:100%" onclick="saveHotkeys()">Kısayolları Kaydet</button>
+    <div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center">AHK'yı yeniden başlatın</div>
   </div>
 
 </aside>
