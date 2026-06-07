@@ -2,11 +2,13 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dialer Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b0c0f;--surface:#13151a;--surface2:#1a1d24;--border:#252830;--border2:#31353f;--text:#eceef4;--muted:#6b7280;--accent:#3b82f6;--accent-dim:#1d3a6e;--green:#22c55e;--green-dim:#14532d;--red:#ef4444;--red-dim:#7f1d1d;--amber:#f59e0b;--amber-dim:#78350f;--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif}
+:root{--bg:#0b0c0f;--surface:#13151a;--surface2:#1a1d24;--border:#252830;--border2:#31353f;--text:#eceef4;--muted:#6b7280;--accent:#3b82f6;--accent-dim:#1d3a6e;--green:#22c55e;--green-dim:#14532d;--red:#ef4444;--red-dim:#7f1d1d;--amber:#f59e0b;--amber-dim:#78350f;--mono:'Roboto Mono',monospace;--sans:'Roboto',sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px}
 
@@ -143,6 +145,10 @@ main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 tbody tr{border-bottom:1px solid var(--border);transition:all .15s;cursor:pointer}
 tbody tr:hover{background:var(--surface2)}
 tbody tr.done{opacity:.45}
+.tbl-select{background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:11px;padding:3px 6px;font-family:var(--sans);cursor:pointer;width:100%;max-width:130px}
+.tbl-select:focus{outline:none;border-color:var(--accent)}
+.tbl-input{background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-size:12px;font-family:var(--sans);padding:2px 4px;width:100%;min-width:80px}
+.tbl-input:focus{outline:none;border-bottom-color:var(--accent)}
 tbody tr.current-row{background:#0c1a2e}
 tbody tr.sel-row{background:#1e2530;outline:1px solid #363a44}
 tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green);box-shadow:0 0 8px rgba(34,197,94,.15);animation:pulse-row 2s infinite}
@@ -370,34 +376,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     </div>
 
     <!-- SONUÇ PANELİ -->
-    <div class="sonuc-panel">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
-        <div class="sonuc-label" id="sonucLbl" style="margin:0;flex:1">Arama Sonucu</div>
-        <div style="display:flex;gap:2px">
-          <button id="tabSonuc" onclick="switchTab('sonuc')" style="padding:3px 10px;font-size:11px;border-radius:4px 0 0 4px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-family:var(--sans)">Sonuç</button>
-          <button id="tabDonus" onclick="switchTab('donus')" style="padding:3px 10px;font-size:11px;border-radius:0 4px 4px 0;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;font-family:var(--sans)">Dönüş</button>
-        </div>
-      </div>
-      <div class="sonuc-grid" id="sonucGrid">
-        <button class="sbtn ilgilenmiyor" onclick="selSonuc('İlgilenmiyor',this)">İlgilenmiyor</button>
-        <button class="sbtn link" onclick="selSonuc('Link Atıldı',this)">Link Atıldı</button>
-        <button class="sbtn cevapsiz" onclick="selSonuc('Cevapsız',this)">Cevapsız</button>
-        <button class="sbtn mesgul" onclick="selSonuc('Meşgul',this)">Meşgul</button>
-        <button class="sbtn ulasilamiyor" onclick="selSonuc('Ulaşılamıyor',this)">Ulaşılamıyor</button>
-        <button class="sbtn sonra" onclick="selSonuc('Sonra Aranacak',this)">Sonra Aranacak</button>
-        <button class="sbtn servis" onclick="selSonuc('Servis Dışı',this)">Servis Dışı</button>
-        <button class="sbtn gorisme" onclick="selSonuc('Görüşmeyi Sonlandırdı',this)">Görüşmeyi Sonlandırdı</button>
-        <button class="sbtn uyeoldu" onclick="selSonuc('Üye Oldu',this)">Üye Oldu</button>
-        <button class="sbtn mevcutaktif" onclick="selSonuc('Mevcut Üye Aktif',this)">Mevcut Üye Aktif</button>
-        <button class="sbtn mevcutedildi" onclick="selSonuc('Mevcut Üye Aktif Edildi',this)">Mevcut Üye Aktif Edildi</button>
-        <button class="sbtn numara" onclick="selSonuc('Numara Başkasına ait',this)">Numara Başkasına ait</button>
-      </div>
-      <div class="not-row">
-        <input type="text" id="ucNot" placeholder="Not ekle (opsiyonel)...">
-        <button class="btn g" id="ucSaveBtn" onclick="saveResult()" style="opacity:.5;pointer-events:none">✓ Kaydet</button>
-    <button class="btn r" id="ucClearBtn" onclick="clearResult()" style="opacity:.5;pointer-events:none">✕ Kaldır</button>
-      </div>
-    </div>
+    
 
     <!-- TABLO TOOLBAR -->
     <div style="display:flex;align-items:center;gap:8px;padding:7px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
@@ -460,7 +439,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
         <button class="btn r" style="font-size:11px;margin-left:auto" onclick="clearSelection()">✕ İptal</button>
       </div>
       <table class="tbl" style="width:100%">
-        <thead id="ucHead"><tr><th style="width:28px"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)" style="cursor:pointer"></th><th style="width:36px">#</th><th>İsim</th><th>Tel</th><th>Sonuç</th><th>Dönüş</th></tr></thead>
+        <thead id="ucHead"><tr><th style="width:28px"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)" style="cursor:pointer"></th><th style="width:36px">#</th><th>İsim</th><th>Tel</th><th style="width:140px">Sonuç</th><th style="width:140px">Dönüş</th><th>Notlar</th><th style="width:28px"></th></tr></thead>
         <tbody id="ucTbody"></tbody>
       </table>
     </div>
@@ -1286,9 +1265,10 @@ function renderUcTable(){
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
       <td>${esc(c.name||'—')}</td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(c.tel||'')}</td>
-      <td>${st}</td><td>${dt}</td>
-      <td style="width:36px">${jumpBtn}</td>
-      <td style="width:36px">${googleBtn}</td></tr>`;
+      <td onclick="event.stopPropagation()"><select class="tbl-select" onchange="quickSave('${c.id}','sonuc',this.value)">${sonucSel}</select></td>
+      <td onclick="event.stopPropagation()"><select class="tbl-select" onchange="quickSave('${c.id}','donus',this.value)">${donusSel}</select></td>
+      <td onclick="event.stopPropagation()"><input class="tbl-input" type="text" value="${esc(c.not_text||'')}" placeholder="Not..." onblur="quickSave('${c.id}','not_text',this.value)" onkeydown="if(event.key==='Enter')this.blur()"></td>
+      <td style="width:36px" onclick="event.stopPropagation()">${jumpBtn}</td></tr>`;
   }).join('');
   document.getElementById('ucSearch').setAttribute('placeholder',`İsim veya numara ara... (${rows.length})`);
 }
@@ -1904,6 +1884,26 @@ async function changeSheetPage(sheet){
   setStatus(sheet+" sayfasi yuklendi",'live');
 }
 
+// ── QUICK SAVE ───────────────────────────────────────────
+async function quickSave(id, field, value){
+  const idx = ucContacts.findIndex(c=>c.id===id);
+  if(idx<0) return;
+  const c = ucContacts[idx];
+  const payload = {not_text: c.not_text||''};
+  if(field==='sonuc') { payload.sonuc=value||null; c.sonuc=value||null; }
+  else if(field==='donus') { payload.donus=value||null; c.donus=value||null; }
+  else if(field==='not_text') { payload.not_text=value; c.not_text=value; }
+  await api('PUT','/api/contacts/'+id+'/result', payload);
+  // Sheets'e gönder
+  sendToSheets(c, c.sonuc||'', c.donus||'', c.not_text||'', null);
+  // Satır class güncelle
+  const row = document.getElementById('uc-'+id);
+  if(row && !row.classList.contains('active-row')){
+    row.className = c.sonuc ? 'done' : '';
+  }
+  updateUcProg();
+}
+
 // ── GOOGLE CONTACTS ───────────────────────────────────────
 async function exportToGoogle(contacts){
   if(!contacts.length){alert('Aktarılacak kişi yok.');return;}
@@ -1965,3 +1965,6 @@ async function exportAllToGoogle(){
 </script>
 </body>
 </html>
+    const _sopts=['','İlgilenmiyor','Link Atıldı','Cevapsız','Meşgul','Ulaşılamıyor','Sonra Aranacak','Servis Dışı','Görüşmeyi Sonlandırdı','Üye Oldu','Mevcut Üye Aktif','Mevcut Üye Aktif Edildi','Numara Başkasına ait'];
+    const sonucSel=_sopts.map(o=>`<option value="$${esc(o)}" $${c.sonuc===o?'selected':''}>${esc(o)||'—'}</option>`).join('');
+    const donusSel=_sopts.map(o=>`<option value="$${esc(o)}" $${c.donus===o?'selected':''}>${esc(o)||'—'}</option>`).join('');
