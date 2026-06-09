@@ -235,7 +235,24 @@ def sheets_write():
         sonuc = data.get('sonuc',''); donus = data.get('donus',''); not_text = data.get('not','')
         if not spreadsheet_id: return jsonify({'error': 'Sheets ID girilmemiş'}), 400
         headers = {'Authorization': f'Bearer {access_token}'}
-        range_name = f"'{sheet_name}'!B3:B" if sheet_name else 'B3:B'
+        # Header'dan sütun yapısını anla
+        col_letter = lambda i: chr(65 + i)
+        hr = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A2:F2' if sheet_name else 'A2:F2', headers=headers, timeout=10)
+        header_row = []
+        if hr.status_code == 200 and hr.json().get('values'):
+            header_row = [str(h).strip().lower() for h in hr.json()['values'][0]]
+        def find_ci(keywords, default):
+            for i, h in enumerate(header_row):
+                for kw in keywords:
+                    if kw in h: return i
+            return default
+        tel_idx = find_ci(['tel','telefon'], 1)
+        sonuc_idx = find_ci(['sonuç','sonuc'], tel_idx+1)
+        donus_idx = find_ci(['dönüş','donus','dönus'], tel_idx+2)
+        not_idx = find_ci(['not','açıklama'], tel_idx+3)
+        
+        tel_col = col_letter(tel_idx)
+        range_name = f"'{sheet_name}'!{tel_col}3:{tel_col}" if sheet_name else f'{tel_col}3:{tel_col}'
         r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_name}', headers=headers, timeout=15)
         if r.status_code != 200: return jsonify({'error': f'Sheets okuma hatası: {r.text[:200]}'}), 400
         values = r.json().get('values', [])
@@ -249,9 +266,9 @@ def sheets_write():
         if not row_num: return jsonify({'error': f'Tel bulunamadı: {tel}'}), 404
         sheet_prefix = f"'{sheet_name}'!" if sheet_name else ''
         updates = []
-        updates.append({'range': f'{sheet_prefix}C{row_num}', 'values': [[sonuc]]})
-        updates.append({'range': f'{sheet_prefix}D{row_num}', 'values': [[donus]]})
-        updates.append({'range': f'{sheet_prefix}E{row_num}', 'values': [[not_text]]})
+        updates.append({'range': f'{sheet_prefix}{col_letter(sonuc_idx)}{row_num}', 'values': [[sonuc]]})
+        updates.append({'range': f'{sheet_prefix}{col_letter(donus_idx)}{row_num}', 'values': [[donus]]})
+        updates.append({'range': f'{sheet_prefix}{col_letter(not_idx)}{row_num}', 'values': [[not_text]]})
         if updates:
             r2 = req_lib.post(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values:batchUpdate',
                 json={'valueInputOption': 'USER_ENTERED', 'data': updates}, headers=headers, timeout=15)
@@ -275,10 +292,35 @@ def sheets_import():
         if not spreadsheet_id or not sheet_name: return jsonify({'error': 'spreadsheet_id ve sheet gerekli'}), 400
         access_token, _ = get_user_google_token(user_id)
         if not access_token: return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
-        r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A3:E',
+        # A2:F - header 2. satırda olabilir, akıllı sütun tespiti
+        r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A2:F',
             headers={'Authorization': f'Bearer {access_token}'}, timeout=15)
         if r.status_code != 200: return jsonify({'error': f'Sheets okuma hatası: {r.text[:200]}'}), 400
-        values = r.json().get('values', [])
+        all_rows = r.json().get('values', [])
+        if not all_rows: return jsonify({'error': 'Veri bulunamadı'}), 400
+        
+        # Header'dan sütun indekslerini bul
+        header = [str(h).strip().lower() for h in all_rows[0]]
+        def find_col(keywords):
+            for i, h in enumerate(header):
+                for kw in keywords:
+                    if kw in h: return i
+            return -1
+        
+        tel_col = find_col(['tel', 'telefon', 'gsm'])
+        if tel_col >= 0:
+            # Header bulundu
+            name_col = find_col(['isim', 'soyisim', 'ad '])
+            if name_col == -1: name_col = max(0, tel_col - 1)
+            sonuc_col = find_col(['sonuç', 'sonuc'])
+            donus_col = find_col(['dönüş', 'donus', 'dönus'])
+            not_col = find_col(['not', 'açıklama'])
+            values = all_rows[1:]
+        else:
+            # Header yok - dış data varsayılan: A=isim, B=tel, C=sonuç, D=dönüş, E=notlar
+            name_col = 0; tel_col = 1; sonuc_col = 2; donus_col = 3; not_col = 4
+            values = all_rows
+        
         if update_only and list_id:
             lid = list_id
             sb.table('contacts').delete().eq('list_id', lid).execute()
@@ -288,13 +330,13 @@ def sheets_import():
             lid = lst_res.data[0]['id']
         batch = []
         for i, row in enumerate(values):
-            name = row[0].strip() if len(row) > 0 else ''
-            tel = ''.join(filter(str.isdigit, str(row[1]))) if len(row) > 1 else ''
-            if not tel: continue
+            name = row[name_col].strip() if len(row) > name_col else ''
+            tel = ''.join(filter(str.isdigit, str(row[tel_col]))) if len(row) > tel_col else ''
+            if not tel or len(tel) < 7: continue
             batch.append({'list_id': lid, 'row_index': i+1, 'name': name, 'tel': tel, 'extra': {},
-                'sonuc': row[2].strip() if len(row) > 2 and row[2].strip() else None,
-                'donus': row[3].strip() if len(row) > 3 and row[3].strip() else None,
-                'not_text': row[4].strip() if len(row) > 4 else ''})
+                'sonuc': row[sonuc_col].strip() if sonuc_col >= 0 and len(row) > sonuc_col and row[sonuc_col].strip() else None,
+                'donus': row[donus_col].strip() if donus_col >= 0 and len(row) > donus_col and row[donus_col].strip() else None,
+                'not_text': row[not_col].strip() if not_col >= 0 and len(row) > not_col else ''})
             if len(batch) >= 200:
                 sb.table('contacts').insert(batch).execute(); batch = []
         if batch: sb.table('contacts').insert(batch).execute()
