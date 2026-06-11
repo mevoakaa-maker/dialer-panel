@@ -315,10 +315,14 @@ def sheets_import():
             sonuc_col = find_col(['sonuç', 'sonuc', 'result'])
             donus_col = find_col(['dönüş', 'donus', 'dönus', 'geri dön'])
             not_col = find_col(['notlar', 'not', 'açıklama', 'aciklama'])
+            username_col = find_col(['kullanıcı', 'kullanici', 'username', 'user'])
+            known_cols = {name_col, tel_col, sonuc_col, donus_col, not_col, username_col}
+            extra_cols = [(i, h) for i, h in enumerate(header_row) if i not in known_cols and h.strip()]
             values = all_rows[1:]
         else:
             # Header yok - varsayılan dış data: A=isim, B=tel
             name_col = 0; tel_col = 1; sonuc_col = 2; donus_col = 3; not_col = 4
+            username_col = -1; extra_cols = []
             values = all_rows
         
         if update_only and list_id:
@@ -329,10 +333,7 @@ def sheets_import():
             if not lst_res.data: return jsonify({'error': 'Liste oluşturulamadı'}), 500
             lid = lst_res.data[0]['id']
         batch = []
-        username_col = find_col(['kullanıcı', 'kullanici', 'username', 'user'])
-        # Bilinen sütunların dışındaki sütunları bul (ekstra veriler)
-        known_cols = {name_col, tel_col, sonuc_col, donus_col, not_col, username_col}
-        extra_cols = [(i, h) for i, h in enumerate(header) if i not in known_cols and h.strip()]
+
         
         for i, row in enumerate(values):
             name = row[name_col].strip() if len(row) > name_col else ''
