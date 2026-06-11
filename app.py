@@ -292,32 +292,32 @@ def sheets_import():
         if not spreadsheet_id or not sheet_name: return jsonify({'error': 'spreadsheet_id ve sheet gerekli'}), 400
         access_token, _ = get_user_google_token(user_id)
         if not access_token: return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
-        # A2:F - header 2. satırda olabilir, akıllı sütun tespiti
-        r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A2:F',
+        # A1:G - header 1. satırda
+        r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A2:G',
             headers={'Authorization': f'Bearer {access_token}'}, timeout=15)
         if r.status_code != 200: return jsonify({'error': f'Sheets okuma hatası: {r.text[:200]}'}), 400
         all_rows = r.json().get('values', [])
         if not all_rows: return jsonify({'error': 'Veri bulunamadı'}), 400
-        
-        # Header'dan sütun indekslerini bul
-        header = [str(h).strip().lower() for h in all_rows[0]]
+
+        # Header tespiti - 1. satır header mı?
+        header_row = [str(h).strip().lower() for h in all_rows[0]]
         def find_col(keywords):
-            for i, h in enumerate(header):
+            for i, h in enumerate(header_row):
                 for kw in keywords:
                     if kw in h: return i
             return -1
-        
-        tel_col = find_col(['tel', 'telefon', 'gsm'])
+
+        tel_col = find_col(['tel no', 'tel', 'telefon', 'gsm'])
         if tel_col >= 0:
-            # Header bulundu
-            name_col = find_col(['isim', 'soyisim', 'ad '])
+            # Header bulundu - veri 2. satırdan başlar
+            name_col = find_col(['isim soyisim', 'isim', 'soyisim', 'ad soyad'])
             if name_col == -1: name_col = max(0, tel_col - 1)
-            sonuc_col = find_col(['sonuç', 'sonuc'])
-            donus_col = find_col(['dönüş', 'donus', 'dönus'])
-            not_col = find_col(['not', 'açıklama'])
+            sonuc_col = find_col(['sonuç', 'sonuc', 'result'])
+            donus_col = find_col(['dönüş', 'donus', 'dönus', 'geri dön'])
+            not_col = find_col(['notlar', 'not', 'açıklama', 'aciklama'])
             values = all_rows[1:]
         else:
-            # Header yok - dış data varsayılan: A=isim, B=tel, C=sonuç, D=dönüş, E=notlar
+            # Header yok - varsayılan dış data: A=isim, B=tel
             name_col = 0; tel_col = 1; sonuc_col = 2; donus_col = 3; not_col = 4
             values = all_rows
         
