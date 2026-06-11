@@ -470,7 +470,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
         <button class="btn r" style="font-size:11px;margin-left:auto" onclick="clearSelection()">✕ İptal</button>
       </div>
       <table class="tbl" style="width:100%">
-        <thead id="ucHead"><tr><th style="width:28px"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)" style="cursor:pointer"></th><th style="width:36px">#</th><th>İsim</th><th>Tel</th><th style="width:140px">Sonuç</th><th style="width:140px">Dönüş</th><th>Notlar</th><th style="width:28px"></th><th style="width:28px"></th></tr></thead>
+        <thead id="ucHead"><tr><th style="width:28px"><input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)" style="cursor:pointer"></th><th style="width:36px">#</th><th id="thUsername" style="display:none;width:100px">Kullanıcı Adı</th><th>İsim</th><th>Tel</th><th style="width:140px">Sonuç</th><th style="width:140px">Dönüş</th><th>Notlar</th><th style="width:28px"></th><th style="width:28px"></th></tr></thead>
         <tbody id="ucTbody"></tbody>
       </table>
     </div>
@@ -1109,7 +1109,7 @@ async function loadUcList(list,btn){
   if(!Array.isArray(contacts))return;
   ucContacts=contacts;
   if(btn){const b=btn.querySelector('.nav-badge');if(b)b.textContent=contacts.length;}
-  renderUcTable();updateUcProg();
+  renderUcTable();updateUcProg();updateUsernameCol();
   // Sheets ID varsa sayfaları yükle
   if(list.spreadsheet_id) loadSheetPages(list);
   // CSV'ye yaz - filtre aktifse sadece filtrelenenleri yaz
@@ -1342,7 +1342,16 @@ function renderUcTable(){
     return `<tr onclick="selectContact('${c.id}')"  ondblclick="jumpToContact(${ri})" class="${isActive?'active-row'+(isSel?' sel-row':''):isSel?'sel-row':c.sonuc?'done':''}" id="uc-${c.id}">
       <td style="width:28px" onclick="event.stopPropagation()"><input type="checkbox" class="row-cb" data-id="${c.id}" onchange="onCbChange(this)" style="cursor:pointer" ${selectedIds.has(c.id)?'checked':''}></td>
       <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:36px">${ri}</td>
-      <td>${esc(c.name||'—')}</td>
+      ${c.extra&&c.extra.username?`<td class="td-username" onclick="copyText('${esc(c.extra.username||'')}')" title="Kopyala" style="font-size:11px;font-family:var(--mono);color:#93c5fd;cursor:pointer;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.extra.username||'')} 📋</td>`:''}
+      <td>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <span>${esc(c.name||'—')}</span>
+          ${c.extra&&Object.keys(c.extra).filter(k=>k!=='username').length>0?
+            `<div style="display:flex;flex-wrap:wrap;gap:3px">${Object.entries(c.extra).filter(([k])=>k!=='username').map(([k,v])=>
+              `<span onclick="copyText('${esc(v)}')" title="${esc(k)}: ${esc(v)} — Kopyala" style="font-size:10px;padding:1px 5px;background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:8px;color:#fbbf24;cursor:pointer">${esc(v)}</span>`
+            ).join('')}</div>`:''}
+        </div>
+      </td>
       <td style="font-family:var(--mono);font-size:12px;color:var(--muted)">${esc(c.tel||'')}</td>
       <td onclick="event.stopPropagation()"><select class="tbl-select ${sonucColor}" onchange="quickSave('${c.id}','sonuc',this.value)">${sonucSel}</select></td>
       <td onclick="event.stopPropagation()"><select class="tbl-select" onchange="quickSave('${c.id}','donus',this.value)">${donusSel}</select></td>
@@ -1480,6 +1489,16 @@ function captureKey(e, input){
     key = k.toUpperCase();
   }
   input.value = key;
+}
+
+function copyText(text){
+  navigator.clipboard.writeText(text).then(()=>setStatus(text+' kopyalandı','live')).catch(()=>{});
+}
+
+function updateUsernameCol(){
+  const hasUsername = ucContacts.some(c=>c.extra&&c.extra.username);
+  const th = document.getElementById('thUsername');
+  if(th) th.style.display = hasUsername ? '' : 'none';
 }
 
 async function saveHotkeys(){
