@@ -317,7 +317,14 @@ def sheets_import():
             not_col = find_col(['notlar', 'not', 'açıklama', 'aciklama'])
             username_col = find_col(['kullanıcı', 'kullanici', 'username', 'user'])
             known_cols = {name_col, tel_col, sonuc_col, donus_col, not_col, username_col}
-            extra_cols = [(i, h) for i, h in enumerate(header_row) if i not in known_cols and h.strip()]
+            # Notlar sütunundan önceki extra sütunları al (Deneme Bonusu gibi)
+            skip_keywords = ['rapor', 'data raporu', 'toplam', 'adet', 'oran', 'tarih']
+            def is_skip_col(h):
+                return any(kw in h for kw in skip_keywords) or not h.strip()
+            extra_cols = [(i, h) for i, h in enumerate(header_row) 
+                         if i not in known_cols 
+                         and (not_col < 0 or i < not_col)
+                         and not is_skip_col(h)]
             values = all_rows[1:]
         else:
             # Header yok - varsayılan dış data: A=isim, B=tel
