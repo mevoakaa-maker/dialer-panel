@@ -332,7 +332,7 @@ def sheets_import():
         username_col = find_col(['kullanıcı', 'kullanici', 'username', 'user'])
         # Bilinen sütunların dışındaki sütunları bul (ekstra veriler)
         known_cols = {name_col, tel_col, sonuc_col, donus_col, not_col, username_col}
-        extra_cols = [(i, h) for i, h in enumerate(header_row) if i not in known_cols and h.strip()] if header_row else []
+        extra_cols = [(i, h) for i, h in enumerate(header) if i not in known_cols and h.strip()]
         
         for i, row in enumerate(values):
             name = row[name_col].strip() if len(row) > name_col else ''
