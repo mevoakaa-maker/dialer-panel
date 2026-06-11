@@ -1061,9 +1061,16 @@ async function uploadContacts(lid,sheetData){
 // ── USER LISTS ────────────────────────────────────────────
 async function loadUserLists(){
   const lists=await api('GET','/api/lists');
-  if(!Array.isArray(lists)||!lists.length)return;
+  if(!Array.isArray(lists)){return;}
   const wrap=document.getElementById('userListNav');
-  wrap.innerHTML='';
+  if(wrap) wrap.innerHTML='';
+  const navTop=document.getElementById('userListNavTop');
+  if(navTop) navTop.innerHTML='';
+  if(!lists.length){
+    if(wrap) wrap.innerHTML='<div style="font-size:11px;color:var(--muted);padding:8px">Henüz data yok</div>';
+    if(navTop) navTop.innerHTML='<div style="font-size:11px;color:var(--muted);padding:8px">Henüz data yok</div>';
+    return;
+  }
   lists.forEach((l,i)=>{
     const btn=document.createElement('button');
     btn.className='nav-btn'+(i===0?' active':'');
