@@ -329,11 +329,23 @@ def sheets_import():
             if not lst_res.data: return jsonify({'error': 'Liste oluşturulamadı'}), 500
             lid = lst_res.data[0]['id']
         batch = []
+        username_col = find_col(['kullanıcı', 'kullanici', 'username', 'user'])
+        # Bilinen sütunların dışındaki sütunları bul (ekstra veriler)
+        known_cols = {name_col, tel_col, sonuc_col, donus_col, not_col, username_col}
+        extra_cols = [(i, h) for i, h in enumerate(header_row) if i not in known_cols and h.strip()] if header_row else []
+        
         for i, row in enumerate(values):
             name = row[name_col].strip() if len(row) > name_col else ''
             tel = ''.join(filter(str.isdigit, str(row[tel_col]))) if len(row) > tel_col else ''
             if not tel or len(tel) < 7: continue
-            batch.append({'list_id': lid, 'row_index': i+1, 'name': name, 'tel': tel, 'extra': {},
+            extra = {}
+            if username_col >= 0 and len(row) > username_col and row[username_col].strip():
+                extra['username'] = row[username_col].strip()
+            # Ekstra sütunları kaydet
+            for col_i, col_name in extra_cols:
+                if len(row) > col_i and row[col_i].strip():
+                    extra[col_name] = row[col_i].strip()
+            batch.append({'list_id': lid, 'row_index': i+1, 'name': name, 'tel': tel, 'extra': extra,
                 'sonuc': row[sonuc_col].strip() if sonuc_col >= 0 and len(row) > sonuc_col and row[sonuc_col].strip() else None,
                 'donus': row[donus_col].strip() if donus_col >= 0 and len(row) > donus_col and row[donus_col].strip() else None,
                 'not_text': row[not_col].strip() if not_col >= 0 and len(row) > not_col else ''})
