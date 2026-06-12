@@ -261,7 +261,7 @@ def sheets_write():
         for i, row in enumerate(values):
             if row:
                 row_tel = ''.join(filter(str.isdigit, str(row[0])))
-                if row_tel == clean_tel or row_tel.endswith(clean_tel[-10:]) or clean_tel.endswith(row_tel[-10:]):
+                if len(row_tel) >= 7 and (row_tel == clean_tel or row_tel.endswith(clean_tel[-10:]) or clean_tel.endswith(row_tel[-10:])):
                     row_num = i + 3; break
         if not row_num: return jsonify({'error': f'Tel bulunamadı: {tel}'}), 404
         sheet_prefix = f"'{sheet_name}'!" if sheet_name else ''
@@ -343,9 +343,12 @@ def sheets_import():
 
         
         for i, row in enumerate(values):
-            name = row[name_col].strip() if len(row) > name_col else ''
-            tel = ''.join(filter(str.isdigit, str(row[tel_col]))) if len(row) > tel_col else ''
+            # Başlık satırlarını atla (tel sütununda rakam yoksa)
+            if len(row) <= tel_col: continue
+            tel_raw = str(row[tel_col]).strip()
+            tel = ''.join(filter(str.isdigit, tel_raw))
             if not tel or len(tel) < 7: continue
+            name = row[name_col].strip() if len(row) > name_col else ''
             extra = {}
             if username_col >= 0 and len(row) > username_col and row[username_col].strip():
                 extra['username'] = row[username_col].strip()
@@ -361,6 +364,84 @@ def sheets_import():
                 sb.table('contacts').insert(batch).execute(); batch = []
         if batch: sb.table('contacts').insert(batch).execute()
         return jsonify({'ok': True, 'count': len(values), 'list_id': lid})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/sheets/batch_write', methods=['POST'])
+@require_auth
+def sheets_batch_write():
+    try:
+        data = request.json
+        user_id = request.user['id']
+        access_token, _ = get_user_google_token(user_id)
+        if not access_token: return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
+        
+        spreadsheet_id = data.get('spreadsheet_id','')
+        sheet_name = data.get('sheet','')
+        contacts = data.get('contacts', [])  # [{tel, sonuc, donus, not_text}]
+        
+        if not spreadsheet_id or not contacts:
+            return jsonify({'error': 'Eksik parametre'}), 400
+        
+        headers = {'Authorization': f'Bearer {access_token}'}
+        
+        # Header'dan sütun tespiti
+        hr = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A2:G2' if sheet_name else 'A2:G2',
+            headers=headers, timeout=10)
+        header_row = []
+        if hr.status_code == 200 and hr.json().get('values'):
+            header_row = [str(h).strip().lower() for h in hr.json()['values'][0]]
+        def find_ci(keywords, default):
+            for i, h in enumerate(header_row):
+                for kw in keywords:
+                    if kw in h: return i
+            return default
+        tel_idx = find_ci(['tel','telefon'], 1)
+        sonuc_idx = find_ci(['sonuç','sonuc'], tel_idx+1)
+        donus_idx = find_ci(['dönüş','donus','don'], tel_idx+2)
+        not_idx = find_ci(['not','açıklama'], tel_idx+3)
+        col_letter = lambda i: chr(65+i)
+        tel_col = col_letter(tel_idx)
+        
+        # Tüm tel listesini tek seferde oku
+        range_name = f"'{sheet_name}'!{tel_col}3:{tel_col}" if sheet_name else f'{tel_col}3:{tel_col}'
+        r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_name}',
+            headers=headers, timeout=15)
+        if r.status_code != 200: return jsonify({'error': f'Sheets okuma hatası: {r.text[:200]}'}), 400
+        
+        tel_values = r.json().get('values', [])
+        
+        # Tel -> row_num map
+        tel_map = {}
+        for i, row in enumerate(tel_values):
+            if row:
+                raw = str(row[0]).strip()
+                t = ''.join(filter(str.isdigit, raw))
+                # Sadece geçerli tel numaralarını ekle (7+ rakam, başlık satırı değil)
+                if len(t) >= 7:
+                    tel_map[t] = i + 3
+        
+        # Batch update oluştur
+        updates = []
+        sheet_prefix = f"'{sheet_name}'!" if sheet_name else ''
+        for c in contacts:
+            clean_tel = ''.join(filter(str.isdigit, str(c.get('tel',''))))
+            row_num = None
+            for t, rn in tel_map.items():
+                if t == clean_tel or t.endswith(clean_tel[-10:]) or clean_tel.endswith(t[-10:]):
+                    row_num = rn; break
+            if not row_num: continue
+            updates.append({'range': f'{sheet_prefix}{col_letter(sonuc_idx)}{row_num}', 'values': [[c.get('sonuc','')]]})
+            updates.append({'range': f'{sheet_prefix}{col_letter(donus_idx)}{row_num}', 'values': [[c.get('donus','')]]})
+            updates.append({'range': f'{sheet_prefix}{col_letter(not_idx)}{row_num}', 'values': [[c.get('not_text','')]]})
+        
+        if updates:
+            body = {'valueInputOption': 'USER_ENTERED', 'data': updates}
+            r2 = req_lib.post(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values:batchUpdate',
+                json=body, headers=headers, timeout=30)
+            if r2.status_code != 200: return jsonify({'error': f'Yazma hatası: {r2.text[:200]}'}), 400
+        
+        return jsonify({'ok': True, 'updated': len(updates)//3})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
