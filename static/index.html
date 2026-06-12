@@ -1283,7 +1283,7 @@ function selectContact(id){
   if(extra['Toplam Yatırım'])parts.push('💰 '+extra['Toplam Yatırım']);
   const cextra=document.getElementById('cextra'); if(cextra) cextra.textContent=parts.join('  ');
   const sonucLbl=document.getElementById('sonucLbl'); if(sonucLbl) sonucLbl.textContent='✏️ '+(selContact.name||'');
-  document.getElementById('ucNot').value=selContact.not_text||'';
+  const ucNot=document.getElementById('ucNot'); if(ucNot) ucNot.value=selContact.not_text||'';
   selSonucVal=selContact.sonuc||null;
   selDonusVal=selContact.donus||null;
   // sekme korunuyor
@@ -1820,37 +1820,38 @@ async function syncAllToSheets(){
     return;
   }
   
-  let done=0, errors=0;
   setStatus("Sheets aktariliyor...",'warn');
   
-  for(const c of withData){
-    try{
-      if(hasSheetId){
-        await api('POST','/api/sheets/write',{
-          spreadsheet_id: ucCurrentList.spreadsheet_id,
-          sheet: ucCurrentList.sheet||'',
-          tel: c.tel||'',
-          sonuc: c.sonuc||'',
-          donus: c.donus||'',
-          not: c.not_text||''
-        });
-      } else {
+  if(hasSheetId){
+    // Tek batch isteği - rate limit yok
+    const r = await api('POST','/api/sheets/batch_write',{
+      spreadsheet_id: ucCurrentList.spreadsheet_id,
+      sheet: ucCurrentList.sheet||'',
+      contacts: withData.map(c=>({tel:c.tel||'',sonuc:c.sonuc||'',donus:c.donus||'',not_text:c.not_text||''}))
+    });
+    if(r.ok){
+      setStatus('Tamamlandi','live');
+      alert(r.updated+" kisi Sheets'e aktarildi!");
+    } else {
+      setStatus('Hata','err');
+      alert('Hata: '+(r.error||''));
+    }
+  } else {
+    // Apps Script URL ile tek tek
+    let done=0, errors=0;
+    for(const c of withData){
+      try{
         await api('POST','/api/sheets/send',{
-          tel: c.tel||'',
-          isim: c.name||'',
-          sonuc: c.sonuc||'',
-          donus: c.donus||'',
-          not: c.not_text||'',
-          sheet: ucCurrentList?.sheet||'',
-          list_id: ucCurrentList?.id||''
+          tel:c.tel||'',isim:c.name||'',sonuc:c.sonuc||'',
+          donus:c.donus||'',not:c.not_text||'',
+          sheet:ucCurrentList?.sheet||'',list_id:ucCurrentList?.id||''
         });
-      }
-      done++;
-    }catch(e){ errors++; }
+        done++;
+      }catch(e){ errors++; }
+    }
+    setStatus('Tamamlandi','live');
+    alert(done+" kisi Sheets'e aktarildi!"+(errors?" ("+errors+" hata)":""));
   }
-  
-  setStatus('Tamamlandi','live');
-  alert(done+" kisi Sheets'e aktarildi!"+(errors?" ("+errors+" hata)":""));
 }
 
 // ── GİZLİ CSV KISAYOLU ───────────────────────────────────
