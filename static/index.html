@@ -1179,7 +1179,7 @@ function selSonuc(val,btn){
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   const sb=document.getElementById('ucSaveBtn');
-  sb.style.opacity='1';sb.style.pointerEvents='auto';
+  if(sb){sb.style.opacity='1';sb.style.pointerEvents='auto';}
   const cb=document.getElementById('ucClearBtn');
   if(cb){cb.style.opacity='1';cb.style.pointerEvents='auto';}
 }
@@ -1281,14 +1281,14 @@ function selectContact(id){
   if(extra['Kullanıcı Adı'])parts.push('👤 '+extra['Kullanıcı Adı']);
   if(extra['Deneme Bonusu'])parts.push('🎁 '+extra['Deneme Bonusu']);
   if(extra['Toplam Yatırım'])parts.push('💰 '+extra['Toplam Yatırım']);
-  document.getElementById('cextra').textContent=parts.join('  ');
-  document.getElementById('sonucLbl').textContent='✏️ '+(selContact.name||'');
+  const cextra=document.getElementById('cextra'); if(cextra) cextra.textContent=parts.join('  ');
+  const sonucLbl=document.getElementById('sonucLbl'); if(sonucLbl) sonucLbl.textContent='✏️ '+(selContact.name||'');
   document.getElementById('ucNot').value=selContact.not_text||'';
   selSonucVal=selContact.sonuc||null;
   selDonusVal=selContact.donus||null;
   // sekme korunuyor
   const sb=document.getElementById('ucSaveBtn');
-  sb.style.opacity='1';sb.style.pointerEvents='auto';
+  if(sb){sb.style.opacity='1';sb.style.pointerEvents='auto';}
   const cb=document.getElementById('ucClearBtn');
   if(cb){cb.style.opacity='1';cb.style.pointerEvents='auto';}
   clearInterval(timerIv);timerSec=0;
