@@ -711,10 +711,8 @@ function showPage(name){
 
   const gcBtn2=document.getElementById('googleContactsBtn2');
   if(gcBtn2) gcBtn2.style.display=(name==='dialer')?'flex':'none';
-  // Dialer sayfasına dönünce aktif listeyi yeniden yükle
-  if(name==='dialer' && ucCurrentList){
-    loadUcList(ucCurrentList, document.querySelector('#userListNav .nav-btn.active'));
-  }
+  // Dialer sayfasına dönünce CSV güncelle
+  if(name==='dialer') updateLocalCsv();
 }
 
 // ── STATUS ────────────────────────────────────────────────
