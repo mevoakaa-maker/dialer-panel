@@ -711,10 +711,14 @@ function showPage(name){
 
   const gcBtn2=document.getElementById('googleContactsBtn2');
   if(gcBtn2) gcBtn2.style.display=(name==='dialer')?'flex':'none';
+  // Dialer sayfasına dönünce aktif listeyi yeniden yükle
+  if(name==='dialer' && ucCurrentList){
+    loadUcList(ucCurrentList, document.querySelector('#userListNav .nav-btn.active'));
+  }
 }
 
 // ── STATUS ────────────────────────────────────────────────
-let stTimer;
+let stTimer
 function setStatus(msg,type){
   const el=document.getElementById('hstatustxt');
   const hs=document.getElementById('hstatus');
