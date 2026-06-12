@@ -1121,6 +1121,7 @@ async function loadUcList(list,btn){
   // Sheets ID varsa sayfaları yükle
   if(list.spreadsheet_id) loadSheetPages(list);
   // CSV'ye yaz - filtre aktifse sadece filtrelenenleri yaz
+  // localOnline kontrolü - bağlı değilse de dene
   if(localOnline){
     const csvContacts = (activeFilter && activeFilter!=='filtered') 
       ? contacts.filter(c=>{
