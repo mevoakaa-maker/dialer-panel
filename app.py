@@ -248,7 +248,7 @@ def sheets_write():
             return default
         tel_idx = find_ci(['tel','telefon'], 1)
         sonuc_idx = find_ci(['sonuç','sonuc'], tel_idx+1)
-        donus_idx = find_ci(['dönüş','donus','dönus'], tel_idx+2)
+        donus_idx = find_ci(['dönüş','donus','dönus','don'], tel_idx+2)
         not_idx = find_ci(['not','açıklama'], tel_idx+3)
         
         tel_col = col_letter(tel_idx)
@@ -313,7 +313,7 @@ def sheets_import():
             name_col = find_col(['isim soyisim', 'isim', 'soyisim', 'ad soyad'])
             if name_col == -1: name_col = max(0, tel_col - 1)
             sonuc_col = find_col(['sonuç', 'sonuc', 'result'])
-            donus_col = find_col(['dönüş', 'donus', 'dönus', 'geri dön'])
+            donus_col = find_col(['dönüş', 'donus', 'dönus', 'don'])
             not_col = find_col(['notlar', 'not', 'açıklama', 'aciklama'])
             username_col = find_col(['kullanıcı', 'kullanici', 'username', 'user'])
             known_cols = {name_col, tel_col, sonuc_col, donus_col, not_col, username_col}
