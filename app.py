@@ -237,7 +237,7 @@ def sheets_write():
         headers = {'Authorization': f'Bearer {access_token}'}
         # Header'dan sütun yapısını anla
         col_letter = lambda i: chr(65 + i)
-        hr = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A2:F2' if sheet_name else 'A2:F2', headers=headers, timeout=10)
+        hr = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A2:G2' if sheet_name else 'A2:G2', headers=headers, timeout=10)
         header_row = []
         if hr.status_code == 200 and hr.json().get('values'):
             header_row = [str(h).strip().lower() for h in hr.json()['values'][0]]
