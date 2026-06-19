@@ -2091,7 +2091,6 @@ async function changeSheetPage(sheet){
 
 // ── CSV GÜNCELLE ─────────────────────────────────────────
 async function updateLocalCsv(){
-  console.log('updateLocalCsv called, activeFilter:', activeFilter, 'localOnline:', localOnline);
   if(!localOnline || !ucContacts.length) return;
   let csvContacts;
   if(activeFilter && activeFilter!=='filtered'){
