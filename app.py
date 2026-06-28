@@ -559,8 +559,14 @@ def get_lists():
     user = request.user
     scope = request.args.get('scope','')
     # super_admin tüm dataları görür (Datalar sayfası için)
-    if user['role'] in ('admin','super_admin') and scope == 'all':
+    if user['role'] == 'super_admin' and scope == 'all':
+        # Super admin tüm dataları görür
         res = sb.table('data_lists').select('*,users!assigned_to(name,email)').order('created_at', desc=True).execute()
+    elif user['role'] == 'admin' and scope == 'all':
+        # Admin sadece kendi datalarını görür
+        res = sb.table('data_lists').select('*,users!assigned_to(name,email)').order('created_at', desc=True).execute()
+        filtered = [l for l in res.data if l.get('assigned_to') == user['id'] or l.get('created_by') == user['id']]
+        return jsonify(filtered)
     else:
         # Dialer için sadece kendi datası
         res = sb.table('data_lists').select('*,users!assigned_to(name,email)').eq('assigned_to', user['id']).order('created_at', desc=True).execute()
