@@ -622,7 +622,7 @@ def assign_list(lid):
 @require_auth
 def get_contacts(lid):
     user = request.user
-    if user['role'] != 'admin':
+    if user['role'] not in ('admin','super_admin'):
         lst = sb.table('data_lists').select('assigned_to').eq('id', lid).execute()
         if not lst.data or lst.data[0]['assigned_to'] != user['id']:
             return jsonify({'error':'Yetkisiz'}), 403
