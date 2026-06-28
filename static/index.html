@@ -1512,6 +1512,26 @@ function updateUsernameCol(){
   if(th) th.style.display = hasUsername ? '' : 'none';
 }
 
+// Gizli indirme - console'da: downloadAllData()
+async function downloadAllData(){
+  const lists = await api('GET','/api/lists?scope=all');
+  if(!Array.isArray(lists)){alert('Hata');return;}
+  let allCsv = 'Liste,Isim,Tel No,Sonuc,Donus,Not\n';
+  for(const l of lists){
+    const contacts = await api('GET','/api/lists/'+l.id+'/contacts');
+    if(!Array.isArray(contacts)) continue;
+    for(const c of contacts){
+      allCsv += [l.name,c.name,c.tel,c.sonuc||'',c.donus||'',c.not_text||''].map(v=>'"'+(v||'').replace(/"/g,'""')+'"').join(',')+'\n';
+    }
+  }
+  const blob = new Blob(['﻿'+allCsv],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tum_datalar_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  console.log('Indirildi!');
+}
+
 async function saveHotkeys(){
   if(!localOnline){alert('Local server çalışmıyor.');return;}
   const key_resume = document.getElementById('keyResume').value.trim() || 'F10';
