@@ -242,14 +242,30 @@ def add_to_google_contacts():
         return jsonify({'error': str(e)}), 500
 
 # ── DRIVE API ────────────────────────────────────────────
+def hedef_kullanici(istek_user):
+    """Islemin hangi kullanicinin Google hesabiyla yapilacagini belirler.
+
+    ?as_user=<uuid> yalnizca super_admin icin gecerlidir.
+    Digerlerinde her zaman kendi hesabi kullanilir.
+    """
+    hedef = (request.args.get('as_user') or '').strip()
+    if hedef and istek_user.get('role') == 'super_admin':
+        return hedef
+    return istek_user['id']
+
+
 @app.route('/api/drive/sheets', methods=['GET'])
 @require_auth
 def list_drive_sheets():
     try:
-        access_token, _ = get_user_google_token(request.user['id'])
+        access_token, _ = get_user_google_token(hedef_kullanici(request.user))
         if not access_token: return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
+        ara = (request.args.get('q') or '').replace("'", "").strip()
+        sorgu = "mimeType='application/vnd.google-apps.spreadsheet' and trashed=false"
+        if ara:
+            sorgu += f" and name contains '{ara}'"
         r = req_lib.get('https://www.googleapis.com/drive/v3/files',
-            params={'q': "mimeType='application/vnd.google-apps.spreadsheet' and trashed=false", 'fields': 'files(id,name,modifiedTime)', 'orderBy': 'modifiedTime desc', 'pageSize': 100},
+            params={'q': sorgu, 'fields': 'files(id,name,modifiedTime)', 'orderBy': 'modifiedTime desc', 'pageSize': 100},
             headers={'Authorization': f'Bearer {access_token}'}, timeout=15)
         if r.status_code != 200: return jsonify({'error': f'Drive hatası: {r.text[:200]}'}), 400
         return jsonify({'files': r.json().get('files', [])})
@@ -743,10 +759,84 @@ def get_stats():
         for c in contacts.data:
             if c['sonuc']: sonuc_counts[c['sonuc']] = sonuc_counts.get(c['sonuc'], 0) + 1
         result.append({'list_id': lst['id'], 'list_name': lst['name'],
+            'user_id': lst.get('assigned_to'),
             'assigned_to': lst.get('users', {}).get('name','') if lst.get('users') else '',
             'user_name': lst.get('users', {}).get('name','') if lst.get('users') else '',
             'total': total, 'done': done, 'pct': round(done/total*100) if total else 0, 'sonuc_counts': sonuc_counts})
     return jsonify(result)
+
+# ── DRIVE INDIRME (yalnizca super_admin) ─────────────────
+@app.route('/api/drive/export', methods=['GET'])
+@require_auth
+def drive_export():
+    """Drive'daki bir dosyayi indirir.
+
+    ?file_id=...&format=xlsx|csv
+    Google Sheets dosyalari export edilir, digerleri oldugu gibi iner.
+    """
+    if request.user.get('role') != 'super_admin':
+        return jsonify({'error': 'Yetkisiz'}), 403
+
+    file_id = (request.args.get('file_id') or '').strip()
+    if not file_id:
+        return jsonify({'error': 'file_id gerekli'}), 400
+    fmt = (request.args.get('format') or 'xlsx').lower()
+
+    access_token, _ = get_user_google_token(hedef_kullanici(request.user))
+    if not access_token:
+        return jsonify({'error': 'Google baglantisi yok'}), 400
+    headers = {'Authorization': f'Bearer {access_token}'}
+
+    # Dosya turunu ogren
+    meta = req_lib.get(
+        f'https://www.googleapis.com/drive/v3/files/{file_id}',
+        params={'fields': 'name,mimeType'}, headers=headers, timeout=15)
+    if meta.status_code != 200:
+        return jsonify({'error': google_hata(meta)}), 400
+    mj = meta.json()
+    ad = mj.get('name', 'dosya')
+    mime = mj.get('mimeType', '')
+
+    tipler = {
+        'xlsx': ('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '.xlsx'),
+        'csv':  ('text/csv', '.csv'),
+        'pdf':  ('application/pdf', '.pdf'),
+    }
+    hedef, uzanti = tipler.get(fmt, tipler['xlsx'])
+
+    if mime.startswith('application/vnd.google-apps'):
+        r = req_lib.get(
+            f'https://www.googleapis.com/drive/v3/files/{file_id}/export',
+            params={'mimeType': hedef}, headers=headers, timeout=90)
+    else:
+        r = req_lib.get(
+            f'https://www.googleapis.com/drive/v3/files/{file_id}',
+            params={'alt': 'media'}, headers=headers, timeout=90)
+        uzanti = ''
+
+    if r.status_code != 200:
+        return jsonify({'error': google_hata(r)}), 400
+
+    from urllib.parse import quote as _q
+    resp = app.response_class(r.content, mimetype=hedef)
+    resp.headers['Content-Disposition'] = (
+        f"attachment; filename*=UTF-8''{_q(ad + uzanti)}")
+    return resp
+
+
+@app.route('/api/drive/accounts', methods=['GET'])
+@require_auth
+def drive_accounts():
+    """Google hesabi bagli kullanicilar. Yalnizca super_admin."""
+    if request.user.get('role') != 'super_admin':
+        return jsonify({'error': 'Yetkisiz'}), 403
+    res = sb.table('users').select('id,name,email,role,google_access_token').execute()
+    return jsonify({'accounts': [
+        {'id': u['id'], 'name': u.get('name'), 'email': u.get('email'),
+         'role': u.get('role'), 'bagli': bool(u.get('google_access_token'))}
+        for u in (res.data or [])
+    ]})
+
 
 # ── SETTINGS ─────────────────────────────────────────────
 @app.route('/api/settings', methods=['GET', 'PUT'])
