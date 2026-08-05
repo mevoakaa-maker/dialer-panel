@@ -688,5 +688,161 @@ def settings():
     else: sb.table('settings').insert(data).execute()
     return jsonify({'ok': True})
 
+# ============================================================
+#  ARAMA KAYITLARI - app.py'nin SONUNA ekle
+#  (if __name__ == '__main__' satirindan ONCE)
+#
+#  Mevcut route'lara dokunmaz. Sadece yeni endpoint ekler.
+# ============================================================
+
+from datetime import timezone
+
+
+def _device_user(token):
+    """Cihaz anahtarindan kullaniciyi bul. Gecersizse None."""
+    if not token:
+        return None
+    res = sb.table('device_tokens').select('user_id,machine,active') \
+            .eq('token', token).limit(1).execute()
+    if not res.data:
+        return None
+    row = res.data[0]
+    if not row.get('active', True):
+        return None
+    try:
+        sb.table('device_tokens').update(
+            {'last_seen': datetime.now(timezone.utc).isoformat()}
+        ).eq('token', token).execute()
+    except Exception:
+        pass
+    return row
+
+
+@app.route('/api/calls/log', methods=['POST'])
+def calls_log():
+    """Kopru buraya arama kayitlarini gonderir.
+
+    Header: X-Device-Token
+    Body:   {"events": [ {...}, {...} ]}   (toplu gonderim)
+    """
+    row = _device_user(request.headers.get('X-Device-Token', ''))
+    if not row:
+        return jsonify({'error': 'Gecersiz cihaz anahtari'}), 401
+
+    data = request.get_json(silent=True) or {}
+    events = data.get('events') or []
+    if not isinstance(events, list):
+        return jsonify({'error': 'events listesi bekleniyor'}), 400
+    if len(events) > 500:
+        return jsonify({'error': 'tek seferde en fazla 500 kayit'}), 400
+
+    rows = []
+    for e in events:
+        if not e.get('number') or not e.get('started_at'):
+            continue
+        rows.append({
+            'user_id':      row['user_id'],
+            'call_id':      e.get('call_id'),
+            'number':       str(e['number'])[:32],
+            'contact_name': (e.get('contact_name') or '')[:120] or None,
+            'started_at':   e['started_at'],
+            'ended_at':     e.get('ended_at'),
+            'duration_sec': int(e.get('duration_sec') or 0),
+            'answered':     bool(e.get('answered')),
+            'result':       (e.get('result') or '')[:64] or None,
+            'category':     (e.get('category') or '')[:32] or None,
+            'sip_code':     (e.get('sip_code') or '')[:8] or None,
+            'recording':    (e.get('recording') or '')[:255] or None,
+            'machine':      row.get('machine'),
+        })
+
+    if not rows:
+        return jsonify({'ok': True, 'saved': 0})
+
+    try:
+        # ayni call_id tekrar gelirse guncelle, cakisma hatasi verme
+        sb.table('call_logs').upsert(
+            rows, on_conflict='user_id,call_id').execute()
+    except Exception:
+        # upsert desteklenmezse tek tek dene, hatalilari atla
+        saved = 0
+        for r in rows:
+            try:
+                sb.table('call_logs').insert(r).execute()
+                saved += 1
+            except Exception:
+                pass
+        return jsonify({'ok': True, 'saved': saved})
+
+    return jsonify({'ok': True, 'saved': len(rows)})
+
+
+@app.route('/api/calls/stats', methods=['GET'])
+@require_auth
+def calls_stats():
+    """Gunluk istatistikler.
+
+    Parametreler:
+      ?days=7            son kac gun (varsayilan 7)
+      ?user_id=...       belirli operator (sadece admin/super_admin)
+    """
+    user = request.user
+    days = min(int(request.args.get('days', 7) or 7), 365)
+    since = (datetime.now(timezone.utc) - timedelta(days=days)).date().isoformat()
+
+    q = sb.table('call_stats_daily').select('*').gte('gun', since)
+
+    target = request.args.get('user_id')
+    if user.get('role') in ('admin', 'super_admin'):
+        if target:
+            q = q.eq('user_id', target)
+    else:
+        q = q.eq('user_id', user['id'])       # operator sadece kendini gorur
+
+    res = q.order('gun', desc=True).execute()
+    return jsonify({'stats': res.data or []})
+
+
+@app.route('/api/calls/list', methods=['GET'])
+@require_auth
+def calls_list():
+    """Tek tek arama kayitlari (kayit dosyasi adiyla birlikte).
+
+    Parametreler: ?user_id= &date=YYYY-MM-DD &answered=1 &limit=200
+    """
+    user = request.user
+    limit = min(int(request.args.get('limit', 200) or 200), 1000)
+
+    q = sb.table('call_logs').select('*')
+
+    target = request.args.get('user_id')
+    if user.get('role') in ('admin', 'super_admin'):
+        if target:
+            q = q.eq('user_id', target)
+    else:
+        q = q.eq('user_id', user['id'])
+
+    d = request.args.get('date')
+    if d:
+        q = q.gte('started_at', f'{d}T00:00:00+03:00') \
+             .lt('started_at', f'{d}T23:59:59+03:00')
+
+    if request.args.get('answered') == '1':
+        q = q.eq('answered', True)
+
+    res = q.order('started_at', desc=True).limit(limit).execute()
+    return jsonify({'calls': res.data or []})
+
+
+@app.route('/api/calls/invalid', methods=['GET'])
+@require_auth
+def calls_invalid():
+    """Gecersiz numaralar - listelerden temizlemek icin."""
+    if request.user.get('role') not in ('admin', 'super_admin'):
+        return jsonify({'error': 'Yetkisiz'}), 403
+    res = sb.table('invalid_numbers').select('*').limit(1000).execute()
+    return jsonify({'numbers': res.data or []})
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
