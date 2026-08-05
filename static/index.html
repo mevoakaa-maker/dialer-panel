@@ -483,22 +483,6 @@ td:empty::after{content:'—';color:var(--muted)}
       <div style="flex:1"><div style="font-size:9px;color:var(--muted);margin-bottom:2px">Bekleme (sn)</div><input type="number" id="cfgDelayU" min="0" max="120" value="" style="width:100%;padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--mono)"></div>
     </div>
     <button onclick="saveLocalSettings()" style="width:100%;padding:5px;background:rgba(59,130,246,.1);border:1px solid var(--accent);border-radius:8px;color:#93c5fd;font-size:11px;font-family:var(--sans);cursor:pointer">Kaydet</button>
-    <div style="font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin:10px 0 6px">Kısayollar</div>
-    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:11px;color:var(--muted)">▶ Devam</span>
-        <input type="text" id="keyResume" placeholder="F10" readonly onkeydown="captureKey(event,this)" onclick="this.select()" style="width:58px;padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:#93c5fd;font-size:11px;font-family:var(--mono);text-align:center;cursor:pointer" title="Tıklayıp tuşa basın">
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:11px;color:var(--muted)">■ Durdur</span>
-        <input type="text" id="keyPause" placeholder="F9" readonly onkeydown="captureKey(event,this)" onclick="this.select()" style="width:58px;padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:#ef4444;font-size:11px;font-family:var(--mono);text-align:center;cursor:pointer" title="Tıklayıp tuşa basın">
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <span style="font-size:11px;color:var(--muted)">✅ Cevaplandı</span>
-        <input type="text" id="keyCancelHangup" placeholder="F8" readonly onkeydown="captureKey(event,this)" onclick="this.select()" style="width:58px;padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:#22c55e;font-size:11px;font-family:var(--mono);text-align:center;cursor:pointer" title="Tıklayıp tuşa basın">
-      </div>
-    </div>
-    <button onclick="saveHotkeys()" style="width:100%;padding:5px;background:rgba(34,197,94,.1);border:1px solid #22c55e;border-radius:8px;color:#22c55e;font-size:11px;font-family:var(--sans);cursor:pointer">Kaydet → AHK yeniden başlat</button>
   </div>
 
 </aside>
@@ -661,9 +645,8 @@ td:empty::after{content:'—';color:var(--muted)}
           <div class="cnum" id="cnum">—</div>
           <div class="cextra" id="cextra"></div>
           <div class="callacts">
-            <button class="btn primary" onclick="localCmd('cancel_hangup')">✓ Cevaplandı <span class="kbd">F8</span></button>
-            <button class="btn" onclick="localCmd('pause')">❚❚ Duraklat <span class="kbd">F9</span></button>
-            <button class="btn" onclick="localCmd('resume')">▶ Sonraki <span class="kbd">F10</span></button>
+            <button class="btn primary" onclick="localCmd('resume')">▶ Aramayı Başlat</button>
+            <button class="btn r" onclick="localCmd('pause')">■ Durdur</button>
           </div>
         </div>
 
@@ -1947,39 +1930,6 @@ async function saveSettings(){
   }
 }
 
-function captureKey(e, input){
-  e.preventDefault();
-  const k = e.key;
-  // AHK v1 tuş adları
-  const ahkMap = {
-    'F1':'F1','F2':'F2','F3':'F3','F4':'F4','F5':'F5','F6':'F6',
-    'F7':'F7','F8':'F8','F9':'F9','F10':'F10','F11':'F11','F12':'F12',
-    'Escape':'Escape','Tab':'Tab','CapsLock':'CapsLock',
-    'Backspace':'Backspace','Delete':'Delete','Insert':'Insert',
-    'Home':'Home','End':'End','PageUp':'PgUp','PageDown':'PgDn',
-    'ArrowUp':'Up','ArrowDown':'Down','ArrowLeft':'Left','ArrowRight':'Right',
-    'Enter':'Enter','Space':'Space',
-    'PrintScreen':'PrintScreen','ScrollLock':'ScrollLock','Pause':'Pause',
-    'NumLock':'NumLock',
-  };
-  let key = k;
-  if(k==='Escape'||k==='Backspace'){input.value='';return;}
-  if(e.location===3){
-    // Numpad
-    const numMap={'0':'Numpad0','1':'Numpad1','2':'Numpad2','3':'Numpad3','4':'Numpad4',
-      '5':'Numpad5','6':'Numpad6','7':'Numpad7','8':'Numpad8','9':'Numpad9',
-      'Enter':'NumpadEnter','*':'NumpadMult','+':'NumpadAdd','-':'NumpadSub','.':'NumpadDot','/':'NumpadDiv'};
-    key = numMap[k] || ('Numpad'+k);
-  } else if(ahkMap[k]){
-    key = ahkMap[k];
-  } else if(k.startsWith('F') && !isNaN(k.slice(1))){
-    key = k;
-  } else if(k.length===1){
-    key = k.toUpperCase();
-  }
-  input.value = key;
-}
-
 function copyText(text){
   navigator.clipboard.writeText(text).then(()=>setStatus(text+' kopyalandı','live')).catch(()=>{});
 }
@@ -2020,18 +1970,6 @@ async function downloadAllData(){
   console.log('Indirildi! '+allContacts.length+' kisi');
 }
 
-async function saveHotkeys(){
-  if(!localOnline){alert('Local server çalışmıyor.');return;}
-  const key_resume = document.getElementById('keyResume').value.trim() || 'F10';
-  const key_pause = document.getElementById('keyPause').value.trim() || 'F9';
-  const key_cancel_hangup = document.getElementById('keyCancelHangup').value.trim() || 'F8';
-  try{
-    const r = await fetch(LOCAL+'/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key_resume,key_pause,key_cancel_hangup})});
-    if(r.ok) setStatus('Kısayollar kaydedildi — AHK yeniden başlatın','live');
-    else setStatus('Hata','err');
-  }catch(e){setStatus('Local server hatası','err');}
-}
-
 async function loadLocalSettings(){
   // DB'den arama ayarları
   const d = await api('GET','/api/settings');
@@ -2047,9 +1985,6 @@ async function loadLocalSettings(){
         const data = await r.json();
         if(data.exists && data.content){
           const cfg = JSON.parse(data.content);
-          if(cfg.key_resume){const el=document.getElementById('keyResume');if(el)el.value=cfg.key_resume;}
-          if(cfg.key_pause){const el=document.getElementById('keyPause');if(el)el.value=cfg.key_pause;}
-          if(cfg.key_cancel_hangup){const el=document.getElementById('keyCancelHangup');if(el)el.value=cfg.key_cancel_hangup;}
         }
       }
     }catch(e){}
