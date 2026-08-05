@@ -1745,11 +1745,21 @@ function selectContact(id){
   document.getElementById('cnum').textContent=selContact.tel||'—';
   document.getElementById('cavatar').textContent=initials(selContact.name||'?');
   const extra=selContact.extra||{};
-  const parts=[];
-  if(extra['Kullanıcı Adı'])parts.push('👤 '+extra['Kullanıcı Adı']);
-  if(extra['Deneme Bonusu'])parts.push('🎁 '+extra['Deneme Bonusu']);
-  if(extra['Toplam Yatırım'])parts.push('💰 '+extra['Toplam Yatırım']);
-  const cextra=document.getElementById('cextra'); if(cextra) cextra.textContent=parts.join('  ');
+  // Tüm ekstra sütunları göster - sütun adları listeye göre değişebiliyor
+  const ikon=k=>{
+    const l=k.toLocaleLowerCase('tr');
+    if(l.includes('kullanıcı')||l.includes('kullanici')||l==='username') return '👤';
+    if(l.includes('deneme')||l.includes('bonus')) return '🎁';
+    if(l.includes('yatırım')||l.includes('yatirim')||l.includes('bakiye')) return '💰';
+    if(l.includes('çekim')||l.includes('cekim')) return '💸';
+    if(l.includes('tarih')||l.includes('işlem')||l.includes('islem')) return '📅';
+    return '•';
+  };
+  const parts=Object.entries(extra)
+    .filter(([k,v])=>k!=='username' && v!==null && String(v).trim()!=='')
+    .map(([k,v])=>`${ikon(k)} ${k}: ${v}`);
+  if(extra.username) parts.unshift('👤 '+extra.username);
+  const cextra=document.getElementById('cextra'); if(cextra) cextra.textContent=parts.join('   ');
   const sonucLbl=document.getElementById('sonucLbl'); if(sonucLbl) sonucLbl.textContent='✏️ '+(selContact.name||'');
   const ucNot=document.getElementById('ucNot'); if(ucNot) ucNot.value=selContact.not_text||'';
   selSonucVal=selContact.sonuc||null;
