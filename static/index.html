@@ -252,6 +252,14 @@ tbody tr.active-row{background:var(--green-dim) !important;outline:1px solid rgb
 .ring-prog{stroke:url(#ringGrad);stroke-width:5;fill:none;stroke-linecap:round;transition:stroke-dashoffset .9s linear}
 .ring-breath{position:absolute;inset:-8px;border-radius:50%;border:1px solid var(--accent);opacity:0;pointer-events:none}
 .callcard.oncall .ring-breath{animation:breathe 3.6s var(--ease) infinite}
+.callcard.ringing .ring-breath{animation:ringing 1.5s var(--ease) infinite;border-color:var(--accent)}
+@keyframes ringing{0%{transform:scale(.94);opacity:.55}70%,100%{transform:scale(1.16);opacity:0}}
+.callcard.ringing .ring-track{stroke:var(--accent-soft);animation:trackPulse 1.5s var(--ease) infinite}
+@keyframes trackPulse{0%,100%{opacity:.55}50%{opacity:1}}
+.callcard.ringing .ring-in .ctimer{color:var(--accent-lite);animation:dimPulse 1.5s var(--ease) infinite}
+@keyframes dimPulse{0%,100%{opacity:.55}50%{opacity:1}}
+.callcard.ringing .callchip{background:var(--accent-dim);color:var(--accent-lite);border-color:rgba(124,140,248,.3)}
+.callcard.ringing .callchip .hdot{background:var(--accent);box-shadow:0 0 7px var(--accent);animation:dimPulse 1.5s var(--ease) infinite}
 .ring-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
 .ring-in .ctimer{font-size:23px;min-width:0;text-align:center;color:var(--text)}
 .callcard.oncall .ring-in .ctimer{color:var(--green)}
@@ -999,15 +1007,28 @@ const RING_C = 2*Math.PI*53;
 
 function tickRing(){
   const t=document.getElementById('ctimer'), r=document.getElementById('ringProg');
-  const card=document.getElementById('callCard');
+  const card=document.getElementById('callCard'), chip=document.getElementById('callChip');
+  const numEl=document.getElementById('cnum');
   if(!t||!r||!card) return;
+
+  const num=(numEl?.textContent||'').trim();
+  const varNumara = num && num!=='—' && num!=='-';
   const m=/^(\d{1,2}):(\d{2})$/.exec((t.textContent||'').trim());
-  if(!m){ card.classList.remove('oncall'); r.style.strokeDashoffset=RING_C; return; }
-  card.classList.add('oncall');
-  const sn=(+m[1])*60+(+m[2]);
-  r.style.strokeDashoffset = RING_C*(1-Math.min(sn/180,1));   // 3 dk = tam tur
-  const chip=document.getElementById('callChip');
-  if(chip) chip.lastChild.textContent=' GÖRÜŞMEDE';
+
+  card.classList.toggle('oncall', !!m);
+  card.classList.toggle('ringing', !m && varNumara);
+
+  if(chip){
+    const yazi = m ? 'GÖRÜŞMEDE' : (varNumara ? 'ARANIYOR' : 'BEKLENİYOR');
+    if(chip.lastChild) chip.lastChild.textContent=' '+yazi;
+  }
+
+  if(m){
+    const sn=(+m[1])*60+(+m[2]);
+    r.style.strokeDashoffset = RING_C*(1-Math.min(sn/180,1));   // 3 dk = tam tur
+  }else{
+    r.style.strokeDashoffset = RING_C;
+  }
 }
 
 function trendYaz(el,bugun,dun){
