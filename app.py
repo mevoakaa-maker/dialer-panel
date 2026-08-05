@@ -368,14 +368,38 @@ def sheets_import():
             not_col = find_col(['notlar', 'not', 'açıklama', 'aciklama'])
             username_col = find_col(['kullanıcı', 'kullanici', 'username', 'user'])
             known_cols = {name_col, tel_col, sonuc_col, donus_col, not_col, username_col}
-            # Ana sütunlar disindaki her sutun "ekstra" olarak alinir
+            # Ana sutunlar disindaki sutunlar "ekstra" olarak alinir
             # (Deneme, Toplam Yatirim, Kullanici Adi vb. - aranan ismin altinda gosterilir).
-            # Sadece sagdaki rapor/ozet bloklari elenir.
-            skip_keywords = ['rapor', 'data raporu', 'oran', 'adet', 'unnamed']
+            #
+            # Sagdaki "Data Raporu" blogu ayni basliklari tekrar kullaniyor
+            # (DURUM / SONUÇ / DÖNÜŞ). Blogun nerede basladigini bulup
+            # o sutundan sonrasini tamamen yok sayiyoruz.
+            rapor_isaret = ['rapor', 'durum', 'oran', 'adet', 'kalan', 'toplam datadaki',
+                            'toplam aranan', 'unnamed']
+            cekirdek_tekrar = ['sonuç', 'sonuc', 'dönüş', 'donus', 'notlar', 'tel', 'isim']
+            son_ana = max([c for c in known_cols if c >= 0], default=-1)
+
+            rapor_bas = len(header_row)
+            bos_sayac = 0
+            for i, h in enumerate(header_row):
+                if i <= son_ana:
+                    continue
+                if not h.strip():                      # bos sutun - ayirici olabilir
+                    bos_sayac += 1
+                    if bos_sayac >= 2:                 # ust uste bos -> tablo bitti
+                        rapor_bas = i
+                        break
+                    continue
+                bos_sayac = 0
+                if any(kw in h for kw in rapor_isaret) or any(kw in h for kw in cekirdek_tekrar):
+                    rapor_bas = i
+                    break
+
             def is_skip_col(h):
-                return any(kw in h for kw in skip_keywords) or not h.strip()
+                return any(kw in h for kw in rapor_isaret) or not h.strip()
+
             extra_cols = [(i, header_raw[i]) for i, h in enumerate(header_row)
-                          if i not in known_cols and not is_skip_col(h)]
+                          if i not in known_cols and i < rapor_bas and not is_skip_col(h)]
             values = all_rows[1:]
         else:
             # Header yok - varsayılan dış data: A=isim, B=tel
