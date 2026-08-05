@@ -810,6 +810,13 @@ async function loadCallStats(){
                Math.round(secs/60), ans? fmtDur(Math.round(secs/ans)) : '—'];
   document.querySelectorAll('#stCards .stat-val').forEach((el,i)=>el.textContent=cards[i]);
 
+  // Kart etiketlerine secili donemi yaz
+  const dsel=document.getElementById('stDays');
+  const donem=dsel.options[dsel.selectedIndex].text;
+  const lbl=['Toplam Arama','Açılan','Toplam Dakika','Ort. Görüşme'];
+  document.querySelectorAll('#stCards .stat-lbl')
+    .forEach((el,i)=>el.innerHTML=`${lbl[i]} <span style="opacity:.55">· ${donem}</span>`);
+
   document.querySelector('#stDaily tbody').innerHTML = rows.length
     ? rows.map(x=>`<tr><td>${x.gun}</td><td>${esc(x.operator||'')}</td><td>${x.toplam_arama}</td><td>${x.acilan}</td><td>${x.acilma_yuzdesi??'—'}%</td><td>${x.toplam_dakika}</td><td>${x.ort_gorusme_sn? fmtDur(x.ort_gorusme_sn):'—'}</td><td>${x.mesgul}</td><td>${x.cevapsiz}</td><td>${x.gecersiz_numara}</td></tr>`).join('')
     : '<tr><td colspan="10" style="text-align:center;color:var(--muted)">Kayıt yok</td></tr>';
