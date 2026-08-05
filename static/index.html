@@ -251,6 +251,12 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     </div>
   </div>
 
+  <!-- ARAMA ISTATISTIKLERI (sadece super_admin) -->
+  <div id="statsNav" style="display:none">
+    <div style="border-top:1px solid var(--border);margin:6px 0"></div>
+    <button class="nav-btn" onclick="showPage('stats');loadCallStats()"><span style="width:18px;text-align:center">📈</span>Arama Raporu</button>
+  </div>
+
   <!-- ADMIN NAV -->
   <div id="adminNav" style="display:none">
     <div class="slabel">Yönetim</div>
@@ -310,6 +316,57 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
         <thead><tr><th>Data</th><th>Kullanıcı</th><th>Toplam</th><th>Tamamlanan</th><th>İlerleme</th><th>İndir</th></tr></thead>
         <tbody></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- ARAMA RAPORU -->
+  <div class="page" id="page-stats">
+    <div class="card">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <div>
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Operatör</label>
+          <select id="stUser" onchange="loadCallStats()" style="min-width:200px"></select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Dönem</label>
+          <select id="stDays" onchange="loadCallStats()">
+            <option value="1">Bugün</option>
+            <option value="7" selected>Son 7 gün</option>
+            <option value="30">Son 30 gün</option>
+            <option value="90">Son 90 gün</option>
+          </select>
+        </div>
+        <button class="btn" onclick="loadCallStats()">↻ Yenile</button>
+      </div>
+    </div>
+
+    <div class="stat-grid" id="stCards">
+      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Toplam Arama</div></div>
+      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Açılan</div></div>
+      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Toplam Dakika</div></div>
+      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Ort. Görüşme</div></div>
+    </div>
+
+    <div class="card">
+      <h3>Günlük Döküm</h3>
+      <table class="tbl" id="stDaily">
+        <thead><tr><th>Gün</th><th>Operatör</th><th>Arama</th><th>Açılan</th><th>Açılma %</th><th>Dakika</th><th>Ort. Süre</th><th>Meşgul</th><th>Cevapsız</th><th>Geçersiz</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h3 style="margin:0">Görüşmeler</h3>
+        <label style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">
+          <input type="checkbox" id="stOnlyAnswered" checked onchange="loadCallList()"> sadece açılanlar
+        </label>
+      </div>
+      <table class="tbl" id="stCalls">
+        <thead><tr><th>Saat</th><th>Kişi</th><th>Numara</th><th>Süre</th><th>Sonuç</th><th>Kayıt</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px">Ses kayıtları operatörün bilgisayarında tutulur. Dinleme yalnızca o makinede, dialer sunucusu açıkken çalışır.</div>
     </div>
   </div>
 
@@ -694,7 +751,78 @@ async function initApp(){
 
     loadLocalSettings();
   }
+  if(me.role==='super_admin'){
+    const sn=document.getElementById('statsNav');
+    if(sn) sn.style.display='block';
+  }
   setInterval(pollLocal,200); pollLocal();
+}
+
+// ── ARAMA RAPORU ──────────────────────────────────────────
+let _stUsersLoaded=false;
+
+function fmtDur(sec){
+  sec=Number(sec)||0;
+  const m=Math.floor(sec/60), s=sec%60;
+  return m? `${m}dk ${s}sn` : `${s}sn`;
+}
+
+async function loadCallStats(){
+  if(!_stUsersLoaded){
+    const r=await api('GET','/api/users');
+    const list=Array.isArray(r)? r : (r.users||[]);
+    const sel=document.getElementById('stUser');
+    sel.innerHTML='<option value="">Tüm operatörler</option>'+
+      list.map(u=>`<option value="${u.id}">${esc(u.name||u.email)}</option>`).join('');
+    _stUsersLoaded=true;
+  }
+
+  const uid=document.getElementById('stUser').value;
+  const days=document.getElementById('stDays').value;
+  const r=await api('GET',`/api/calls/stats?days=${days}`+(uid?`&user_id=${uid}`:''));
+  const rows=r.stats||[];
+
+  let tot=0,ans=0,secs=0;
+  rows.forEach(x=>{tot+=+x.toplam_arama||0; ans+=+x.acilan||0; secs+=+x.toplam_saniye||0;});
+  const cards=[tot, `${ans} (${tot?Math.round(ans/tot*100):0}%)`,
+               Math.round(secs/60), ans? fmtDur(Math.round(secs/ans)) : '—'];
+  document.querySelectorAll('#stCards .stat-val').forEach((el,i)=>el.textContent=cards[i]);
+
+  document.querySelector('#stDaily tbody').innerHTML = rows.length
+    ? rows.map(x=>`<tr><td>${x.gun}</td><td>${esc(x.operator||'')}</td><td>${x.toplam_arama}</td><td>${x.acilan}</td><td>${x.acilma_yuzdesi??'—'}%</td><td>${x.toplam_dakika}</td><td>${x.ort_gorusme_sn? fmtDur(x.ort_gorusme_sn):'—'}</td><td>${x.mesgul}</td><td>${x.cevapsiz}</td><td>${x.gecersiz_numara}</td></tr>`).join('')
+    : '<tr><td colspan="10" style="text-align:center;color:var(--muted)">Kayıt yok</td></tr>';
+
+  loadCallList();
+}
+
+async function loadCallList(){
+  const uid=document.getElementById('stUser').value;
+  const only=document.getElementById('stOnlyAnswered').checked?'&answered=1':'';
+  const r=await api('GET',`/api/calls/list?limit=200${uid?`&user_id=${uid}`:''}${only}`);
+  const rows=r.calls||[];
+
+  document.querySelector('#stCalls tbody').innerHTML = rows.length
+    ? rows.map(c=>{
+        const d=new Date(c.started_at);
+        const t=d.toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+        const rec=c.recording
+          ? `<button class="btn" style="font-size:10px;padding:2px 8px" onclick="playRec('${encodeURIComponent(c.recording)}')">▶ Dinle</button>`
+          : '<span style="color:var(--muted)">—</span>';
+        return `<tr><td>${t}</td><td>${esc(c.contact_name||'')}</td><td>${esc(c.number)}</td><td>${c.answered? fmtDur(c.duration_sec):'—'}</td><td>${esc(c.result||'')}</td><td>${rec}</td></tr>`;
+      }).join('')
+    : '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Kayıt yok</td></tr>';
+}
+
+function playRec(name){
+  let el=document.getElementById('recPlayer');
+  if(!el){
+    el=document.createElement('audio');
+    el.id='recPlayer'; el.controls=true;
+    el.style.cssText='position:fixed;bottom:14px;right:14px;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.4);border-radius:8px';
+    document.body.appendChild(el);
+  }
+  el.src=`http://127.0.0.1:9090/api/recording?name=${name}`;
+  el.play().catch(()=>alert('Kayıt açılamadı.\n\nSes dosyaları operatörün bilgisayarında tutulur.\nDinlemek için o makinede, dialer sunucusu açıkken deneyin.'));
 }
 
 // ── NAVIGATION ────────────────────────────────────────────
