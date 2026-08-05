@@ -66,6 +66,32 @@ def refresh_google_token(user_id, access_token, refresh_token, zorla=False):
             return new_token
     return access_token
 
+def col_letter(i):
+    """0->A, 25->Z, 26->AA, 51->AZ, 52->BA ..."""
+    i = int(i)
+    ad = ''
+    while True:
+        ad = chr(65 + i % 26) + ad
+        i = i // 26 - 1
+        if i < 0:
+            break
+    return ad
+
+
+def sheets_url(spreadsheet_id, rng):
+    """Sheets values adresi - aralik URL icin kodlanir."""
+    from urllib.parse import quote
+    return ('https://sheets.googleapis.com/v4/spreadsheets/'
+            f'{spreadsheet_id}/values/{quote(rng, safe="")}')
+
+
+def sheet_range(sheet_name, a1):
+    """'Sayfa Adi'!A2:G  seklinde aralik uretir."""
+    if not sheet_name:
+        return a1
+    return "'" + str(sheet_name).replace("'", "''") + "'!" + a1
+
+
 def google_hata(r):
     """Google yanitini okunabilir hataya cevirir."""
     govde = (r.text or '')[:300]
@@ -261,8 +287,7 @@ def sheets_write():
         if not spreadsheet_id: return jsonify({'error': 'Sheets ID girilmemiş'}), 400
         headers = {'Authorization': f'Bearer {access_token}'}
         # Header'dan sütun yapısını anla
-        col_letter = lambda i: chr(65 + i)
-        hr = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A2:G2' if sheet_name else 'A2:G2', headers=headers, timeout=10)
+        hr = req_lib.get(sheets_url(spreadsheet_id, sheet_range(sheet_name, 'A2:ZZ2')), headers=headers, timeout=10)
         header_row = []
         if hr.status_code == 200 and hr.json().get('values'):
             header_row = [str(h).strip().lower() for h in hr.json()['values'][0]]
@@ -278,7 +303,7 @@ def sheets_write():
         
         tel_col = col_letter(tel_idx)
         range_name = f"'{sheet_name}'!{tel_col}3:{tel_col}" if sheet_name else f'{tel_col}3:{tel_col}'
-        r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_name}', headers=headers, timeout=15)
+        r = req_lib.get(sheets_url(spreadsheet_id, range_name), headers=headers, timeout=15)
         if r.status_code != 200: return jsonify({'error': google_hata(r)}), 400
         values = r.json().get('values', [])
         clean_tel = ''.join(filter(str.isdigit, tel))
@@ -297,7 +322,7 @@ def sheets_write():
         if updates:
             r2 = req_lib.post(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values:batchUpdate',
                 json={'valueInputOption': 'USER_ENTERED', 'data': updates}, headers=headers, timeout=15)
-            if r2.status_code != 200: return jsonify({'error': f'Yazma hatası: {r2.text[:200]}'}), 400
+            if r2.status_code != 200: return jsonify({'error': google_hata(r2)}), 400
         return jsonify({'ok': True, 'row': row_num})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -317,15 +342,16 @@ def sheets_import():
         if not spreadsheet_id or not sheet_name: return jsonify({'error': 'spreadsheet_id ve sheet gerekli'}), 400
         access_token, _ = get_user_google_token(user_id)
         if not access_token: return jsonify({'error': 'Google bağlı değil', 'needs_auth': True}), 401
-        # A1:G - header 1. satırda
-        r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A2:G',
+        # A2:ZZ - header 1. satirda, ekstra sutunlar da okunur
+        r = req_lib.get(sheets_url(spreadsheet_id, sheet_range(sheet_name, 'A2:ZZ')),
             headers={'Authorization': f'Bearer {access_token}'}, timeout=15)
         if r.status_code != 200: return jsonify({'error': google_hata(r)}), 400
         all_rows = r.json().get('values', [])
         if not all_rows: return jsonify({'error': 'Veri bulunamadı'}), 400
 
         # Header tespiti - 1. satır header mı?
-        header_row = [str(h).strip().lower() for h in all_rows[0]]
+        header_raw = [str(h).strip() for h in all_rows[0]]
+        header_row = [h.lower() for h in header_raw]
         def find_col(keywords):
             for i, h in enumerate(header_row):
                 for kw in keywords:
@@ -342,14 +368,14 @@ def sheets_import():
             not_col = find_col(['notlar', 'not', 'açıklama', 'aciklama'])
             username_col = find_col(['kullanıcı', 'kullanici', 'username', 'user'])
             known_cols = {name_col, tel_col, sonuc_col, donus_col, not_col, username_col}
-            # Notlar sütunundan önceki extra sütunları al (Deneme Bonusu gibi)
-            skip_keywords = ['rapor', 'data raporu', 'toplam', 'adet', 'oran', 'tarih']
+            # Ana sütunlar disindaki her sutun "ekstra" olarak alinir
+            # (Deneme, Toplam Yatirim, Kullanici Adi vb. - aranan ismin altinda gosterilir).
+            # Sadece sagdaki rapor/ozet bloklari elenir.
+            skip_keywords = ['rapor', 'data raporu', 'oran', 'adet', 'unnamed']
             def is_skip_col(h):
                 return any(kw in h for kw in skip_keywords) or not h.strip()
-            extra_cols = [(i, h) for i, h in enumerate(header_row) 
-                         if i not in known_cols 
-                         and (not_col < 0 or i < not_col)
-                         and not is_skip_col(h)]
+            extra_cols = [(i, header_raw[i]) for i, h in enumerate(header_row)
+                          if i not in known_cols and not is_skip_col(h)]
             values = all_rows[1:]
         else:
             # Header yok - varsayılan dış data: A=isim, B=tel
@@ -411,7 +437,7 @@ def sheets_batch_write():
         headers = {'Authorization': f'Bearer {access_token}'}
         
         # Header'dan sütun tespiti
-        hr = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A2:G2' if sheet_name else 'A2:G2',
+        hr = req_lib.get(sheets_url(spreadsheet_id, sheet_range(sheet_name, 'A2:ZZ2')),
             headers=headers, timeout=10)
         header_row = []
         if hr.status_code == 200 and hr.json().get('values'):
@@ -425,12 +451,11 @@ def sheets_batch_write():
         sonuc_idx = find_ci(['sonuç','sonuc'], tel_idx+1)
         donus_idx = find_ci(['dönüş','donus','don'], tel_idx+2)
         not_idx = find_ci(['not','açıklama'], tel_idx+3)
-        col_letter = lambda i: chr(65+i)
         tel_col = col_letter(tel_idx)
         
         # Tüm tel listesini tek seferde oku
         range_name = f"'{sheet_name}'!{tel_col}3:{tel_col}" if sheet_name else f'{tel_col}3:{tel_col}'
-        r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_name}',
+        r = req_lib.get(sheets_url(spreadsheet_id, range_name),
             headers=headers, timeout=15)
         if r.status_code != 200: return jsonify({'error': google_hata(r)}), 400
         
@@ -464,7 +489,7 @@ def sheets_batch_write():
             body = {'valueInputOption': 'USER_ENTERED', 'data': updates}
             r2 = req_lib.post(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values:batchUpdate',
                 json=body, headers=headers, timeout=30)
-            if r2.status_code != 200: return jsonify({'error': f'Yazma hatası: {r2.text[:200]}'}), 400
+            if r2.status_code != 200: return jsonify({'error': google_hata(r2)}), 400
         
         return jsonify({'ok': True, 'updated': len(updates)//3})
     except Exception as e:
