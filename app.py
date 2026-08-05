@@ -794,7 +794,9 @@ def calls_stats():
     """
     user = request.user
     days = min(int(request.args.get('days', 7) or 7), 365)
-    since = (datetime.now(timezone.utc) - timedelta(days=days)).date().isoformat()
+    # Bugun dahil N gun: days=1 -> sadece bugun, days=7 -> bugun + onceki 6
+    bugun = (datetime.now(timezone.utc) + timedelta(hours=3)).date()
+    since = (bugun - timedelta(days=days - 1)).isoformat()
 
     q = sb.table('call_stats_daily').select('*').gte('gun', since)
 
