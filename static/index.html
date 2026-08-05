@@ -472,6 +472,7 @@ td:empty::after{content:'—';color:var(--muted)}
   <div id="adminNav" style="display:none">
     <div class="slabel">Yönetim</div>
     <button class="nav-btn active" onclick="showPage('dashboard')"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="13" y="7" width="3" height="10" rx="1"/></svg>Dashboard</button>
+    <button class="nav-btn" onclick="showPage('lists');loadLists()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Datalar</button>
     <button class="nav-btn" onclick="showPage('users')"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg>Kullanıcılar</button>
     <button class="nav-btn" onclick="showPage('settings')"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ayarlar</button>
     <div style="border-top:1px solid var(--border);margin:6px 0"></div>
@@ -506,9 +507,29 @@ td:empty::after{content:'—';color:var(--muted)}
       <div class="stat-card"><div class="sc-ico" style="color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19"/><circle cx="7.5" cy="7.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg></div><div class="stat-val">—</div><div class="stat-lbl">Tamamlanma</div><svg class="sc-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,27 L17,22 L34,26 L51,17 L68,22 L85,12 L102,16 L120,9" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     </div>
     <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <h3 style="margin:0">Operatör Takibi</h3>
+        <span style="font-size:11.5px;color:var(--muted)" id="opTrackSub">bugün</span>
+        <select class="st-select" id="opTrackDays" onchange="loadOpTrack()"
+                style="margin-left:auto;font-size:12px;padding:6px 30px 6px 11px">
+          <option value="1" selected>Bugün</option>
+          <option value="7">Son 7 gün</option>
+          <option value="30">Son 30 gün</option>
+        </select>
+      </div>
+      <table class="tbl" id="opTrackTbl">
+        <thead><tr>
+          <th>Operatör</th><th>Aranan Data</th><th>İlerleme</th>
+          <th>Arama</th><th>Görüşülen</th><th>Oran</th><th>Dakika</th><th>Ort. Süre</th>
+        </tr></thead>
+        <tbody><tr><td colspan="8" style="text-align:center;color:var(--muted)">Yükleniyor…</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="card">
       <h3>Data Durumu</h3>
       <table class="tbl" id="dashTbl">
-        <thead><tr><th>Data</th><th>Kullanıcı</th><th>Toplam</th><th>Tamamlanan</th><th>İlerleme</th><th>İndir</th></tr></thead>
+        <thead><tr><th>Data</th><th>Kullanıcı</th><th>Toplam</th><th>Tamamlanan</th><th>İlerleme</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -982,7 +1003,7 @@ async function initApp(){
   if(me.role==='admin'){
     document.getElementById('hadminBadge').style.display='inline';
     document.getElementById('adminNav').style.display='block';
-    await loadUsers(); await loadLists(); loadDashboard();
+    await loadUsers(); await loadLists(); loadDashboard(); loadOpTrack();
   } else {
     document.getElementById('userNav').style.display='flex';
     document.getElementById('userSettings').style.display='block';
@@ -1060,6 +1081,182 @@ async function loadTodayStats(){
     trendYaz(g('dsMinutesT'),bugun.s,dun.s);
     trendYaz(g('dsAvgT'), bugun.a?bugun.s/bugun.a:0, dun.a?dun.s/dun.a:0);
   }catch(e){ /* sunucu yoksa sessiz kal */ }
+}
+
+// ══════════════════════════════════════════════════════════
+//  KONSOL ARAÇLARI - yalnızca super_admin
+//  F12 > Console açıp yardim() yazarak kullanılır.
+//  Panelde buton yok; veri dışarı aktarımı bilinçli olarak gizli.
+// ══════════════════════════════════════════════════════════
+function _saMi(){
+  if(window._userRole==='super_admin') return true;
+  console.warn('Bu araç yalnızca super_admin içindir.');
+  return false;
+}
+
+async function datalar(){
+  if(!_saMi()) return;
+  const l=await api('GET','/api/lists?scope=all');
+  if(!Array.isArray(l)) return console.warn('Liste alınamadı');
+  console.table(l.map(x=>({id:x.id, ad:x.name, sayfa:x.sheet||'—',
+    atanan:x.users?.name||x.users?.email||'—', sheets_id:x.spreadsheet_id||'—'})));
+  console.log('İndirmek için:  dataIndir("id")');
+  return l;
+}
+
+async function dataIndir(lid, ad){
+  if(!_saMi()) return;
+  if(!lid) return console.warn('Kullanım: dataIndir("liste-id")');
+  const c=await api('GET','/api/lists/'+lid+'/contacts');
+  if(!Array.isArray(c)) return console.warn('Kişiler alınamadı');
+  if(!ad){
+    const l=(await api('GET','/api/lists?scope=all'))||[];
+    ad=(l.find(x=>x.id===lid)||{}).name||'data';
+  }
+  const q=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+  const csv='İsim,Tel,Sonuç,Dönüş,Not\n'+
+    c.map(x=>[x.name,x.tel,x.sonuc,x.donus,x.not_text].map(q).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download=ad+'.csv'; a.click();
+  console.log(`${c.length} kişi indirildi -> ${ad}.csv`);
+}
+
+async function hesaplar(){
+  if(!_saMi()) return;
+  const r=await api('GET','/api/drive/accounts');
+  const a=r.accounts||[];
+  console.table(a.map(x=>({id:x.id, ad:x.name, mail:x.email, rol:x.role,
+                           google:x.bagli?'bagli':'—'})));
+  console.log('Başkasının hesabıyla:  driveListe("", "kullanici-id")');
+  return a;
+}
+
+async function driveListe(q, asUser){
+  if(!_saMi()) return;
+  const p=new URLSearchParams();
+  if(q) p.set('q',q);
+  if(asUser) p.set('as_user',asUser);
+  const r=await api('GET','/api/drive/sheets'+(p.toString()?'?'+p:''));
+  const f=Array.isArray(r)? r : (r.files||[]);
+  if(!f.length) return console.warn('Dosya bulunamadı');
+  console.table(f.map(x=>({id:x.id, ad:x.name, tarih:(x.modifiedTime||'').slice(0,10)})));
+  console.log('İndirmek için:  driveIndir("id")   veya   driveIndir("id","csv")');
+  if(asUser) console.log('(bu liste', asUser, 'hesabına ait — indirirken de aynı id\'yi ver)');
+  return f;
+}
+
+async function driveIndir(fileId, format, asUser){
+  if(!_saMi()) return;
+  if(!fileId) return console.warn('Kullanım: driveIndir("dosya-id", "xlsx"|"csv"|"pdf", "kullanici-id")');
+  const p=new URLSearchParams({file_id:fileId, format:format||'xlsx'});
+  if(asUser) p.set('as_user',asUser);
+  const url=API+'/api/drive/export?'+p;
+  const r=await fetch(url,{headers:{'Authorization':'Bearer '+token}});
+  if(!r.ok){
+    let m='';
+    try{ m=(await r.json()).error||''; }catch(e){}
+    return console.error('İndirilemedi:', r.status, m);
+  }
+  const cd=r.headers.get('Content-Disposition')||'';
+  let ad=decodeURIComponent((cd.match(/filename\*=UTF-8''(.+)$/)||[])[1]||'')
+         || ('drive.'+(format||'xlsx'));
+  const blob=await r.blob();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=ad; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  console.log('İndirildi ->', ad);
+}
+
+function yardim(){
+  if(!_saMi()) return;
+  console.log([
+    'KONSOL ARAÇLARI',
+    '  datalar()                    panel datalarını listele',
+    '  dataIndir("liste-id")        bir datayı CSV indir',
+    '  driveListe()                 Drive\'daki Sheets dosyalarını listele',
+    '  driveListe("temmuz")         arayarak listele',
+    '  driveIndir("dosya-id")       Drive dosyasını xlsx indir',
+    '  driveIndir("dosya-id","csv") csv olarak indir',
+    '',
+    'BAŞKA BİR HESABIN DRIVE\'I',
+    '  hesaplar()                          Google bağlı kullanıcıları listele',
+    '  driveListe("", "kullanici-id")      o kişinin dosyalarını listele',
+    '  driveIndir("dosya-id","xlsx","kullanici-id")   o kişinin adına indir',
+  ].join('\n'));
+}
+
+// ── OPERATÖR TAKİBİ (yönetim panosu) ──────────────────────
+async function loadOpTrack(){
+  const tb=document.querySelector('#opTrackTbl tbody');
+  if(!tb) return;
+  const gun=document.getElementById('opTrackDays').value;
+  const sub=document.getElementById('opTrackSub');
+  if(sub) sub.textContent=document.getElementById('opTrackDays')
+                          .selectedOptions[0].text.toLocaleLowerCase('tr');
+
+  let listeler=[], aramalar=[];
+  try{
+    [listeler, aramalar] = await Promise.all([
+      api('GET','/api/stats'),
+      api('GET','/api/calls/stats?days='+gun).then(r=>r.stats||[])
+    ]);
+  }catch(e){
+    tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted)">Veri alınamadı</td></tr>';
+    return;
+  }
+  if(!Array.isArray(listeler)) listeler=[];
+
+  // Operatör bazında topla
+  const kisi={};
+  const al=id=>kisi[id]||(kisi[id]={ad:'',listeler:[],top:0,bit:0,arama:0,acilan:0,sn:0});
+
+  listeler.forEach(l=>{
+    if(!l.user_id) return;
+    const k=al(l.user_id);
+    k.ad=l.user_name||l.assigned_to||'—';
+    k.top+=l.total||0; k.bit+=l.done||0;
+    if((l.total||0)>(l.done||0)) k.listeler.push(l);   // devam edenler
+  });
+  aramalar.forEach(a=>{
+    const k=al(a.user_id);
+    if(!k.ad) k.ad=a.operator||'—';
+    k.arama+=+a.toplam_arama||0; k.acilan+=+a.acilan||0; k.sn+=+a.toplam_saniye||0;
+  });
+
+  const satirlar=Object.values(kisi)
+    .filter(k=>k.top>0 || k.arama>0)
+    .sort((a,b)=>b.arama-a.arama || b.top-a.top);
+
+  if(!satirlar.length){
+    tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted)">Kayıt yok</td></tr>';
+    return;
+  }
+
+  tb.innerHTML=satirlar.map(k=>{
+    const pct=k.top? Math.round(k.bit/k.top*100):0;
+    const aktif=k.listeler.length
+      ? k.listeler.slice(0,2).map(l=>esc(l.list_name)).join(', ')
+        + (k.listeler.length>2? ` <span style="color:var(--muted)">+${k.listeler.length-2}</span>`:'')
+      : '<span style="color:var(--muted)">—</span>';
+    const oran=k.arama? Math.round(k.acilan/k.arama*100):0;
+    return `<tr>
+      <td style="font-weight:600">${esc(k.ad)}</td>
+      <td>${aktif}</td>
+      <td style="min-width:150px">
+        <div style="display:flex;align-items:center;gap:9px">
+          <div class="prog-track" style="flex:1;margin:0"><div class="prog-fill" style="width:${pct}%"></div></div>
+          <span class="num" style="font-family:var(--mono);font-size:11.5px;min-width:80px">
+            %${pct} <span style="color:var(--muted)">${k.bit}/${k.top}</span></span>
+        </div>
+      </td>
+      <td style="font-family:var(--mono)">${k.arama}</td>
+      <td style="font-family:var(--mono)">${k.acilan}</td>
+      <td style="font-family:var(--mono)">%${oran}</td>
+      <td style="font-family:var(--mono)">${Math.round(k.sn/60)} dk</td>
+      <td style="font-family:var(--mono)">${k.acilan? fmtDur(Math.round(k.sn/k.acilan)):'—'}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ── ARAMA RAPORU ──────────────────────────────────────────
@@ -1362,15 +1559,8 @@ async function loadDashboard(){
     <tr><td>${esc(l.list_name)}</td><td style="color:var(--muted)">${esc(l.user_name||l.assigned_to||'—')}</td>
     <td style="font-family:var(--mono)">${l.total}</td><td style="font-family:var(--mono)">${l.done}</td>
     <td><div class="prog-track"><div class="prog-fill" style="width:${l.pct}%"></div></div><span style="font-size:10px;font-family:var(--mono);color:var(--muted)">${l.pct}%</span></td>
-    <td><button class="btn b" style="font-size:11px" onclick="downloadList('${l.list_id}','${esc(l.list_name)}')" style="display:none">⬇ CSV</button></td></tr>`).join('');
+    </tr>`).join('');
 }
-async function downloadList(lid,name){
-  const c=await api('GET','/api/lists/'+lid+'/contacts');
-  if(!Array.isArray(c))return;
-  const csv='İsim,Tel,Sonuç,Dönüş,Not\n'+c.map(x=>`"${(x.name||'').replace(/"/g,'""')}","${x.tel||''}","${x.sonuc||''}","${x.donus||''}","${x.not_text||''}"`).join('\n');
-  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download=name+'.csv';a.click();
-}
-
 // ── ADMIN: USERS ──────────────────────────────────────────
 async function loadUsers(){
   allUsers=await api('GET','/api/users');
@@ -1492,7 +1682,7 @@ async function addList(){
   const spreadsheetId=document.getElementById('nlSpreadsheetId').value.trim();
   const lst=await api('POST','/api/lists',{name,sheet:xlsxSelSheet,assigned_to:uid||null,gs_url:gsUrl,spreadsheet_id:spreadsheetId});
   if(lst.id) await uploadContacts(lst.id,xlsxData[xlsxSelSheet]);
-  closeModal('addListModal');resetXlsx();loadLists();loadDashboard();
+  closeModal('addListModal');resetXlsx();loadLists();loadDashboard();loadOpTrack();
 }
 
 // ── XLSX UPLOAD (user) ────────────────────────────────────
@@ -2395,7 +2585,7 @@ async function importAdminDriveSheet(spreadsheetId, sheetName, fileName){
   if(r.error){alert('Hata: '+r.error);return;}
   closeModal('adminDriveModal');
   setStatus(r.count+' kisi eklendi','live');
-  loadLists(); loadDashboard();
+  loadLists(); loadDashboard(); loadOpTrack();
 }
 
 // ── DRIVE NAV ────────────────────────────────────────────
