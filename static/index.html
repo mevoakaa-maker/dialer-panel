@@ -238,8 +238,7 @@ tbody tr.active-row{background:var(--green-dim) !important;outline:1px solid rgb
 
 
 /* ═══ ARAMA BÖLGESİ (prototip düzeni) ═══ */
-.callzone{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;padding:16px 18px 0;flex-shrink:0}
-@media(max-width:1240px){.callzone{grid-template-columns:1fr}}
+.callzone{display:block;padding:16px 18px 0;flex-shrink:0}
 
 .callcard{display:flex;gap:24px;align-items:center;padding:22px 24px;border-radius:16px;
   border:1px solid var(--border2);background:radial-gradient(520px 300px at 88% -30%,rgba(124,140,248,.14),transparent 66%),var(--surface);
@@ -268,24 +267,6 @@ tbody tr.active-row{background:var(--green-dim) !important;outline:1px solid rgb
 .callcard .cextra{margin-top:9px;font-size:11.5px;line-height:1.7}
 .callacts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
 .callside{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
-
-.queuecard{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;
-  display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(0,0,0,.28)}
-.qhead{display:flex;align-items:baseline;gap:9px;margin-bottom:11px}
-.qhead h4{font-size:13.5px;font-weight:700;letter-spacing:-.01em}
-.qhead span{font-size:11.5px;color:var(--muted);font-weight:500}
-.queue{display:flex;flex-direction:column;gap:1px;flex:1;min-height:0;overflow:hidden}
-.q-row{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:9px;transition:background .18s var(--ease)}
-.q-row:hover{background:var(--surface2)}
-.q-row.next{background:var(--accent-soft)}
-.q-idx{font-family:var(--mono);font-size:10.5px;color:var(--muted);width:28px;flex-shrink:0}
-.q-row.next .q-idx{color:var(--accent-lite)}
-.q-name{font-size:12.5px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.q-num{font-family:var(--mono);font-size:11px;color:var(--muted)}
-.q-empty{font-size:12px;color:var(--muted);padding:14px 10px;text-align:center}
-.qprog{margin-top:12px}
-.qprog-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;color:var(--muted)}
-.qprog-top b{font-family:var(--mono);font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
 
 /* KPI şeridi */
 .dkpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:14px 18px 16px;flex-shrink:0}
@@ -703,16 +684,6 @@ td:empty::after{content:'—';color:var(--muted)}
         <div style="display:none"><div class="cavatar" id="cavatar">—</div></div>
       </div>
 
-      <div class="queuecard">
-        <div class="qhead"><h4>Sıradaki</h4><span id="qSub">—</span></div>
-        <div class="queue" id="queueList">
-          <div class="q-empty">Liste bekleniyor</div>
-        </div>
-        <div class="qprog">
-          <div class="qprog-top"><span>Liste ilerlemesi</span><b id="qProgLbl">—</b></div>
-          <div class="prog-track"><div class="prog-fill" id="qProgFill" style="width:0%"></div></div>
-        </div>
-      </div>
     </div>
 
     <!-- TABLO TOOLBAR -->
@@ -976,6 +947,7 @@ let gsUrl='';
 let localOnline=false;
 let localTimerIv=null;
 let localTimerSec=0;
+let callAnswered=false;
 let lastLocalName='';
 let lastLocalNum='';
 
@@ -1035,44 +1007,12 @@ async function initApp(){
     if(sn) sn.style.display='block';
   }
   loadTodayStats(); setInterval(loadTodayStats,60000);
-  renderQueue(); setInterval(renderQueue,2000);
   tickRing();    setInterval(tickRing,1000);
   setInterval(pollLocal,200); pollLocal();
 }
 
 // ── ARAMA BÖLGESİ (sıradaki + halka + günlük özet) ────────
 const RING_C = 2*Math.PI*53;
-
-function sadeNo(x){ return String(x||'').replace(/\D/g,'').slice(-10); }
-
-function renderQueue(){
-  const list=document.getElementById('queueList');
-  const sub=document.getElementById('qSub');
-  const lbl=document.getElementById('qProgLbl');
-  const fill=document.getElementById('qProgFill');
-  if(!list) return;
-
-  const total=ucContacts.length;
-  if(!total){ list.innerHTML='<div class="q-empty">Liste bekleniyor</div>';
-              if(sub)sub.textContent='—'; if(lbl)lbl.textContent='—'; return; }
-
-  const aktif=sadeNo(lastLocalNum);
-  let i=ucContacts.findIndex(c=>sadeNo(c.tel)===aktif && aktif);
-  if(i<0) i=ucContacts.findIndex(c=>!c.sonuc)-1;
-
-  const sonraki=ucContacts.slice(i+1, i+6);
-  list.innerHTML = sonraki.length
-    ? sonraki.map((c,k)=>
-        `<div class="q-row${k===0?' next':''}"><span class="q-idx">${i+2+k}</span>`+
-        `<span class="q-name">${esc(c.name||'—')}</span>`+
-        `<span class="q-num">${esc(c.tel||'')}</span></div>`).join('')
-    : '<div class="q-empty">Liste sonuna gelindi</div>';
-
-  if(sub) sub.textContent=(ucCurrentList?.name||'Liste')+' · '+total.toLocaleString('tr-TR')+' kişi';
-  const done=ucContacts.filter(c=>c.sonuc).length;
-  if(lbl) lbl.textContent=done.toLocaleString('tr-TR')+' / '+total.toLocaleString('tr-TR');
-  if(fill) fill.style.width=(total?done/total*100:0)+'%';
-}
 
 function tickRing(){
   const t=document.getElementById('ctimer'), r=document.getElementById('ringProg');
@@ -1262,6 +1202,29 @@ async function pollLocal(){
       document.getElementById('localTxt').style.color='var(--green)';
       // current_call oku
       try{
+        // Çağrı cevaplandı mı? (cancel_hangup.flag = F8 ya da köprü)
+        try{
+          const cf=await fetch(LOCAL+'/api/file?name=cancel_hangup.flag');
+          if(cf.ok){
+            const fd=await cf.json();
+            const acik=!!fd.exists;
+            if(acik && !callAnswered){
+              callAnswered=true; localTimerSec=0;
+              clearInterval(localTimerIv);
+              localTimerIv=setInterval(()=>{
+                localTimerSec++;
+                const m=String(Math.floor(localTimerSec/60)).padStart(2,'0');
+                const sc=String(localTimerSec%60).padStart(2,'0');
+                const el=document.getElementById('ctimer');
+                if(el) el.textContent=m+':'+sc;
+              },1000);
+            } else if(!acik && callAnswered){
+              callAnswered=false;
+              clearInterval(localTimerIv); localTimerIv=null;
+            }
+          }
+        }catch(e){}
+
         const cc=await fetch(LOCAL+'/api/file?name=current_call.txt');
         if(cc.ok){
           const d=await cc.json();
@@ -1273,21 +1236,15 @@ async function pollLocal(){
             document.getElementById('cname').textContent=name;
             document.getElementById('cnum').textContent=num;
             document.getElementById('cavatar').textContent=initials(name);
-            // Numara değişince timer sıfırla ve highlight yap
+            // Numara değişince sayacı sıfırla (saymaya cevaplanınca başlar)
             if(num&&num!==lastLocalNum){
               lastLocalName=name;
               lastLocalNum=num;
               localTimerSec=0;
-              clearInterval(localTimerIv);
+              callAnswered=false;
+              clearInterval(localTimerIv); localTimerIv=null;
               const timerEl=document.getElementById('ctimer');
-              if(timerEl) timerEl.style.color='var(--green)';
-              localTimerIv=setInterval(()=>{
-                localTimerSec++;
-                const m=String(Math.floor(localTimerSec/60)).padStart(2,'0');
-                const sc=String(localTimerSec%60).padStart(2,'0');
-                const el=document.getElementById('ctimer');
-                if(el) el.textContent=m+':'+sc;
-              },1000);
+              if(timerEl) timerEl.textContent='—';
               highlightActiveContact(num);
               // Arama değişince manuel seçimi sıfırla, aktif arananı seç
               if(selContact && !selContact._autoSelected) selContact=null;
