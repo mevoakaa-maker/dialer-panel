@@ -227,6 +227,23 @@ tbody tr.active-row{background:var(--green-dim) !important;outline:1px solid rgb
 .local-online{background:var(--green);box-shadow:0 0 6px var(--green)}
 
 
+
+/* KPI kart detaylari */
+.stat-card{text-align:left;padding:17px 18px;overflow:hidden}
+.sc-ico{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;margin-bottom:12px;background:var(--surface2);border:1px solid var(--border2)}
+.sc-ico svg{width:14px;height:14px}
+.stat-card .stat-val{font-size:26px}
+.stat-card .stat-lbl{margin-top:4px}
+.sc-spark{position:absolute;right:0;bottom:0;width:120px;height:40px;opacity:.42;pointer-events:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 45%);mask-image:linear-gradient(90deg,transparent,#000 45%)}
+.stat-card:hover .sc-spark{opacity:.72;transition:opacity .3s var(--ease)}
+.sc-spark path{stroke-dasharray:200;stroke-dashoffset:200;animation:sparkIn 1.2s var(--ease) .3s forwards}
+@keyframes sparkIn{to{stroke-dashoffset:0}}
+
+/* Nav ikonlari */
+.nav-btn svg{opacity:.85}
+.nav-btn.active svg{opacity:1}
+
 /* ══════════════ DETAY KATMANI ══════════════ */
 
 /* Rakamlar sabit genislikte - sayac ilerlerken satir oynamasin */
@@ -379,17 +396,17 @@ td:empty::after{content:'—';color:var(--muted)}
   <!-- ARAMA ISTATISTIKLERI (sadece super_admin) -->
   <div id="statsNav" style="display:none">
     <div style="border-top:1px solid var(--border);margin:6px 0"></div>
-    <button class="nav-btn" onclick="showPage('stats');loadCallStats()"><span style="width:18px;text-align:center">📈</span>Arama Raporu</button>
+    <button class="nav-btn" onclick="showPage('stats');loadCallStats()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>Arama Raporu</button>
   </div>
 
   <!-- ADMIN NAV -->
   <div id="adminNav" style="display:none">
     <div class="slabel">Yönetim</div>
-    <button class="nav-btn active" onclick="showPage('dashboard')"><span style="width:18px;text-align:center">📊</span>Dashboard</button>
-    <button class="nav-btn" onclick="showPage('users')"><span style="width:18px;text-align:center">👥</span>Kullanıcılar</button>
-    <button class="nav-btn" onclick="showPage('settings')"><span style="width:18px;text-align:center">⚙️</span>Ayarlar</button>
+    <button class="nav-btn active" onclick="showPage('dashboard')"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="13" y="7" width="3" height="10" rx="1"/></svg>Dashboard</button>
+    <button class="nav-btn" onclick="showPage('users')"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg>Kullanıcılar</button>
+    <button class="nav-btn" onclick="showPage('settings')"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ayarlar</button>
     <div style="border-top:1px solid var(--border);margin:6px 0"></div>
-    <button class="nav-btn" onclick="showPage('dialer');loadAdminLists()"><span style="width:18px;text-align:center">📞</span>Dialer</button>
+    <button class="nav-btn" onclick="showPage('dialer');loadAdminLists()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>Dialer</button>
   </div>
 
   <!-- ADMIN DIALER LIST -->
@@ -430,10 +447,10 @@ td:empty::after{content:'—';color:var(--muted)}
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
     <div class="stat-grid" id="dashStats">
-      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Aranan Data</div></div>
-      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Toplam Kişi</div></div>
-      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Aranan</div></div>
-      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Tamamlanma</div></div>
+      <div class="stat-card"><div class="sc-ico" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><div class="stat-val">—</div><div class="stat-lbl">Aranan Data</div><svg class="sc-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,33 L17,29 L34,31 L51,20 L68,25 L85,14 L102,18 L120,8" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="stat-card"><div class="sc-ico" style="color:var(--teal)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="stat-val">—</div><div class="stat-lbl">Toplam Kişi</div><svg class="sc-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,15 L17,19 L34,12 L51,21 L68,16 L85,23 L102,19 L120,26" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="stat-card"><div class="sc-ico" style="color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></div><div class="stat-val">—</div><div class="stat-lbl">Aranan</div><svg class="sc-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,31 L17,32 L34,24 L51,27 L68,17 L85,20 L102,11 L120,13" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="stat-card"><div class="sc-ico" style="color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19"/><circle cx="7.5" cy="7.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg></div><div class="stat-val">—</div><div class="stat-lbl">Tamamlanma</div><svg class="sc-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,27 L17,22 L34,26 L51,17 L68,22 L85,12 L102,16 L120,9" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     </div>
     <div class="card">
       <h3>Data Durumu</h3>
@@ -466,10 +483,10 @@ td:empty::after{content:'—';color:var(--muted)}
     </div>
 
     <div class="stat-grid" id="stCards">
-      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Toplam Arama</div></div>
-      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Açılan</div></div>
-      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Toplam Dakika</div></div>
-      <div class="stat-card"><div class="stat-val">—</div><div class="stat-lbl">Ort. Görüşme</div></div>
+      <div class="stat-card"><div class="sc-ico" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></div><div class="stat-val">—</div><div class="stat-lbl">Toplam Arama</div><svg class="sc-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,33 L17,29 L34,31 L51,20 L68,25 L85,14 L102,18 L120,8" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="stat-card"><div class="sc-ico" style="color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><div class="stat-val">—</div><div class="stat-lbl">Açılan</div><svg class="sc-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,31 L17,32 L34,24 L51,27 L68,17 L85,20 L102,11 L120,13" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="stat-card"><div class="sc-ico" style="color:var(--teal)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="stat-val">—</div><div class="stat-lbl">Toplam Dakika</div><svg class="sc-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,15 L17,19 L34,12 L51,21 L68,16 L85,23 L102,19 L120,26" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="stat-card"><div class="sc-ico" style="color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12M6 2c0 5 6 6 6 10S6 17 6 22M18 2c0 5-6 6-6 10s6 5 6 10"/></svg></div><div class="stat-val">—</div><div class="stat-lbl">Ort. Görüşme</div><svg class="sc-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,27 L17,22 L34,26 L51,17 L68,22 L85,12 L102,16 L120,9" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     </div>
 
     <div class="card">
@@ -2281,7 +2298,7 @@ async function loadDriveFiles(){
   }
   const html = driveFiles.map(f=>`
     <button class="nav-btn" onclick="selectDriveNav('${f.id}','${esc(f.name)}')">
-      <span style="width:18px;text-align:center">📊</span>${esc(f.name)}
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="13" y="7" width="3" height="10" rx="1"/></svg>${esc(f.name)}
     </button>`).join('');
   if(wrap) wrap.innerHTML = html;
   if(wrapTop) wrapTop.innerHTML = html;
