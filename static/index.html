@@ -68,6 +68,16 @@ main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
 
 /* BUTTONS */
+/* ARAMA RAPORU - filtre alanlari */
+.st-filters{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.st-field{display:flex;flex-direction:column;gap:5px}
+.st-field>label{font-size:10px;font-weight:600;letter-spacing:.09em;color:var(--muted);text-transform:uppercase}
+.st-select{appearance:none;-webkit-appearance:none;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;padding:8px 34px 8px 12px;cursor:pointer;transition:border-color .18s,box-shadow .18s;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;background-size:13px}
+.st-select:hover{border-color:var(--border2);background-color:#222635}
+.st-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.16)}
+.st-select option{background:var(--surface2);color:var(--text)}
+.st-refresh{height:35px;border-radius:8px;padding:0 15px}
+.st-note{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:center;gap:6px}
 .btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:12px;font-family:var(--sans);cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:all .18s;white-space:nowrap;letter-spacing:.02em}
 .btn:hover{background:var(--surface2);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .btn:active{transform:scale(.97) translateY(0)}
@@ -322,21 +332,21 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
   <!-- ARAMA RAPORU -->
   <div class="page" id="page-stats">
     <div class="card">
-      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-        <div>
-          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Operatör</label>
-          <select id="stUser" onchange="loadCallStats()" style="min-width:200px"></select>
+      <div class="st-filters">
+        <div class="st-field">
+          <label for="stUser">Operatör</label>
+          <select id="stUser" class="st-select" onchange="loadCallStats()" style="min-width:220px"></select>
         </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Dönem</label>
-          <select id="stDays" onchange="loadCallStats()">
+        <div class="st-field">
+          <label for="stDays">Dönem</label>
+          <select id="stDays" class="st-select" onchange="loadCallStats()" style="min-width:150px">
             <option value="1">Bugün</option>
             <option value="7" selected>Son 7 gün</option>
             <option value="30">Son 30 gün</option>
             <option value="90">Son 90 gün</option>
           </select>
         </div>
-        <button class="btn" onclick="loadCallStats()">↻ Yenile</button>
+        <button class="btn st-refresh" onclick="loadCallStats()">↻ Yenile</button>
       </div>
     </div>
 
@@ -366,7 +376,7 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
         <thead><tr><th>Saat</th><th>Kişi</th><th>Numara</th><th>Süre</th><th>Sonuç</th><th>Kayıt</th></tr></thead>
         <tbody></tbody>
       </table>
-      <div style="font-size:11px;color:var(--muted);margin-top:8px">Ses kayıtları operatörün bilgisayarında tutulur. Dinleme yalnızca o makinede, dialer sunucusu açıkken çalışır.</div>
+      <div class="st-note"><span>ℹ</span><span>Ses kayıtları operatörün bilgisayarında tutulur. Dinleme yalnızca o makinede, dialer sunucusu açıkken çalışır.</span></div>
     </div>
   </div>
 
