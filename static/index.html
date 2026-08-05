@@ -77,6 +77,11 @@ main{display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .st-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.16)}
 .st-select option{background:var(--surface2);color:var(--text)}
 .st-refresh{height:35px;border-radius:8px;padding:0 15px}
+.st-search{appearance:none;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;padding:8px 12px;width:260px;transition:border-color .18s,box-shadow .18s}
+.st-search::placeholder{color:var(--muted)}
+.st-search:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.16)}
+.st-summary{display:flex;gap:22px;flex-wrap:wrap;padding:11px 14px;margin-bottom:12px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;font-size:12px}
+.st-summary b{font-family:var(--mono);font-size:14px;display:block;margin-top:2px}
 .st-note{font-size:11px;color:var(--muted);margin-top:10px;display:flex;align-items:center;gap:6px}
 .btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:12px;font-family:var(--sans);cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);transition:all .18s;white-space:nowrap;letter-spacing:.02em}
 .btn:hover{background:var(--surface2);transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.2)}
@@ -366,12 +371,19 @@ tbody tr.active-row{background:#052e16 !important;outline:2px solid var(--green)
     </div>
 
     <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap">
         <h3 style="margin:0">Görüşmeler</h3>
-        <label style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">
-          <input type="checkbox" id="stOnlyAnswered" checked onchange="loadCallList()"> sadece açılanlar
-        </label>
+        <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
+          <input id="stSearch" class="st-search" placeholder="Numara veya isim ara..."
+                 onkeydown="if(event.key==='Enter')loadCallList()">
+          <button class="btn" onclick="loadCallList()">Ara</button>
+          <button class="btn" id="stClear" style="display:none" onclick="clearSearch()">✕ Temizle</button>
+          <label style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">
+            <input type="checkbox" id="stOnlyAnswered" checked onchange="loadCallList()"> sadece açılanlar
+          </label>
+        </div>
       </div>
+      <div id="stSummary" style="display:none" class="st-summary"></div>
       <table class="tbl" id="stCalls">
         <thead><tr><th>Saat</th><th>Kişi</th><th>Numara</th><th>Süre</th><th>Sonuç</th><th>Kayıt</th></tr></thead>
         <tbody></tbody>
@@ -807,9 +819,34 @@ async function loadCallStats(){
 
 async function loadCallList(){
   const uid=document.getElementById('stUser').value;
+  const term=document.getElementById('stSearch').value.trim();
   const only=document.getElementById('stOnlyAnswered').checked?'&answered=1':'';
-  const r=await api('GET',`/api/calls/list?limit=200${uid?`&user_id=${uid}`:''}${only}`);
+  document.getElementById('stClear').style.display = term? 'inline-flex':'none';
+
+  const qs = term
+    ? `/api/calls/list?limit=500&q=${encodeURIComponent(term)}${uid?`&user_id=${uid}`:''}`
+    : `/api/calls/list?limit=200${uid?`&user_id=${uid}`:''}${only}`;
+  const r=await api('GET',qs);
   const rows=r.calls||[];
+
+  // Arama yapildiysa ozet goster
+  const sum=document.getElementById('stSummary');
+  if(term && rows.length){
+    const ans=rows.filter(c=>c.answered);
+    const secs=ans.reduce((a,c)=>a+(+c.duration_sec||0),0);
+    const last=rows[0];
+    const names=[...new Set(rows.map(c=>c.contact_name).filter(Boolean))];
+    sum.style.display='flex';
+    sum.innerHTML=`
+      <div>Kişi<b>${esc(names[0]||'—')}</b></div>
+      <div>Toplam arama<b>${rows.length}</b></div>
+      <div>Görüşülen<b>${ans.length}</b></div>
+      <div>Toplam süre<b>${fmtDur(secs)}</b></div>
+      <div>Ortalama<b>${ans.length? fmtDur(Math.round(secs/ans.length)):'—'}</b></div>
+      <div>Son arama<b>${new Date(last.started_at).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</b></div>`;
+  } else {
+    sum.style.display='none';
+  }
 
   document.querySelector('#stCalls tbody').innerHTML = rows.length
     ? rows.map(c=>{
@@ -818,9 +855,14 @@ async function loadCallList(){
         const rec=c.recording
           ? `<button class="btn" style="font-size:10px;padding:2px 8px" onclick="playRec('${encodeURIComponent(c.recording)}')">▶ Dinle</button>`
           : '<span style="color:var(--muted)">—</span>';
-        return `<tr><td>${t}</td><td>${esc(c.contact_name||'')}</td><td>${esc(c.number)}</td><td>${c.answered? fmtDur(c.duration_sec):'—'}</td><td>${esc(c.result||'')}</td><td>${rec}</td></tr>`;
+        return `<tr><td>${t}</td><td>${esc(c.contact_name||'')}</td><td style="font-family:var(--mono)">${esc(c.number)}</td><td>${c.answered? fmtDur(c.duration_sec):'—'}</td><td>${esc(c.result||'')}</td><td>${rec}</td></tr>`;
       }).join('')
-    : '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Kayıt yok</td></tr>';
+    : `<tr><td colspan="6" style="text-align:center;color:var(--muted)">${term?'Bu numara/isme ait kayıt bulunamadı':'Kayıt yok'}</td></tr>`;
+}
+
+function clearSearch(){
+  document.getElementById('stSearch').value='';
+  loadCallList();
 }
 
 function playRec(name){
