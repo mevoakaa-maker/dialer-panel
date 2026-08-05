@@ -736,6 +736,12 @@ def calls_log():
     if len(events) > 500:
         return jsonify({'error': 'tek seferde en fazla 500 kayit'}), 400
 
+    import re as _re
+
+    def _norm_num(n):
+        d = _re.sub(r'\D', '', str(n or ''))
+        return d[-10:] if len(d) >= 10 else d
+
     rows = []
     for e in events:
         if not e.get('number') or not e.get('started_at'):
@@ -743,7 +749,7 @@ def calls_log():
         rows.append({
             'user_id':      row['user_id'],
             'call_id':      e.get('call_id'),
-            'number':       str(e['number'])[:32],
+            'number':       _norm_num(e['number'])[:32],
             'contact_name': (e.get('contact_name') or '')[:120] or None,
             'started_at':   e['started_at'],
             'ended_at':     e.get('ended_at'),
@@ -822,13 +828,24 @@ def calls_list():
     else:
         q = q.eq('user_id', user['id'])
 
-    d = request.args.get('date')
-    if d:
-        q = q.gte('started_at', f'{d}T00:00:00+03:00') \
-             .lt('started_at', f'{d}T23:59:59+03:00')
-
-    if request.args.get('answered') == '1':
-        q = q.eq('answered', True)
+    # Arama: numara veya isim icinde gecen
+    term = (request.args.get('q') or '').strip()
+    if term:
+        # or_() sozdizimini bozacak karakterleri temizle
+        safe = ''.join(c for c in term if c not in ',()\'"%')[:40]
+        digits = ''.join(c for c in safe if c.isdigit())
+        if digits and len(digits) >= 4:
+            key = digits[-10:] if len(digits) >= 10 else digits
+            q = q.ilike('number', f'%{key}%')
+        elif safe:
+            q = q.ilike('contact_name', f'%{safe}%')
+    else:
+        d = request.args.get('date')
+        if d:
+            q = q.gte('started_at', f'{d}T00:00:00+03:00') \
+                 .lt('started_at', f'{d}T23:59:59+03:00')
+        if request.args.get('answered') == '1':
+            q = q.eq('answered', True)
 
     res = q.order('started_at', desc=True).limit(limit).execute()
     return jsonify({'calls': res.data or []})
