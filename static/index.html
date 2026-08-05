@@ -571,7 +571,7 @@ td:empty::after{content:'—';color:var(--muted)}
       </table>
     </div>
 
-    <div class="card">
+    <div class="card" id="stCallsCard">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap">
         <h3 style="margin:0">Görüşmeler</h3>
         <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
@@ -1018,6 +1018,10 @@ async function initApp(){
   // Operatörler yalnızca kendi verisini görür (backend kısıtlıyor).
   const sn=document.getElementById('statsNav');
   if(sn) sn.style.display='block';
+  if(me.role==='admin'){
+    const gk=document.getElementById('stCallsCard');   // Görüşmeler admin'de gizli
+    if(gk) gk.style.display='none';                    // operatör kendi kayıtlarını görür
+  }
   loadTodayStats(); setInterval(loadTodayStats,60000);
   tickRing();    setInterval(tickRing,1000);
   setInterval(pollLocal,200); pollLocal();
