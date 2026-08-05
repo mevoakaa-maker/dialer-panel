@@ -252,8 +252,17 @@ tbody tr.active-row{background:var(--green-dim) !important;outline:1px solid rgb
 .ring-prog{stroke:url(#ringGrad);stroke-width:5;fill:none;stroke-linecap:round;transition:stroke-dashoffset .9s linear}
 .ring-breath{position:absolute;inset:-8px;border-radius:50%;border:1px solid var(--accent);opacity:0;pointer-events:none}
 .callcard.oncall .ring-breath{animation:breathe 3.6s var(--ease) infinite}
-.callcard.ringing .ring-breath{animation:ringing 1.5s var(--ease) infinite;border-color:var(--accent)}
-@keyframes ringing{0%{transform:scale(.94);opacity:.55}70%,100%{transform:scale(1.16);opacity:0}}
+.callcard.ringing .ring-breath{animation:ringing 1.6s var(--ease) infinite;border:2px solid var(--accent);box-shadow:0 0 18px rgba(124,140,248,.5),inset 0 0 14px rgba(124,140,248,.28)}
+@keyframes ringing{0%{transform:scale(.92);opacity:.9}75%,100%{transform:scale(1.22);opacity:0}}
+/* ikinci dalga - gecikmeli */
+.callcard.ringing .ringwrap::after{content:'';position:absolute;inset:-8px;border-radius:50%;
+  border:2px solid var(--accent);opacity:0;pointer-events:none;
+  animation:ringing 1.6s var(--ease) .8s infinite}
+/* aranirken halkada donen yay */
+.callcard.ringing .ring-prog{stroke:var(--accent);transition:none;
+  animation:arcSpin 1.6s linear infinite;transform-origin:60px 60px}
+@keyframes arcSpin{to{transform:rotate(360deg)}}
+.callcard.ringing .ringwrap{filter:drop-shadow(0 0 12px rgba(124,140,248,.35))}
 .callcard.ringing .ring-track{stroke:var(--accent-soft);animation:trackPulse 1.5s var(--ease) infinite}
 @keyframes trackPulse{0%,100%{opacity:.55}50%{opacity:1}}
 .callcard.ringing .ring-in .ctimer{color:var(--accent-lite);animation:dimPulse 1.5s var(--ease) infinite}
@@ -1050,8 +1059,14 @@ function tickRing(){
 
   if(m){
     const sn=(+m[1])*60+(+m[2]);
+    r.style.strokeDasharray = RING_C;
     r.style.strokeDashoffset = RING_C*(1-Math.min(sn/180,1));   // 3 dk = tam tur
+  }else if(varNumara){
+    // aranıyor: kısa bir yay, CSS onu döndürüyor
+    r.style.strokeDasharray = (RING_C*0.16)+' '+(RING_C*0.84);
+    r.style.strokeDashoffset = 0;
   }else{
+    r.style.strokeDasharray = RING_C;
     r.style.strokeDashoffset = RING_C;
   }
 }
