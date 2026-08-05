@@ -1776,14 +1776,9 @@ function selectContact(id){
   if(sb){sb.style.opacity='1';sb.style.pointerEvents='auto';}
   const cb=document.getElementById('ucClearBtn');
   if(cb){cb.style.opacity='1';cb.style.pointerEvents='auto';}
-  clearInterval(timerIv);timerSec=0;
-  document.getElementById('ctimer').style.color='var(--green)';
-  timerIv=setInterval(()=>{
-    timerSec++;
-    const m=String(Math.floor(timerSec/60)).padStart(2,'0');
-    const s=String(timerSec%60).padStart(2,'0');
-    document.getElementById('ctimer').textContent=m+':'+s;
-  },1000);
+  // Not: kişi seçimi artık sayacı başlatmıyor.
+  // Süre yalnızca çağrı cevaplandığında (cancel_hangup.flag) sayılır.
+  clearInterval(timerIv); timerSec=0;
   renderUcTable();
 }
 
