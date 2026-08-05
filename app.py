@@ -46,9 +46,16 @@ def require_admin(f):
         return f(*args, **kwargs)
     return wrapper
 
-def refresh_google_token(user_id, access_token, refresh_token):
-    test = req_lib.get('https://www.googleapis.com/oauth2/v1/tokeninfo', params={'access_token': access_token}, timeout=5)
-    if test.status_code != 200 and refresh_token:
+def refresh_google_token(user_id, access_token, refresh_token, zorla=False):
+    if zorla:
+        test = None
+    else:
+        try:
+            test = req_lib.get('https://www.googleapis.com/oauth2/v1/tokeninfo',
+                               params={'access_token': access_token}, timeout=5)
+        except Exception:
+            test = None
+    if (zorla or test is None or test.status_code != 200) and refresh_token:
         ref = req_lib.post('https://oauth2.googleapis.com/token', data={
             'client_id': GOOGLE_CLIENT_ID, 'client_secret': GOOGLE_CLIENT_SECRET,
             'refresh_token': refresh_token, 'grant_type': 'refresh_token'
@@ -58,6 +65,24 @@ def refresh_google_token(user_id, access_token, refresh_token):
             sb.table('users').update({'google_access_token': new_token}).eq('id', user_id).execute()
             return new_token
     return access_token
+
+def google_hata(r):
+    """Google yanitini okunabilir hataya cevirir."""
+    govde = (r.text or '')[:300]
+    if govde.lstrip().lower().startswith(('<!doctype', '<html')):
+        return ('Google yetkisi gecersiz. Panelden cikis yapip '
+                'Google ile tekrar giris yapin.')
+    try:
+        j = r.json()
+        msg = j.get('error', {}).get('message') or str(j)[:200]
+    except Exception:
+        msg = govde
+    if r.status_code in (401, 403):
+        return f'Google erisim reddedildi ({r.status_code}). Tekrar giris yapmayi deneyin. {msg[:120]}'
+    if r.status_code == 404:
+        return 'Sheets dosyasi bulunamadi. Baglanti veya erisim izni kontrol edilmeli.'
+    return f'Sheets okuma hatasi ({r.status_code}): {msg[:150]}'
+
 
 def get_user_google_token(user_id):
     user_res = sb.table('users').select('google_access_token,google_refresh_token').eq('id', user_id).execute()
@@ -254,7 +279,7 @@ def sheets_write():
         tel_col = col_letter(tel_idx)
         range_name = f"'{sheet_name}'!{tel_col}3:{tel_col}" if sheet_name else f'{tel_col}3:{tel_col}'
         r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_name}', headers=headers, timeout=15)
-        if r.status_code != 200: return jsonify({'error': f'Sheets okuma hatası: {r.text[:200]}'}), 400
+        if r.status_code != 200: return jsonify({'error': google_hata(r)}), 400
         values = r.json().get('values', [])
         clean_tel = ''.join(filter(str.isdigit, tel))
         row_num = None
@@ -295,7 +320,7 @@ def sheets_import():
         # A1:G - header 1. satırda
         r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{chr(39)}{sheet_name}{chr(39)}!A2:G',
             headers={'Authorization': f'Bearer {access_token}'}, timeout=15)
-        if r.status_code != 200: return jsonify({'error': f'Sheets okuma hatası: {r.text[:200]}'}), 400
+        if r.status_code != 200: return jsonify({'error': google_hata(r)}), 400
         all_rows = r.json().get('values', [])
         if not all_rows: return jsonify({'error': 'Veri bulunamadı'}), 400
 
@@ -407,7 +432,7 @@ def sheets_batch_write():
         range_name = f"'{sheet_name}'!{tel_col}3:{tel_col}" if sheet_name else f'{tel_col}3:{tel_col}'
         r = req_lib.get(f'https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet_id}/values/{range_name}',
             headers=headers, timeout=15)
-        if r.status_code != 200: return jsonify({'error': f'Sheets okuma hatası: {r.text[:200]}'}), 400
+        if r.status_code != 200: return jsonify({'error': google_hata(r)}), 400
         
         tel_values = r.json().get('values', [])
         
