@@ -565,10 +565,10 @@ td:empty::after{content:'—';color:var(--muted)}
       </div>
       <div id="stSummary" style="display:none" class="st-summary"></div>
       <table class="tbl" id="stCalls">
-        <thead><tr><th>Saat</th><th>Kişi</th><th>Numara</th><th>Süre</th><th>Sonuç</th><th>Kayıt</th></tr></thead>
+        <thead><tr><th>Saat</th><th>Kişi</th><th>Numara</th><th>Süre</th><th>Sonuç</th><th id="thKayit">Kayıt</th></tr></thead>
         <tbody></tbody>
       </table>
-      <div class="st-note"><span>ℹ</span><span>Ses kayıtları operatörün bilgisayarında tutulur. Dinleme yalnızca o makinede, dialer sunucusu açıkken çalışır.</span></div>
+      <div class="st-note" id="stNote"><span>ℹ</span><span>Ses kayıtları operatörün bilgisayarında tutulur. Dinleme yalnızca o makinede, dialer sunucusu açıkken çalışır.</span></div>
     </div>
   </div>
 
@@ -993,10 +993,10 @@ async function initApp(){
 
     loadLocalSettings();
   }
-  if(me.role==='super_admin'){
-    const sn=document.getElementById('statsNav');
-    if(sn) sn.style.display='block';
-  }
+  // Arama Raporu herkeste görünür.
+  // Operatörler yalnızca kendi verisini görür (backend kısıtlıyor).
+  const sn=document.getElementById('statsNav');
+  if(sn) sn.style.display='block';
   loadTodayStats(); setInterval(loadTodayStats,60000);
   tickRing();    setInterval(tickRing,1000);
   setInterval(pollLocal,200); pollLocal();
@@ -1072,10 +1072,17 @@ function fmtDur(sec){
 }
 
 async function loadCallStats(){
-  if(!_stUsersLoaded){
+  const yonetici = ['admin','super_admin'].includes(window._userRole);
+  const sel=document.getElementById('stUser');
+  const alan=sel? sel.closest('.st-field') : null;
+  if(!yonetici){
+    // Operatör kendi verisini görür - seçiciye gerek yok
+    if(alan) alan.style.display='none';
+    if(sel) sel.value='';
+  }else if(!_stUsersLoaded){
+    if(alan) alan.style.display='';
     const r=await api('GET','/api/users');
     const list=Array.isArray(r)? r : (r.users||[]);
-    const sel=document.getElementById('stUser');
     sel.innerHTML='<option value="">Tüm operatörler</option>'+
       list.map(u=>`<option value="${u.id}">${esc(u.name||u.email)}</option>`).join('');
     _stUsersLoaded=true;
