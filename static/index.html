@@ -236,16 +236,77 @@ tbody tr.active-row{background:var(--green-dim) !important;outline:1px solid rgb
   transition:filter .3s var(--ease),transform .3s var(--ease)}
 .brand img:hover{filter:drop-shadow(0 8px 24px rgba(124,140,248,.45));transform:translateY(-1px)}
 
-/* Gunluk ozet seridi - tablo altinda */
-.daystrip{display:flex;align-items:center;gap:20px;padding:11px 18px;flex-shrink:0;
-  border-top:1px solid var(--border);background:var(--surface);
-  box-shadow:0 -8px 24px -20px rgba(0,0,0,.9)}
-.ds-item{display:flex;flex-direction:column;gap:2px;min-width:0}
-.ds-lbl{font-size:9.5px;font-weight:700;letter-spacing:.13em;color:var(--muted);text-transform:uppercase}
-.ds-val{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:-.02em;
-  font-variant-numeric:tabular-nums;line-height:1.15}
-.ds-sep{width:1px;height:26px;background:var(--border2);flex-shrink:0}
-.ds-spacer{flex:1}
+
+/* ═══ ARAMA BÖLGESİ (prototip düzeni) ═══ */
+.callzone{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;padding:16px 18px 0;flex-shrink:0}
+@media(max-width:1240px){.callzone{grid-template-columns:1fr}}
+
+.callcard{display:flex;gap:24px;align-items:center;padding:22px 24px;border-radius:16px;
+  border:1px solid var(--border2);background:radial-gradient(520px 300px at 88% -30%,rgba(124,140,248,.14),transparent 66%),var(--surface);
+  box-shadow:0 1px 2px rgba(0,0,0,.3),0 14px 34px -22px rgba(0,0,0,.9);position:relative;overflow:hidden}
+.callcard::before{content:'';position:absolute;left:18px;right:18px;top:0;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent)}
+
+.ringwrap{position:relative;width:126px;height:126px;flex-shrink:0}
+.ringwrap svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-track{stroke:var(--surface2);stroke-width:5;fill:none}
+.ring-prog{stroke:url(#ringGrad);stroke-width:5;fill:none;stroke-linecap:round;transition:stroke-dashoffset .9s linear}
+.ring-breath{position:absolute;inset:-8px;border-radius:50%;border:1px solid var(--accent);opacity:0;pointer-events:none}
+.callcard.oncall .ring-breath{animation:breathe 3.6s var(--ease) infinite}
+.ring-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.ring-in .ctimer{font-size:23px;min-width:0;text-align:center;color:var(--text)}
+.callcard.oncall .ring-in .ctimer{color:var(--green)}
+.ring-lbl{font-size:9px;color:var(--muted);letter-spacing:.18em;font-weight:700}
+
+.callcard .cinfo{flex:1;min-width:0}
+.callchip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:20px;
+  font-size:10.5px;font-weight:700;letter-spacing:.06em;background:var(--surface2);color:var(--muted);
+  border:1px solid var(--border2)}
+.callcard.oncall .callchip{background:rgba(69,192,138,.11);color:var(--green);border-color:rgba(69,192,138,.28)}
+.callcard.oncall .callchip .hdot{background:var(--green);box-shadow:0 0 7px var(--green)}
+.callcard .cname{margin:10px 0 4px;font-size:25px}
+.callcard .cextra{margin-top:9px;font-size:11.5px;line-height:1.7}
+.callacts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.callside{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+
+.queuecard{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 18px;
+  display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(0,0,0,.28)}
+.qhead{display:flex;align-items:baseline;gap:9px;margin-bottom:11px}
+.qhead h4{font-size:13.5px;font-weight:700;letter-spacing:-.01em}
+.qhead span{font-size:11.5px;color:var(--muted);font-weight:500}
+.queue{display:flex;flex-direction:column;gap:1px;flex:1;min-height:0;overflow:hidden}
+.q-row{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:9px;transition:background .18s var(--ease)}
+.q-row:hover{background:var(--surface2)}
+.q-row.next{background:var(--accent-soft)}
+.q-idx{font-family:var(--mono);font-size:10.5px;color:var(--muted);width:28px;flex-shrink:0}
+.q-row.next .q-idx{color:var(--accent-lite)}
+.q-name{font-size:12.5px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-num{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.q-empty{font-size:12px;color:var(--muted);padding:14px 10px;text-align:center}
+.qprog{margin-top:12px}
+.qprog-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px;color:var(--muted)}
+.qprog-top b{font-family:var(--mono);font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+
+/* KPI şeridi */
+.dkpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:14px 18px 16px;flex-shrink:0}
+@media(max-width:1240px){.dkpi-row{grid-template-columns:repeat(2,1fr)}}
+.dkpi{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:15px 17px;transition:border-color .25s var(--ease),transform .25s var(--ease)}
+.dkpi:hover{border-color:var(--border2);transform:translateY(-2px)}
+.dkpi-top{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.dkpi-ico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;
+  background:var(--surface2);border:1px solid var(--border2)}
+.dkpi-ico svg{width:13px;height:13px}
+.dkpi-lbl{font-size:11.5px;color:var(--muted);font-weight:600}
+.dkpi-val{font-family:var(--mono);font-size:25px;font-weight:700;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums}
+.dkpi-val small{font-size:13px;font-weight:500;color:var(--muted);margin-left:3px}
+.dkpi-foot{margin-top:8px;font-size:11px;color:var(--muted);min-height:15px}
+.dkpi-foot .up{color:var(--green);font-weight:700;font-family:var(--mono)}
+.dkpi-foot .dn{color:var(--red);font-weight:700;font-family:var(--mono)}
+.dkpi-spark{position:absolute;right:0;bottom:0;width:120px;height:40px;opacity:.4;pointer-events:none;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 45%);mask-image:linear-gradient(90deg,transparent,#000 45%)}
+.dkpi:hover .dkpi-spark{opacity:.7;transition:opacity .3s var(--ease)}
 
 /* KPI kart detaylari */
 .stat-card{text-align:left;padding:17px 18px;overflow:hidden}
@@ -593,44 +654,66 @@ td:empty::after{content:'—';color:var(--muted)}
   <div class="page-full" id="page-dialer">
 
     <!-- AKTİF ARAMA -->
-    <div class="callstrip">
-      <div class="cavatar" id="cavatar">—</div>
-      <div class="cinfo">
-        <div class="cname" id="cname">Bekleniyor</div>
-        <div class="cnum" id="cnum">—</div>
-        <div class="cextra" id="cextra"></div>
-      </div>
-      <div style="flex:1"></div>
-      <!-- Kişileri Aktar - callstrip sağ tarafı -->
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
-        <button id="googleContactsBtn2" onclick="exportAllToGoogle()" style="display:flex;align-items:center;gap:10px;padding:10px 22px;background:transparent;border:1.5px solid #4285f4;border-radius:24px;color:#4285f4;font-size:15px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:all .18s" onmouseover="this.style.background='rgba(66,133,244,.12)';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='transparent';this.style.transform=''">
+    <!-- AKTİF ARAMA -->
+    <div class="callzone">
+
+      <div class="callcard" id="callCard">
+        <div class="ringwrap">
+          <span class="ring-breath"></span>
+          <svg viewBox="0 0 120 120">
+            <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#7C8CF8"/><stop offset="100%" stop-color="#5DD3C3"/>
+            </linearGradient></defs>
+            <circle class="ring-track" cx="60" cy="60" r="53"/>
+            <circle class="ring-prog" id="ringProg" cx="60" cy="60" r="53"
+                    stroke-dasharray="333" stroke-dashoffset="333"/>
+          </svg>
+          <div class="ring-in">
+            <div class="ctimer" id="ctimer">—</div>
+            <div class="ring-lbl">SÜRE</div>
+          </div>
+        </div>
+
+        <div class="cinfo">
+          <span class="callchip" id="callChip"><span class="hdot"></span> BEKLENİYOR</span>
+          <div class="cname" id="cname">Bekleniyor</div>
+          <div class="cnum" id="cnum">—</div>
+          <div class="cextra" id="cextra"></div>
+          <div class="callacts">
+            <button class="btn primary" onclick="localCmd('cancel_hangup')">✓ Cevaplandı <span class="kbd">F8</span></button>
+            <button class="btn" onclick="localCmd('pause')">❚❚ Duraklat <span class="kbd">F9</span></button>
+            <button class="btn" onclick="localCmd('resume')">▶ Sonraki <span class="kbd">F10</span></button>
+          </div>
+        </div>
+
+        <div class="callside">
+          <button id="googleContactsBtn2" onclick="exportAllToGoogle()" style="display:flex;align-items:center;gap:10px;padding:10px 22px;background:transparent;border:1.5px solid #4285f4;border-radius:24px;color:#4285f4;font-size:15px;font-weight:500;cursor:pointer;font-family:var(--sans);transition:all .18s" onmouseover="this.style.background='rgba(66,133,244,.12)';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='transparent';this.style.transform=''">
           <svg width="22" height="22" viewBox="0 0 48 48"><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/></svg>
           Kişileri Aktar
         </button>
-        <div id="googleProgress" style="display:none;flex-direction:column;gap:2px;align-items:flex-end">
+          <div id="googleProgress" style="display:none;flex-direction:column;gap:2px;align-items:flex-end">
           <div style="font-size:11px;font-family:var(--mono);color:#93c5fd">📇 Google Kişiler</div>
           <div style="font-size:16px;font-weight:600;font-family:var(--mono);color:var(--green)" id="googleProgressTxt">0/0</div>
           <div style="height:3px;background:var(--surface2);border-radius:2px;width:120px">
             <div id="googleProgressBar" style="height:100%;background:var(--green);border-radius:2px;width:0%;transition:width .3s"></div>
           </div>
         </div>
+          <button class="btn" onclick="refreshContacts()" style="font-size:11px;padding:5px 12px">↻ Yenile</button>
+        </div>
+        <div style="display:none"><div class="cavatar" id="cavatar">—</div></div>
       </div>
-      <div style="display:none">
-        <div class="ctimer" id="ctimer" style="color:var(--muted)">—</div>
+
+      <div class="queuecard">
+        <div class="qhead"><h4>Sıradaki</h4><span id="qSub">—</span></div>
+        <div class="queue" id="queueList">
+          <div class="q-empty">Liste bekleniyor</div>
+        </div>
+        <div class="qprog">
+          <div class="qprog-top"><span>Liste ilerlemesi</span><b id="qProgLbl">—</b></div>
+          <div class="prog-track"><div class="prog-fill" id="qProgFill" style="width:0%"></div></div>
+        </div>
       </div>
     </div>
-
-    <!-- ARAMA KONTROL -->
-    <div style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
-      <button class="btn g" onclick="localCmd('resume')">▶ Aramaya Devam Et</button>
-      <button class="btn a" onclick="localCmd('cancel_hangup')">✅ Cevaplandı</button>
-      <button class="btn r" onclick="localCmd('pause')">■ Durdur</button>
-      <div style="flex:1"></div>
-      <button class="btn" onclick="refreshContacts()">↻</button>
-    </div>
-
-    <!-- SONUÇ PANELİ -->
-    
 
     <!-- TABLO TOOLBAR -->
     <div style="display:flex;align-items:center;gap:8px;padding:7px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
@@ -701,28 +784,31 @@ td:empty::after{content:'—';color:var(--muted)}
     </div>
 
     <!-- GÜNLÜK ÖZET -->
-    <div class="daystrip" id="dayStrip">
-      <div class="ds-item">
-        <span class="ds-lbl">Bugünkü arama</span>
-        <b class="ds-val" id="dsCalls">—</b>
+    <div class="dkpi-row" id="dayStrip">
+      <div class="dkpi">
+        <div class="dkpi-top"><span class="dkpi-ico" style="color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></span><span class="dkpi-lbl">Bugünkü arama</span></div>
+        <div class="dkpi-val" id="dsCalls">—</div>
+        <div class="dkpi-foot" id="dsCallsT"></div>
+        <svg class="dkpi-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,33 L17,29 L34,31 L51,20 L68,25 L85,14 L102,18 L120,8" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div class="ds-sep"></div>
-      <div class="ds-item">
-        <span class="ds-lbl">Görüşülen</span>
-        <b class="ds-val" id="dsAnswered">—</b>
+      <div class="dkpi">
+        <div class="dkpi-top"><span class="dkpi-ico" style="color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="dkpi-lbl">Görüşülen</span></div>
+        <div class="dkpi-val" id="dsAnswered">—</div>
+        <div class="dkpi-foot" id="dsAnsweredT"></div>
+        <svg class="dkpi-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,31 L17,32 L34,24 L51,27 L68,17 L85,20 L102,11 L120,13" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div class="ds-sep"></div>
-      <div class="ds-item">
-        <span class="ds-lbl">Konuşma süresi</span>
-        <b class="ds-val" id="dsMinutes">—</b>
+      <div class="dkpi">
+        <div class="dkpi-top"><span class="dkpi-ico" style="color:var(--teal)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="dkpi-lbl">Konuşma süresi</span></div>
+        <div class="dkpi-val" id="dsMinutes">—</div>
+        <div class="dkpi-foot" id="dsMinutesT"></div>
+        <svg class="dkpi-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,15 L17,19 L34,12 L51,21 L68,16 L85,23 L102,19 L120,26" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div class="ds-sep"></div>
-      <div class="ds-item">
-        <span class="ds-lbl">Ortalama görüşme</span>
-        <b class="ds-val" id="dsAvg">—</b>
+      <div class="dkpi">
+        <div class="dkpi-top"><span class="dkpi-ico" style="color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><span class="dkpi-lbl">Ortalama görüşme</span></div>
+        <div class="dkpi-val" id="dsAvg">—</div>
+        <div class="dkpi-foot" id="dsAvgT"></div>
+        <svg class="dkpi-spark" viewBox="0 0 120 40" preserveAspectRatio="none"><path d="M0,27 L17,22 L34,26 L51,17 L68,22 L85,12 L102,16 L120,9" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div class="ds-spacer"></div>
-      <button class="btn" id="dsRefresh" onclick="loadTodayStats()" style="font-size:11px;padding:5px 12px">↻ Yenile</button>
     </div>
 
   </div><!-- /page-dialer -->
@@ -949,22 +1035,86 @@ async function initApp(){
     if(sn) sn.style.display='block';
   }
   loadTodayStats(); setInterval(loadTodayStats,60000);
+  renderQueue(); setInterval(renderQueue,2000);
+  tickRing();    setInterval(tickRing,1000);
   setInterval(pollLocal,200); pollLocal();
 }
 
-// ── GÜNLÜK ÖZET (dialer alt şeridi) ───────────────────────
+// ── ARAMA BÖLGESİ (sıradaki + halka + günlük özet) ────────
+const RING_C = 2*Math.PI*53;
+
+function sadeNo(x){ return String(x||'').replace(/\D/g,'').slice(-10); }
+
+function renderQueue(){
+  const list=document.getElementById('queueList');
+  const sub=document.getElementById('qSub');
+  const lbl=document.getElementById('qProgLbl');
+  const fill=document.getElementById('qProgFill');
+  if(!list) return;
+
+  const total=ucContacts.length;
+  if(!total){ list.innerHTML='<div class="q-empty">Liste bekleniyor</div>';
+              if(sub)sub.textContent='—'; if(lbl)lbl.textContent='—'; return; }
+
+  const aktif=sadeNo(lastLocalNum);
+  let i=ucContacts.findIndex(c=>sadeNo(c.tel)===aktif && aktif);
+  if(i<0) i=ucContacts.findIndex(c=>!c.sonuc)-1;
+
+  const sonraki=ucContacts.slice(i+1, i+6);
+  list.innerHTML = sonraki.length
+    ? sonraki.map((c,k)=>
+        `<div class="q-row${k===0?' next':''}"><span class="q-idx">${i+2+k}</span>`+
+        `<span class="q-name">${esc(c.name||'—')}</span>`+
+        `<span class="q-num">${esc(c.tel||'')}</span></div>`).join('')
+    : '<div class="q-empty">Liste sonuna gelindi</div>';
+
+  if(sub) sub.textContent=(ucCurrentList?.name||'Liste')+' · '+total.toLocaleString('tr-TR')+' kişi';
+  const done=ucContacts.filter(c=>c.sonuc).length;
+  if(lbl) lbl.textContent=done.toLocaleString('tr-TR')+' / '+total.toLocaleString('tr-TR');
+  if(fill) fill.style.width=(total?done/total*100:0)+'%';
+}
+
+function tickRing(){
+  const t=document.getElementById('ctimer'), r=document.getElementById('ringProg');
+  const card=document.getElementById('callCard');
+  if(!t||!r||!card) return;
+  const m=/^(\d{1,2}):(\d{2})$/.exec((t.textContent||'').trim());
+  if(!m){ card.classList.remove('oncall'); r.style.strokeDashoffset=RING_C; return; }
+  card.classList.add('oncall');
+  const sn=(+m[1])*60+(+m[2]);
+  r.style.strokeDashoffset = RING_C*(1-Math.min(sn/180,1));   // 3 dk = tam tur
+  const chip=document.getElementById('callChip');
+  if(chip) chip.lastChild.textContent=' GÖRÜŞMEDE';
+}
+
+function trendYaz(el,bugun,dun){
+  if(!el) return;
+  if(!dun){ el.innerHTML='<span style="color:var(--muted)">dün veri yok</span>'; return; }
+  const d=Math.round((bugun-dun)/dun*100);
+  el.innerHTML = d>=0 ? `<span class="up">▲ ${d}%</span> düne göre`
+                      : `<span class="dn">▼ ${Math.abs(d)}%</span> düne göre`;
+}
+
 async function loadTodayStats(){
   const g=id=>document.getElementById(id);
   if(!g('dsCalls')) return;
   try{
-    const r=await api('GET','/api/calls/stats?days=1');
-    const rows=(r.stats||[]).filter(x=>!currentUser||x.user_id===currentUser.id);
-    let tot=0,ans=0,secs=0;
-    rows.forEach(x=>{tot+=+x.toplam_arama||0; ans+=+x.acilan||0; secs+=+x.toplam_saniye||0;});
-    g('dsCalls').textContent=tot;
-    g('dsAnswered').textContent=tot? `${ans} · %${Math.round(ans/tot*100)}` : ans;
-    g('dsMinutes').textContent=Math.round(secs/60)+' dk';
-    g('dsAvg').textContent=ans? Math.round(secs/ans)+' sn' : '—';
+    const r=await api('GET','/api/calls/stats?days=2');
+    const mine=(r.stats||[]).filter(x=>!currentUser||x.user_id===currentUser.id);
+    const gunler=[...new Set(mine.map(x=>x.gun))].sort().reverse();
+    const topla=gun=>{ let t=0,a=0,s=0;
+      mine.filter(x=>x.gun===gun).forEach(x=>{t+=+x.toplam_arama||0;a+=+x.acilan||0;s+=+x.toplam_saniye||0;});
+      return {t,a,s}; };
+    const bugun=topla(gunler[0]||''), dun=gunler[1]?topla(gunler[1]):{t:0,a:0,s:0};
+
+    g('dsCalls').textContent=bugun.t;
+    g('dsAnswered').innerHTML=bugun.t? `${bugun.a}<small>%${Math.round(bugun.a/bugun.t*100)}</small>` : bugun.a;
+    g('dsMinutes').innerHTML=Math.round(bugun.s/60)+'<small>dk</small>';
+    g('dsAvg').innerHTML=bugun.a? Math.round(bugun.s/bugun.a)+'<small>sn</small>' : '—';
+    trendYaz(g('dsCallsT'),bugun.t,dun.t);
+    trendYaz(g('dsAnsweredT'),bugun.a,dun.a);
+    trendYaz(g('dsMinutesT'),bugun.s,dun.s);
+    trendYaz(g('dsAvgT'), bugun.a?bugun.s/bugun.a:0, dun.a?dun.s/dun.a:0);
   }catch(e){ /* sunucu yoksa sessiz kal */ }
 }
 
