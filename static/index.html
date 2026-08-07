@@ -1431,13 +1431,14 @@ async function pollLocal(){
       try{
         // Çağrı cevaplandı mı? (cancel_hangup.flag = F8 ya da köprü)
         try{
-          const cf=await fetch(LOCAL+'/api/file?name=cancel_hangup.flag');
+          const cf=await fetch(LOCAL+'/api/file?name=cancel_hangup.flag&_='+Date.now(),{cache:'no-store'});
           if(cf.ok){
             const fd=await cf.json();
             const acik=!!fd.exists;
             if(acik && !callAnswered){
               callAnswered=true; localTimerSec=0;
               clearInterval(localTimerIv);
+              {const el0=document.getElementById('ctimer'); if(el0) el0.textContent='00:00';}
               localTimerIv=setInterval(()=>{
                 localTimerSec++;
                 const m=String(Math.floor(localTimerSec/60)).padStart(2,'0');
@@ -1445,20 +1446,32 @@ async function pollLocal(){
                 const el=document.getElementById('ctimer');
                 if(el) el.textContent=m+':'+sc;
               },1000);
+              if(typeof tickRing==='function') tickRing();
             } else if(!acik && callAnswered){
               callAnswered=false;
               clearInterval(localTimerIv); localTimerIv=null;
+              const el=document.getElementById('ctimer');
+              if(el) el.textContent='—';
+              if(typeof tickRing==='function') tickRing();
             }
           }
         }catch(e){}
 
-        const cc=await fetch(LOCAL+'/api/file?name=current_call.txt');
+        const cc=await fetch(LOCAL+'/api/file?name=current_call.txt&_='+Date.now(),{cache:'no-store'});
         if(cc.ok){
           const d=await cc.json();
           if(d.exists&&d.content.trim()){
             const lines=d.content.trim().split('\n');
             const name=(lines[0]||'').trim();
             const num=(lines[1]||'').trim();
+            // GÖRÜŞME SÜRERKEN EKRANI DONDUR.
+            // Sistem, operatör konuşurken sıradaki numarayı arayabiliyor;
+            // MicroSIP meşgul olduğu için o arama başlamıyor ama
+            // current_call.txt yeni kişiyi yazıyor. Ekranın hattaki kişiyi
+            // göstermesi için cevaplıyken güncelleme yapmıyoruz.
+            if(callAnswered){
+              highlightActiveContact(lastLocalNum);
+            } else {
             // Her poll'da aktif kişiyi güncelle
             document.getElementById('cname').textContent=name;
             document.getElementById('cnum').textContent=num;
@@ -1472,6 +1485,7 @@ async function pollLocal(){
               clearInterval(localTimerIv); localTimerIv=null;
               const timerEl=document.getElementById('ctimer');
               if(timerEl) timerEl.textContent='—';
+              if(typeof tickRing==='function') tickRing();
               highlightActiveContact(num);
               // Arama değişince manuel seçimi sıfırla, aktif arananı seç
               if(selContact && !selContact._autoSelected) selContact=null;
@@ -1480,6 +1494,7 @@ async function pollLocal(){
               // Aynı kişi ama highlight güncelle
               highlightActiveContact(num);
             }
+            }   // görüşme dondurma bloğu sonu
           }
         }
       }catch(e){}
@@ -1540,7 +1555,7 @@ let _dialerSettings = null;
 async function getDialerSettings(){
   if(_dialerSettings) return _dialerSettings;
   try{
-    const r = await fetch(LOCAL+'/api/file?name=dialer_settings.json');
+    const r = await fetch(LOCAL+'/api/file?name=dialer_settings.json&_='+Date.now(),{cache:'no-store'});
     if(r.ok){
       const d = await r.json();
       if(d.exists) _dialerSettings = JSON.parse(d.content);
@@ -2107,7 +2122,7 @@ async function jumpToContact(ri, contactId){
   try{
     // Mevcut CSV dosyasını oku ve içinde bu kişinin pozisyonunu bul
     try{
-      const csvRes = await fetch(LOCAL+'/api/file?name=contacts.csv');
+      const csvRes = await fetch(LOCAL+'/api/file?name=contacts.csv&_='+Date.now(),{cache:'no-store'});
       if(csvRes.ok){
         const csvData = await csvRes.json();
         if(csvData.exists && csvData.content){
@@ -2163,7 +2178,7 @@ async function saveSettings(){
   // Local nextcall.bat güncelle
   if(localOnline){
     try{
-      const rb=await fetch(LOCAL+'/api/file?name=nextcall.bat');
+      const rb=await fetch(LOCAL+'/api/file?name=nextcall.bat&_='+Date.now(),{cache:'no-store'});
       if(rb.ok){
         const d=await rb.json();
         if(d.exists){
@@ -2227,7 +2242,7 @@ async function loadLocalSettings(){
   // Local'den kısayollar
   if(localOnline){
     try{
-      const r = await fetch(LOCAL+'/api/file?name=dialer_settings.json');
+      const r = await fetch(LOCAL+'/api/file?name=dialer_settings.json&_='+Date.now(),{cache:'no-store'});
       if(r.ok){
         const data = await r.json();
         if(data.exists && data.content){
@@ -2243,7 +2258,7 @@ async function saveLocalSettings(){
   await api('PUT','/api/settings',{timeout_sec:timeout,delay_between_calls:delay});
   if(localOnline){
     try{
-      const r=await fetch(LOCAL+'/api/file?name=nextcall.bat');
+      const r=await fetch(LOCAL+'/api/file?name=nextcall.bat&_='+Date.now(),{cache:'no-store'});
       if(r.ok){
         const d=await r.json();
         if(d.exists){
