@@ -657,19 +657,7 @@ td:empty::after{content:'—';color:var(--muted)}
   <div class="page-full" id="page-dialer">
 
     <!-- AKTİF ARAMA -->
-    <!-- NUMARA / İSİM ARAMA -->
-    <div style="padding:8px 18px 0;flex-shrink:0">
-      <div style="position:relative;display:inline-block">
-        <input id="numAra" type="text" placeholder="🔍 Numara veya isim ara…"
-          style="width:260px;padding:7px 32px 7px 11px;border:1px solid var(--border2);
-                 background:var(--surface2);border-radius:9px;color:var(--text);font-size:12.5px"
-          oninput="numAraGir(this.value)"
-          onkeydown="if(event.key==='Escape'){this.value='';document.getElementById('numAraTepsi').style.display='none'}">
-        <div id="numAraTepsi" style="display:none;position:absolute;top:calc(100% + 5px);left:0;z-index:200;
-          background:var(--surface);border:1px solid var(--border2);border-radius:12px;
-          box-shadow:0 8px 32px rgba(0,0,0,.45);min-width:400px;max-height:340px;overflow-y:auto"></div>
-      </div>
-    </div>
+    <!-- AKTİF ARAMA -->
 
     <!-- AKTİF ARAMA -->
     <div class="callzone">
@@ -1049,53 +1037,6 @@ async function initApp(){
   tickRing();    setInterval(tickRing,1000);
   setInterval(pollLocal,200); pollLocal();
 }
-
-// ── NUMARA / İSİM ARAMA (hangi datadan) ────────────────────
-let _numAraTimer = null;
-
-async function numAraGir(q){
-  const tepsi=document.getElementById('numAraTepsi');
-  if(!q||q.length<2){ tepsi.style.display='none'; return; }
-  clearTimeout(_numAraTimer);
-  _numAraTimer=setTimeout(async()=>{
-    try{
-      const r=await api('GET','/api/contacts/search?q='+encodeURIComponent(q));
-      const liste=r.results||[];
-      if(!liste.length){
-        tepsi.innerHTML='<div style="padding:14px 16px;font-size:12.5px;color:var(--muted)">Sonuç bulunamadı</div>';
-        tepsi.style.display='block'; return;
-      }
-      tepsi.innerHTML=liste.map(c=>{
-        const ekstra=Object.entries(c.extra||{}).filter(([k,v])=>v).map(([k,v])=>`${esc(k)}: ${esc(String(v))}`).join(' · ');
-        return `<div style="padding:10px 15px;cursor:pointer;border-bottom:1px solid var(--border)"
-          onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''"
-          onclick="numAraSecim(${JSON.stringify(c).replace(/"/g,'&quot;')})">
-          <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
-            <span style="font-weight:600;font-size:13px">${esc(c.name||'—')}</span>
-            <span style="font-family:var(--mono);font-size:12px;color:var(--accent-lite)">${esc(c.tel)}</span>
-            ${c.sonuc?`<span style="font-size:10.5px;background:var(--surface2);padding:2px 7px;border-radius:6px;color:var(--muted)">${esc(c.sonuc)}</span>`:''}
-          </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;display:flex;gap:12px;flex-wrap:wrap">
-            <span>📋 ${esc(c.list_name||'—')}</span>
-            ${c.operator?`<span>👤 ${esc(c.operator)}</span>`:''}
-            ${ekstra?`<span style="color:var(--muted)">${ekstra}</span>`:''}
-          </div>
-        </div>`;
-      }).join('');
-      tepsi.style.display='block';
-    }catch(e){ tepsi.style.display='none'; }
-  },280);
-}
-
-function numAraSecim(c){
-  document.getElementById('numAraTepsi').style.display='none';
-  document.getElementById('numAra').value='';
-}
-
-document.addEventListener('click',e=>{
-  const t=document.getElementById('numAraTepsi');
-  if(t&&!t.contains(e.target)&&e.target.id!=='numAra') t.style.display='none';
-});
 
 // ── ARAMA BÖLGESİ (sıradaki + halka + günlük özet) ────────
 const RING_C = 2*Math.PI*53;
