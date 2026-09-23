@@ -726,6 +726,68 @@ def assign_list(lid):
     return jsonify({'ok': True})
 
 # ── CONTACTS ─────────────────────────────────────────────
+@app.route('/api/contacts/search', methods=['GET'])
+@require_auth
+def contacts_search():
+    """Numara veya isme gore kisi ara, hangi listede oldugunu da dondur.
+
+    ?q=<numara veya isim>&limit=20
+    """
+    q = (request.args.get('q') or '').strip()
+    if len(q) < 2:
+        return jsonify({'results': []})
+
+    limit = min(int(request.args.get('limit', 20)), 100)
+    user = request.user
+    rol = user.get('role')
+
+    # Sadece kullanicinin kendi listelerini gor (admin/super_admin hepsini)
+    if rol in ('admin', 'super_admin'):
+        listeler = sb.table('data_lists').select('id,name,assigned_to,users!assigned_to(name)').execute()
+    else:
+        listeler = sb.table('data_lists').select('id,name').eq('assigned_to', user['id']).execute()
+
+    liste_map = {l['id']: l for l in (listeler.data or [])}
+    if not liste_map:
+        return jsonify({'results': []})
+
+    # Numara mi isim mi?
+    sadece_rakam = re.sub(r'\D', '', q)
+    sonuclar = []
+
+    if sadece_rakam and len(sadece_rakam) >= 3:
+        # Numara aramasi
+        res = sb.table('contacts').select('id,name,tel,list_id,sonuc,extra') \
+                .like('tel', f'%{sadece_rakam[-10:]}%') \
+                .in_('list_id', list(liste_map.keys())) \
+                .limit(limit).execute()
+    else:
+        # Isim aramasi
+        res = sb.table('contacts').select('id,name,tel,list_id,sonuc,extra') \
+                .ilike('name', f'%{q}%') \
+                .in_('list_id', list(liste_map.keys())) \
+                .limit(limit).execute()
+
+    for r in (res.data or []):
+        lst = liste_map.get(r['list_id'], {})
+        operatr = ''
+        if rol in ('admin', 'super_admin'):
+            u = lst.get('users') or {}
+            operatr = u.get('name', '') if isinstance(u, dict) else ''
+        sonuclar.append({
+            'id': r['id'],
+            'name': r.get('name', ''),
+            'tel': r.get('tel', ''),
+            'sonuc': r.get('sonuc', ''),
+            'list_id': r['list_id'],
+            'list_name': lst.get('name', ''),
+            'operator': operatr,
+            'extra': r.get('extra') or {},
+        })
+
+    return jsonify({'results': sonuclar})
+
+
 @app.route('/api/lists/<lid>/contacts', methods=['GET'])
 @require_auth
 def get_contacts(lid):
@@ -965,6 +1027,38 @@ def calls_log():
     return jsonify({'ok': True, 'saved': len(rows)})
 
 
+@app.route('/api/calls/known', methods=['POST'])
+def calls_known():
+    """Gonderilen call_id listesinden HANGILERI zaten kayitli, onu doner.
+
+    Backfill script'i once bunu sorar, sadece eksikleri gonderir.
+    Header: X-Device-Token
+    Body:   {"call_ids": [...]}
+    """
+    row = _device_user(request.headers.get('X-Device-Token', ''))
+    if not row:
+        return jsonify({'error': 'Gecersiz cihaz anahtari'}), 401
+
+    data = request.get_json(silent=True) or {}
+    ids = data.get('call_ids') or []
+    if not isinstance(ids, list):
+        return jsonify({'error': 'call_ids listesi bekleniyor'}), 400
+    ids = [str(i) for i in ids if i][:2000]
+    if not ids:
+        return jsonify({'known': []})
+
+    bilinen = []
+    for i in range(0, len(ids), 200):
+        parca = ids[i:i + 200]
+        try:
+            r = sb.table('call_logs').select('call_id') \
+                  .eq('user_id', row['user_id']).in_('call_id', parca).execute()
+            bilinen.extend([x['call_id'] for x in (r.data or []) if x.get('call_id')])
+        except Exception:
+            pass
+    return jsonify({'known': bilinen})
+
+
 @app.route('/api/calls/stats', methods=['GET'])
 @require_auth
 def calls_stats():
@@ -1032,7 +1126,42 @@ def calls_list():
             q = q.eq('answered', True)
 
     res = q.order('started_at', desc=True).limit(limit).execute()
-    return jsonify({'calls': res.data or []})
+    kayitlar = res.data or []
+
+    # Numaralari contacts tablosuna eslestirip liste adini bul
+    if kayitlar:
+        numaralar = list(set(r.get('number','') for r in kayitlar if r.get('number')))
+        # Son 10 rakama indir
+        def son10(x): return re.sub(r'\D','',str(x))[-10:]
+        num_map = {}   # son10(numara) -> list_name
+        try:
+            # Kullanicinin listelerini bul
+            if user.get('role') in ('admin','super_admin') and target:
+                listeler = sb.table('data_lists').select('id,name').eq('assigned_to', target).execute()
+            elif user.get('role') in ('admin','super_admin'):
+                listeler = sb.table('data_lists').select('id,name').execute()
+            else:
+                listeler = sb.table('data_lists').select('id,name').eq('assigned_to', user['id']).execute()
+            liste_map = {l['id']: l['name'] for l in (listeler.data or [])}
+            if liste_map:
+                # Numaralari contacts'ta ara
+                for i in range(0, len(numaralar), 50):
+                    parca = numaralar[i:i+50]
+                    cr = sb.table('contacts').select('tel,list_id') \
+                           .in_('list_id', list(liste_map.keys())) \
+                           .in_('tel', parca).execute()
+                    for c in (cr.data or []):
+                        k = son10(c.get('tel',''))
+                        if k and k not in num_map:
+                            num_map[k] = liste_map.get(c['list_id'],'')
+        except Exception:
+            pass
+
+        for r in kayitlar:
+            k = son10(r.get('number',''))
+            r['list_name'] = num_map.get(k,'')
+
+    return jsonify({'calls': kayitlar})
 
 
 @app.route('/api/calls/invalid', methods=['GET'])
