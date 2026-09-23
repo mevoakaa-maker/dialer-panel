@@ -1130,7 +1130,7 @@ def calls_list():
 
     # Her durumda (arama yapilsa da yapilmasa da) liste adini eslestir
     if kayitlar:
-        def son10(x): return re.sub(r'\D','',str(x))[-10:]
+        def son10(x): return ''.join(c for c in str(x) if c.isdigit())[-10:]
         numaralar = list(set(son10(r.get('number','')) for r in kayitlar if r.get('number')))
         num_map = {}
         try:
