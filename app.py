@@ -1128,14 +1128,12 @@ def calls_list():
     res = q.order('started_at', desc=True).limit(limit).execute()
     kayitlar = res.data or []
 
-    # Numaralari contacts tablosuna eslestirip liste adini bul
+    # Her durumda (arama yapilsa da yapilmasa da) liste adini eslestir
     if kayitlar:
-        numaralar = list(set(r.get('number','') for r in kayitlar if r.get('number')))
-        # Son 10 rakama indir
         def son10(x): return re.sub(r'\D','',str(x))[-10:]
-        num_map = {}   # son10(numara) -> list_name
+        numaralar = list(set(son10(r.get('number','')) for r in kayitlar if r.get('number')))
+        num_map = {}
         try:
-            # Kullanicinin listelerini bul
             if user.get('role') in ('admin','super_admin') and target:
                 listeler = sb.table('data_lists').select('id,name').eq('assigned_to', target).execute()
             elif user.get('role') in ('admin','super_admin'):
@@ -1143,23 +1141,20 @@ def calls_list():
             else:
                 listeler = sb.table('data_lists').select('id,name').eq('assigned_to', user['id']).execute()
             liste_map = {l['id']: l['name'] for l in (listeler.data or [])}
-            if liste_map:
-                # Numaralari contacts'ta ara
-                for i in range(0, len(numaralar), 50):
-                    parca = numaralar[i:i+50]
+            if liste_map and numaralar:
+                for i in range(0, len(numaralar), 100):
+                    parca = numaralar[i:i+100]
                     cr = sb.table('contacts').select('tel,list_id') \
                            .in_('list_id', list(liste_map.keys())) \
-                           .in_('tel', parca).execute()
+                           .execute()
                     for c in (cr.data or []):
                         k = son10(c.get('tel',''))
-                        if k and k not in num_map:
+                        if k in numaralar and k not in num_map:
                             num_map[k] = liste_map.get(c['list_id'],'')
         except Exception:
             pass
-
         for r in kayitlar:
-            k = son10(r.get('number',''))
-            r['list_name'] = num_map.get(k,'')
+            r['list_name'] = num_map.get(son10(r.get('number','')), '')
 
     return jsonify({'calls': kayitlar})
 
