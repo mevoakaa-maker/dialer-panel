@@ -1142,15 +1142,20 @@ def calls_list():
                 listeler = sb.table('data_lists').select('id,name').eq('assigned_to', user['id']).execute()
             liste_map = {l['id']: l['name'] for l in (listeler.data or [])}
             if liste_map and numaralar:
-                # contacts'ta numara formati farkli olabilir (05xx, 905xx, 5xx).
-                # Python tarafinda son10 ile normalize ederek eslestir.
-                cr = sb.table('contacts').select('tel,list_id') \
-                       .in_('list_id', list(liste_map.keys())) \
-                       .execute()
-                for c in (cr.data or []):
-                    k = son10(c.get('tel',''))
-                    if k in numaralar and k not in num_map:
-                        num_map[k] = liste_map.get(c['list_id'],'')
+                # Her olasiligi dene: 5xxxxxxxxx, 05xxxxxxxxx, 905xxxxxxxxx
+                tel_varyantlari = []
+                for n in numaralar:
+                    tel_varyantlari += [n, '0'+n, '90'+n]
+                # 200'er gruplar halinde sorgula (Supabase .in_ limiti)
+                for i in range(0, len(tel_varyantlari), 200):
+                    parca = tel_varyantlari[i:i+200]
+                    cr = sb.table('contacts').select('tel,list_id') \
+                           .in_('list_id', list(liste_map.keys())) \
+                           .in_('tel', parca).execute()
+                    for c in (cr.data or []):
+                        k = son10(c.get('tel',''))
+                        if k in numaralar and k not in num_map:
+                            num_map[k] = liste_map.get(c['list_id'],'')
         except Exception:
             pass
         for r in kayitlar:
