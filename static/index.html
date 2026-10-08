@@ -708,12 +708,27 @@ td:empty::after{content:'—';color:var(--muted)}
           </select>
           <button class="btn g" onclick="fuGenerateScript()" style="padding:5px 14px">🚀 Script Oluştur</button>
         </div>
+        <!-- Bookmarklet kurulum -->
+        <div id="fuBookmarkHint" style="margin-bottom:10px;padding:10px 12px;background:var(--accent-dim);border:1px solid var(--accent-soft);border-radius:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--accent-lite);flex:1;min-width:200px">
+            💡 <strong>Kolay kullanım:</strong> Aşağıdaki butonu yer imlerine sürükle → Casino panelindeyken tıkla, script otomatik çalışır
+          </span>
+          <a id="fuBookmarklet" href="" onclick="return false"
+            style="padding:5px 14px;background:var(--amber-dim);border:1px solid var(--amber);border-radius:7px;color:var(--amber);font-size:12px;font-weight:700;cursor:grab;text-decoration:none;white-space:nowrap;user-select:none"
+            title="Bunu yer imlerine (bookmarks bar) sürükle">
+            ⭐ Script Çalıştır
+          </a>
+        </div>
         <div id="fuScriptOut" style="display:none">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
             <span id="fuScriptBadge" style="font-size:11px;color:var(--accent-lite)"></span>
-            <button class="btn" style="padding:3px 10px;font-size:11px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--dim)" onclick="navigator.clipboard.writeText(document.getElementById('fuScriptText').value).then(()=>{this.textContent='✅ Kopyalandı';setTimeout(()=>this.textContent='📋 Kopyala',2000)})">📋 Kopyala</button>
+            <button id="fuCopyBtn" class="btn" style="padding:5px 16px;font-size:12px;font-weight:700;background:var(--accent-dim);border:1px solid var(--accent);border-radius:7px;color:var(--accent-lite)" onclick="fuCopyScript(this)">📋 Kopyala</button>
           </div>
-          <textarea id="fuScriptText" readonly style="width:100%;height:120px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--dim);font-family:var(--mono);font-size:11px;padding:10px;resize:vertical"></textarea>
+          <div style="padding:10px 12px;background:var(--green-dim);border:1px solid var(--green);border-radius:8px;margin-bottom:8px;font-size:12px;color:var(--green)">
+            <strong>Nasıl kullanılır:</strong><br>
+            <span style="color:var(--dim)">1. Kopyala butonuna bas &nbsp;→&nbsp; 2. Casino panelini aç &nbsp;→&nbsp; 3. <strong>⭐ Script Çalıştır</strong> bookmarkını tıkla &nbsp;→&nbsp; Bitti!</span>
+          </div>
+          <textarea id="fuScriptText" readonly style="width:100%;height:90px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--muted);font-family:var(--mono);font-size:10px;padding:10px;resize:none"></textarea>
         </div>
       </div>
 
@@ -3292,8 +3307,24 @@ window.__showTSV?window.__showTSV(JSON.stringify(__FINAL),'Arama Takip — '+__F
 })();`;
 
   document.getElementById('fuScriptText').value=s;
-  document.getElementById('fuScriptBadge').textContent=`${phones.length} numara → kopyala, panelde F12 → Console → yapıştır`;
+  document.getElementById('fuScriptBadge').textContent=`${phones.length} numara hazır`;
   document.getElementById('fuScriptOut').style.display='';
+
+  // Bookmarklet: clipboard'dan okuyup eval eder
+  const bm=`javascript:(async()=>{try{const t=await navigator.clipboard.readText();if(!t||!t.includes('__q2')){alert('Önce panelden scripti kopyala!');return;}eval(t);}catch(e){alert('Hata: '+e.message);}})()`;
+  document.getElementById('fuBookmarklet').href=bm;
+
+  // Otomatik kopyala
+  fuCopyScript(document.getElementById('fuCopyBtn'));
+}
+
+function fuCopyScript(btn){
+  const txt=document.getElementById('fuScriptText').value;
+  if(!txt) return;
+  navigator.clipboard.writeText(txt).then(()=>{
+    if(btn){btn.textContent='✅ Kopyalandı!';btn.style.background='var(--green-dim)';btn.style.borderColor='var(--green)';btn.style.color='var(--green)';}
+    setTimeout(()=>{if(btn){btn.textContent='📋 Kopyala';btn.style.background='var(--accent-dim)';btn.style.borderColor='var(--accent)';btn.style.color='var(--accent-lite)';}},3000);
+  });
 }
 
 // ── Sonuç Analizi ──────────────────────────────────────────
