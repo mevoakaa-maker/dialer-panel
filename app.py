@@ -1004,7 +1004,33 @@ def calls_log():
             'sip_code':     (e.get('sip_code') or '')[:8] or None,
             'recording':    (e.get('recording') or '')[:255] or None,
             'machine':      row.get('machine'),
+            'list_name':    None,
         })
+
+    # list_name: numarayi contacts'tan bul, data_lists'ten ismi al
+    if rows:
+        try:
+            nums = list(set(r['number'] for r in rows if r['number']))
+            variants = []
+            for n in nums:
+                variants += [n, '0'+n, '90'+n]
+            uid = row['user_id']
+            lists_res = sb.table('data_lists').select('id,name').eq('assigned_to', uid).execute()
+            liste_map = {l['id']: l['name'] for l in (lists_res.data or [])}
+            if liste_map:
+                for i in range(0, len(variants), 200):
+                    cr = sb.table('contacts').select('tel,list_id') \
+                           .in_('list_id', list(liste_map.keys())) \
+                           .in_('tel', variants[i:i+200]).execute()
+                    num_map = {}
+                    for c in (cr.data or []):
+                        k = _re.sub(r'\D', '', str(c.get('tel','')))[-10:]
+                        if k not in num_map:
+                            num_map[k] = liste_map.get(c['list_id'], '')
+                for r in rows:
+                    r['list_name'] = num_map.get(r['number'], None)
+        except Exception:
+            pass
 
     if not rows:
         return jsonify({'ok': True, 'saved': 0})
@@ -1241,34 +1267,38 @@ def follow_up_calls():
             c['follow_note']    = fu.get('note')
             c['follow_updated'] = fu.get('updated_at')
 
-        # liste adi
-        try:
-            num10_list = list(set(_s10(n) for n in numbers if n))
-            if is_admin and target_user:
-                listeler = sb.table('data_lists').select('id,name').eq('assigned_to', target_user).execute()
-            elif is_admin:
-                listeler = sb.table('data_lists').select('id,name').execute()
-            else:
-                listeler = sb.table('data_lists').select('id,name').eq('assigned_to', user['id']).execute()
-            liste_map = {l['id']: l['name'] for l in (listeler.data or [])}
-            num_map = {}
-            if liste_map and num10_list:
-                tel_var = []
-                for n in num10_list:
-                    tel_var += [n, '0'+n, '90'+n]
-                for i in range(0, len(tel_var), 200):
-                    cr = sb.table('contacts').select('tel,list_id') \
-                           .in_('list_id', list(liste_map.keys())) \
-                           .in_('tel', tel_var[i:i+200]).execute()
-                    for row in (cr.data or []):
-                        k = _s10(row.get('tel', ''))
-                        if k not in num_map:
-                            num_map[k] = liste_map.get(row['list_id'], '')
-            for c in calls:
-                c['list_name'] = num_map.get(_s10(c.get('number', '')), '')
-        except Exception:
-            for c in calls:
-                c.setdefault('list_name', '')
+        # liste adi: once call_logs'daki kalici alandan al, yoksa dinamik bak
+        for c in calls:
+            c.setdefault('list_name', c.get('list_name') or '')
+        # Eksik olanlar icin dinamik lookup
+        eksik = [c for c in calls if not c['list_name']]
+        if eksik:
+            try:
+                num10_list = list(set(_s10(c.get('number','')) for c in eksik))
+                if is_admin and target_user:
+                    listeler = sb.table('data_lists').select('id,name').eq('assigned_to', target_user).execute()
+                elif is_admin:
+                    listeler = sb.table('data_lists').select('id,name').execute()
+                else:
+                    listeler = sb.table('data_lists').select('id,name').eq('assigned_to', user['id']).execute()
+                liste_map = {l['id']: l['name'] for l in (listeler.data or [])}
+                num_map = {}
+                if liste_map and num10_list:
+                    tel_var = []
+                    for n in num10_list:
+                        tel_var += [n, '0'+n, '90'+n]
+                    for i in range(0, len(tel_var), 200):
+                        cr = sb.table('contacts').select('tel,list_id') \
+                               .in_('list_id', list(liste_map.keys())) \
+                               .in_('tel', tel_var[i:i+200]).execute()
+                        for row in (cr.data or []):
+                            k = _s10(row.get('tel', ''))
+                            if k not in num_map:
+                                num_map[k] = liste_map.get(row['list_id'], '')
+                for c in eksik:
+                    c['list_name'] = num_map.get(_s10(c.get('number', '')), '')
+            except Exception:
+                pass
 
     return jsonify({'calls': calls, 'number_search': bool(number_search)})
 
