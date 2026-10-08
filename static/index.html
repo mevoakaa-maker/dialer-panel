@@ -1245,8 +1245,8 @@ async function loadTodayStats(){
 //  Panelde buton yok; veri dışarı aktarımı bilinçli olarak gizli.
 // ══════════════════════════════════════════════════════════
 function _saMi(){
-  if(window._userRole==='super_admin') return true;
-  console.warn('Bu araç yalnızca super_admin içindir.');
+  if(window._userRole==='super_admin'||window._userRole==='admin') return true;
+  console.warn('Bu araç yalnızca admin içindir.');
   return false;
 }
 
@@ -1737,11 +1737,11 @@ async function loadDashboard(){
 async function loadUsers(){
   allUsers=await api('GET','/api/users');
   if(!Array.isArray(allUsers))return;
-  const displayUsers = window._userRole!=='admin' ? allUsers.filter(u=>u.role==='user') : allUsers;
+  const displayUsers = allUsers;
   document.querySelector('#usersTbl tbody').innerHTML=displayUsers.map(u=>`
     <tr><td>${esc(u.name||'—')}</td><td style="font-family:var(--mono);font-size:12px" style="color:var(--muted)">${esc(u.email).replace(/(.{3})[^@]*(@.+)/, "$1***$2")}</td>
     <td><span class="badge badge-${u.role}">${u.role==='admin'?'Admin':'Kullanıcı'}</span></td>
-    <td style="display:flex;gap:4px">${window._userRole==='admin'?`
+    <td style="display:flex;gap:4px">${(window._userRole==='admin'||window._userRole==='super_admin')?`
       <select onchange="changeUserRole('${u.id}',this.value)" style="padding:3px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text);font-size:11px">
         <option value="user" ${u.role==='user'?'selected':''}>Kullanıcı</option>
         <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
@@ -3173,7 +3173,7 @@ async function fuLoadUserFilter(){
   try{
     const r=await api('GET','/api/users');
     const users=Array.isArray(r)?r:(r.users||[]);
-    const temsilciler=users.filter(u=>u.role==='user'||u.role==='admin');
+    const temsilciler=users.filter(u=>u.role==='user'||u.role==='admin'||u.role==='super_admin');
     sel.innerHTML='<option value="">Tüm Temsilciler</option>'+
       temsilciler.map(u=>`<option value="${u.id}">${esc(u.name||u.email)}</option>`).join('');
     sel.style.display='inline-block';

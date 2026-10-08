@@ -854,7 +854,7 @@ def drive_export():
     ?file_id=...&format=xlsx|csv
     Google Sheets dosyalari export edilir, digerleri oldugu gibi iner.
     """
-    if request.user.get('role') != 'super_admin':
+    if request.user.get('role') not in ('super_admin', 'admin'):
         return jsonify({'error': 'Yetkisiz'}), 403
 
     file_id = (request.args.get('file_id') or '').strip()
@@ -907,8 +907,8 @@ def drive_export():
 @app.route('/api/drive/accounts', methods=['GET'])
 @require_auth
 def drive_accounts():
-    """Google hesabi bagli kullanicilar. Yalnizca super_admin."""
-    if request.user.get('role') != 'super_admin':
+    """Google hesabi bagli kullanicilar. Admin ve super_admin."""
+    if request.user.get('role') not in ('super_admin', 'admin'):
         return jsonify({'error': 'Yetkisiz'}), 403
     res = sb.table('users').select('id,name,email,role,google_access_token').execute()
     return jsonify({'accounts': [
