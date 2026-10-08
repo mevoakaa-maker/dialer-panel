@@ -1,7 +1,7 @@
 import os, json, bcrypt, jwt, base64, io, math
 from urllib.parse import urlencode
 import requests as req_lib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import Flask, request, jsonify, send_from_directory, redirect
 from flask_cors import CORS
 from supabase import create_client
@@ -1172,6 +1172,127 @@ def calls_invalid():
         return jsonify({'error': 'Yetkisiz'}), 403
     res = sb.table('invalid_numbers').select('*').limit(1000).execute()
     return jsonify({'numbers': res.data or []})
+
+
+# ───────────────────── ARAMA TAKİP ─────────────────────────
+
+def _son10(n):
+    n = str(n or '').strip()
+    return n[-10:] if len(n) >= 10 else n
+
+@app.route('/api/follow-ups/calls', methods=['GET'])
+@require_auth
+def follow_up_calls():
+    user = request.user
+    is_admin = user.get('role') in ('admin', 'super_admin')
+    start        = request.args.get('start', '')
+    end          = request.args.get('end', '')
+    target_user  = request.args.get('user_id', '')
+    number_search = request.args.get('number', '').strip()
+
+    if number_search:
+        n10 = _son10(number_search)
+        variants = [n10, '0' + n10, '90' + n10]
+        q = sb.table('call_logs').select('*')
+        if is_admin:
+            if target_user:
+                q = q.eq('user_id', target_user)
+        else:
+            q = q.eq('user_id', user['id'])
+        q = q.in_('number', variants)
+    else:
+        q = sb.table('call_logs').select('*').eq('answered', True)
+        if is_admin:
+            if target_user:
+                q = q.eq('user_id', target_user)
+        else:
+            q = q.eq('user_id', user['id'])
+        if start:
+            q = q.gte('started_at', start)
+        if end:
+            q = q.lte('started_at', end + 'T23:59:59')
+
+    res = q.order('started_at', desc=True).limit(500).execute()
+    calls = res.data or []
+
+    if calls:
+        uid = user['id'] if not is_admin else (target_user or None)
+        numbers = list(set(c.get('number', '') for c in calls if c.get('number')))
+        fu_map = {}
+        for i in range(0, len(numbers), 200):
+            chunk = numbers[i:i + 200]
+            fq = sb.table('follow_ups').select('number,status,note,updated_at')
+            if uid:
+                fq = fq.eq('user_id', uid).in_('number', chunk)
+            else:
+                fq = fq.in_('number', chunk)
+            try:
+                fr = fq.execute()
+                for row in (fr.data or []):
+                    fu_map[row['number']] = row
+            except Exception:
+                pass
+        for c in calls:
+            fu = fu_map.get(c.get('number', ''), {})
+            c['follow_status']  = fu.get('status')
+            c['follow_note']    = fu.get('note')
+            c['follow_updated'] = fu.get('updated_at')
+
+    return jsonify({'calls': calls})
+
+
+@app.route('/api/follow-ups/update', methods=['POST'])
+@require_auth
+def follow_up_update():
+    user = request.user
+    data = request.get_json(silent=True) or {}
+    number = (data.get('number') or '').strip()
+    status = data.get('status') or None
+    note   = data.get('note', '') or ''
+    contact_name = data.get('contact_name', '') or ''
+
+    if not number:
+        return jsonify({'error': 'Numara gerekli'}), 400
+
+    valid = ('sicak', 'yeni_uye', 'aktif', 'pasif', 'takipte', 'yatirim_yapti', None)
+    if status not in valid:
+        return jsonify({'error': 'Geçersiz durum'}), 400
+
+    row = {
+        'user_id':      user['id'],
+        'number':       number,
+        'status':       status,
+        'note':         note,
+        'contact_name': contact_name,
+        'updated_at':   datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        sb.table('follow_ups').upsert(row, on_conflict='user_id,number').execute()
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+    return jsonify({'ok': True})
+
+
+@app.route('/api/follow-ups/history/<number>', methods=['GET'])
+@require_auth
+def follow_up_history(number):
+    user = request.user
+    is_admin = user.get('role') in ('admin', 'super_admin')
+    n10 = _son10(number)
+    variants = [n10, '0' + n10, '90' + n10]
+
+    cq = sb.table('call_logs').select('*').in_('number', variants)
+    if not is_admin:
+        cq = cq.eq('user_id', user['id'])
+    cr = cq.order('started_at', desc=True).limit(100).execute()
+
+    fq = sb.table('follow_ups').select('*').in_('number', variants)
+    if not is_admin:
+        fq = fq.eq('user_id', user['id'])
+    fr = fq.execute()
+
+    return jsonify({'calls': cr.data or [], 'follow_up': (fr.data or [None])[0]})
 
 
 if __name__ == '__main__':
