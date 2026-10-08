@@ -3229,7 +3229,11 @@ const sema=(fn,ms=38)=>new Promise(r=>setTimeout(()=>r(fn()),ms));`;
 
 const FU_DURUM_JS=`const __bugun=Math.floor(Date.now()/86400000);
 function __hesaplaDurum(yatAll,kayitGun,bonusBal,donemBasTs){
-  if(yatAll.length===0) return (bonusBal>0)?'Deneme':'Yeni Üye';
+  if(yatAll.length===0){
+    if(bonusBal>0) return 'Deneme';
+    if(kayitGun!==null&&donemBasTs&&kayitGun>=__JD(donemBasTs)) return 'Yeni Üye';
+    return 'Boş Üye';
+  }
   const yatDonem=donemBasTs?yatAll.filter(v=>v.t>=donemBasTs):yatAll;
   if(yatDonem.length===0){const sg=__JD(yatAll[yatAll.length-1].t);return (__bugun-sg>=25)?'Pasif':'Aktif';}
   const di=yatDonem[0],dig=__JD(di.t);
@@ -3366,7 +3370,7 @@ function fuCopyScript(btn){
 let _fuResData=[], _fuResDurumFilter='hepsi', _fuResSortCol='donem_yat', _fuResSortDir=-1;
 
 const FU_DURUM_COLORS={'Sıcak':'#ef4444','İlk Yatırım':'#f59e0b','Aktif Edildi':'#10b981',
-  '5x Aktif Edildi':'#06b6d4','Aktif':'#3b82f6','Pasif':'#6b7280',
+  '5x Aktif Edildi':'#06b6d4','Aktif':'#3b82f6','Pasif':'#6b7280','Boş Üye':'#374151',
   'Yeni Üye':'#8b5cf6','Deneme':'#ec4899','Bulunamadı':'#4b5563'};
 
 function fuLoadResults(){
