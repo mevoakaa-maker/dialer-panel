@@ -477,6 +477,12 @@ td:empty::after{content:'—';color:var(--muted)}
     <button class="nav-btn" onclick="showPage('stats');loadCallStats()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>Arama Raporu</button>
   </div>
 
+  <!-- USER ARAMA TAKİP -->
+  <div id="userFollowupNav" style="display:none">
+    <div style="border-top:1px solid var(--border);margin:6px 0"></div>
+    <button class="nav-btn" onclick="showPage('followup');loadFollowUpCalls()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Arama Takip</button>
+  </div>
+
   <!-- ADMIN NAV -->
   <div id="adminNav" style="display:none">
     <div class="slabel">Yönetim</div>
@@ -1143,6 +1149,7 @@ async function initApp(){
     await loadUsers(); await loadLists(); loadDashboard(); loadOpTrack(); fuLoadUserFilter();
   } else {
     document.getElementById('userNav').style.display='flex';
+    document.getElementById('userFollowupNav').style.display='block';
     document.getElementById('userSettings').style.display='block';
     const uf=document.getElementById('userFooter'); if(uf) uf.style.display='block';
     showPage('dialer');
