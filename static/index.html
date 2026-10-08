@@ -766,17 +766,17 @@ td:empty::after{content:'—';color:var(--muted)}
             <table style="width:100%;border-collapse:collapse;font-size:12px">
               <thead style="position:sticky;top:0;z-index:2">
                 <tr style="background:var(--surface2);border-bottom:1px solid var(--border2)">
-                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">#</th>
-                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">USERNAME</th>
-                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">NUMARA</th>
-                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">DATA</th>
-                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">KAYIT TAR.</th>
-                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">DURUM</th>
-                  <th style="padding:8px 12px;text-align:right;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">DÖNEM YAT.</th>
-                  <th style="padding:8px 12px;text-align:right;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">TOP. YAT.</th>
-                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">SON YAT.</th>
-                  <th style="padding:8px 12px;text-align:right;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">PASİF G.</th>
-                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">ARAMA TAR.</th>
+                  <th style="padding:8px 12px;color:var(--dim);font-size:10px;letter-spacing:.04em">#</th>
+                  <th onclick="fuSortBy('username')" id="fuRTh_username" style="padding:8px 12px;color:var(--dim);font-size:10px;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap">USERNAME</th>
+                  <th onclick="fuSortBy('tel')" id="fuRTh_tel" style="padding:8px 12px;color:var(--dim);font-size:10px;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap">NUMARA</th>
+                  <th onclick="fuSortBy('list_name')" id="fuRTh_list_name" style="padding:8px 12px;color:var(--dim);font-size:10px;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap">DATA</th>
+                  <th onclick="fuSortBy('durum')" id="fuRTh_durum" style="padding:8px 12px;color:var(--dim);font-size:10px;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap">DURUM</th>
+                  <th onclick="fuSortBy('donem_yat')" id="fuRTh_donem_yat" style="padding:8px 12px;text-align:right;color:var(--dim);font-size:10px;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap">DÖNEM YAT.</th>
+                  <th onclick="fuSortBy('top_yat')" id="fuRTh_top_yat" style="padding:8px 12px;text-align:right;color:var(--dim);font-size:10px;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap">TOP. YAT.</th>
+                  <th onclick="fuSortBy('kayit')" id="fuRTh_kayit" style="padding:8px 12px;color:var(--dim);font-size:10px;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap">KAYIT TAR.</th>
+                  <th onclick="fuSortBy('arama_tarih')" id="fuRTh_arama_tarih" style="padding:8px 12px;color:var(--dim);font-size:10px;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap">ARAMA TAR.</th>
+                  <th onclick="fuSortBy('son_tar')" id="fuRTh_son_tar" style="padding:8px 12px;color:var(--dim);font-size:10px;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap">SON YAT. TAR.</th>
+                  <th onclick="fuSortBy('pasif_gun')" id="fuRTh_pasif_gun" style="padding:8px 12px;text-align:right;color:var(--dim);font-size:10px;letter-spacing:.04em;cursor:pointer;user-select:none;white-space:nowrap">PASİF G.</th>
                 </tr>
               </thead>
               <tbody id="fuResultTbody"></tbody>
@@ -3363,7 +3363,7 @@ function fuCopyScript(btn){
 }
 
 // ── Sonuç Analizi ──────────────────────────────────────────
-let _fuResData=[], _fuResDurumFilter='hepsi';
+let _fuResData=[], _fuResDurumFilter='hepsi', _fuResSortCol='donem_yat', _fuResSortDir=-1;
 
 const FU_DURUM_COLORS={'Sıcak':'#ef4444','İlk Yatırım':'#f59e0b','Aktif Edildi':'#10b981',
   '5x Aktif Edildi':'#06b6d4','Aktif':'#3b82f6','Pasif':'#6b7280',
@@ -3430,31 +3430,55 @@ function fuRenderResultStats(){
     <div class="card" style="padding:12px 14px;text-align:center"><div style="font-size:20px;font-weight:800">${d.filter(r=>!r.id).length}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">🔎 Bulunamadı</div></div>`;
 }
 
+function fuSortBy(col){
+  if(_fuResSortCol===col) _fuResSortDir*=-1;
+  else { _fuResSortCol=col; _fuResSortDir=-1; }
+  // başlık okları güncelle
+  document.querySelectorAll('[id^="fuRTh_"]').forEach(th=>{
+    const c=th.id.replace('fuRTh_','');
+    const base=th.textContent.replace(/ [▲▼]$/,'');
+    th.textContent=c===_fuResSortCol?base+(_fuResSortDir===-1?' ▼':' ▲'):base;
+    th.style.color=c===_fuResSortCol?'var(--accent-lite)':'var(--dim)';
+  });
+  fuRenderResultTable();
+}
+
 function fuRenderResultTable(){
   let data=_fuResData;
   if(_fuResDurumFilter!=='hepsi') data=data.filter(r=>r.durum===_fuResDurumFilter);
   const q=(document.getElementById('fuResSearch')?.value||'').toLowerCase();
-  if(q) data=data.filter(r=>(r.username||'').toLowerCase().includes(q)||(r.tel||'').includes(q)||(r.isim||'').toLowerCase().includes(q));
-  data=[...data].sort((a,b)=>(b.donem_yat||0)-(a.donem_yat||0));
+  if(q) data=data.filter(r=>(r.username||'').toLowerCase().includes(q)||(r.tel||'').includes(q)||(r.isim||'').toLowerCase().includes(q)||(r.list_name||'').toLowerCase().includes(q));
+  const col=_fuResSortCol, dir=_fuResSortDir;
+  const numCols=new Set(['donem_yat','top_yat','pasif_gun','yat_adet']);
+  data=[...data].sort((a,b)=>{
+    let av=a[col]??'', bv=b[col]??'';
+    if(numCols.has(col)){ av=+(av||0); bv=+(bv||0); return dir*(av-bv); }
+    return dir*(String(av).localeCompare(String(bv),'tr'));
+  });
   document.getElementById('fuResCount').textContent=data.length+' kayıt';
   const fmtTR=n=>n>=1000?(n/1000).toLocaleString('tr-TR',{maximumFractionDigits:1})+'K':n.toLocaleString('tr-TR');
+  const fmtDate=s=>{
+    if(!s) return '—';
+    // DD.MM.YYYY HH:MM veya YYYY-MM-DD veya YYYYMMDDHHMMSS
+    if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(0,4);
+    return s.slice(0,10);
+  };
   document.getElementById('fuResultTbody').innerHTML=data.slice(0,500).map((r,i)=>{
     const dc=FU_DURUM_COLORS[r.durum]||'#6b7280';
     const yatColor=(r.donem_yat||0)>0?'color:var(--green);font-weight:700':'color:var(--muted)';
-    const kayitStr=r.kayit?r.kayit.slice(0,10).split('-').reverse().join('.'):'—';
     const listStr=esc(r.list_name||'—');
     return `<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''">
       <td style="padding:7px 12px;color:var(--muted)">${i+1}</td>
       <td style="padding:7px 12px;font-weight:600">${esc(r.username||'-')}</td>
       <td style="padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--accent-lite)">${esc(r.tel||'-')}</td>
-      <td style="padding:7px 12px;font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${listStr}">${listStr}</td>
-      <td style="padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--dim)">${kayitStr}</td>
+      <td style="padding:7px 12px;font-size:11px;color:var(--muted);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${listStr}">${listStr}</td>
       <td style="padding:7px 12px"><span style="color:${dc};font-weight:600;font-size:12px">${esc(r.durum||'-')}</span></td>
       <td style="padding:7px 12px;text-align:right;font-family:var(--mono);${yatColor}">${(r.donem_yat||0)>0?fmtTR(r.donem_yat):'-'}</td>
       <td style="padding:7px 12px;text-align:right;font-family:var(--mono);color:var(--dim)">${fmtTR(r.top_yat||0)}</td>
-      <td style="padding:7px 12px;font-size:11px;color:var(--dim)">${esc(r.son_tar||'-')}</td>
+      <td style="padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap">${fmtDate(r.kayit)}</td>
+      <td style="padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap">${esc(r.arama_tarih||'—')}</td>
+      <td style="padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap">${esc(r.son_tar||'—')}</td>
       <td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:${(r.pasif_gun||0)>=25?'var(--amber)':'var(--dim)'}">${r.pasif_gun!=null?r.pasif_gun:'-'}</td>
-      <td style="padding:7px 12px;font-size:11px;color:var(--dim)">${esc(r.arama_tarih||'-')}</td>
     </tr>`;
   }).join('');
 }
