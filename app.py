@@ -1216,8 +1216,11 @@ def follow_up_calls():
     calls = res.data or []
 
     if calls:
+        def _s10(x): return ''.join(c for c in str(x or '') if c.isdigit())[-10:]
         uid = user['id'] if not is_admin else (target_user or None)
         numbers = list(set(c.get('number', '') for c in calls if c.get('number')))
+
+        # follow_up durumu
         fu_map = {}
         for i in range(0, len(numbers), 200):
             chunk = numbers[i:i + 200]
@@ -1238,7 +1241,36 @@ def follow_up_calls():
             c['follow_note']    = fu.get('note')
             c['follow_updated'] = fu.get('updated_at')
 
-    return jsonify({'calls': calls})
+        # liste adi
+        try:
+            num10_list = list(set(_s10(n) for n in numbers if n))
+            if is_admin and target_user:
+                listeler = sb.table('data_lists').select('id,name').eq('assigned_to', target_user).execute()
+            elif is_admin:
+                listeler = sb.table('data_lists').select('id,name').execute()
+            else:
+                listeler = sb.table('data_lists').select('id,name').eq('assigned_to', user['id']).execute()
+            liste_map = {l['id']: l['name'] for l in (listeler.data or [])}
+            num_map = {}
+            if liste_map and num10_list:
+                tel_var = []
+                for n in num10_list:
+                    tel_var += [n, '0'+n, '90'+n]
+                for i in range(0, len(tel_var), 200):
+                    cr = sb.table('contacts').select('tel,list_id') \
+                           .in_('list_id', list(liste_map.keys())) \
+                           .in_('tel', tel_var[i:i+200]).execute()
+                    for row in (cr.data or []):
+                        k = _s10(row.get('tel', ''))
+                        if k not in num_map:
+                            num_map[k] = liste_map.get(row['list_id'], '')
+            for c in calls:
+                c['list_name'] = num_map.get(_s10(c.get('number', '')), '')
+        except Exception:
+            for c in calls:
+                c.setdefault('list_name', '')
+
+    return jsonify({'calls': calls, 'number_search': bool(number_search)})
 
 
 @app.route('/api/follow-ups/update', methods=['POST'])
