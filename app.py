@@ -1212,7 +1212,7 @@ def follow_up_calls():
         if end:
             q = q.lte('started_at', end + 'T23:59:59')
 
-    res = q.order('started_at', desc=True).limit(500).execute()
+    res = q.order('started_at', desc=True).limit(5000).execute()
     calls = res.data or []
 
     if calls:
