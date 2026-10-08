@@ -3375,11 +3375,14 @@ const FU_DURUM_COLORS={'Sıcak':'#ef4444','İlk Yatırım':'#f59e0b','Aktif Edil
   'Yeni Üye':'#8b5cf6','Deneme':'#ec4899','Bulunamadı':'#4b5563'};
 
 function fuLoadResults(){
-  const raw=(document.getElementById('fuResultJSON').value||'').trim();
+  let raw=(document.getElementById('fuResultJSON').value||'').trim();
   if(!raw){ alert('Script çıktısını yapıştır!'); return; }
+  // Yorum satırlarını ve kod satırlarını temizle, sadece JSON array'i bul
+  const arrMatch=raw.match(/(\[[\s\S]*\])/);
+  if(arrMatch) raw=arrMatch[1];
   let data;
   try{ data=JSON.parse(raw); if(!Array.isArray(data)) throw new Error('Dizi bekleniyor'); }
-  catch(e){ alert('Geçersiz JSON: '+e.message); return; }
+  catch(e){ alert('Geçersiz JSON: '+e.message+'\n\nCasino panelinde scripti çalıştır, çıkan kutudaki "Kopyala" butonuna bas, sonra buraya yapıştır.'); return; }
   // _fuCalls'dan telefon → list_name map'i oluştur
   const _listMap={};
   (_fuCalls||[]).forEach(c=>{
