@@ -1011,7 +1011,7 @@ async function initApp(){
   av.textContent = uname.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase().slice(0,2);
   setInterval(()=>{document.getElementById('hclock').textContent=new Date().toLocaleTimeString('tr-TR');},1000);
   await loadGsSettings();
-  if(me.role==='admin'){
+  if(me.role==='admin' || me.role==='super_admin'){
     document.getElementById('hadminBadge').style.display='inline';
     document.getElementById('adminNav').style.display='block';
     await loadUsers(); await loadLists(); loadDashboard(); loadOpTrack();
@@ -1029,7 +1029,7 @@ async function initApp(){
   // Operatörler yalnızca kendi verisini görür (backend kısıtlıyor).
   const sn=document.getElementById('statsNav');
   if(sn) sn.style.display='block';
-  if(me.role==='admin'){
+  if(me.role==='admin' || me.role==='super_admin'){
     const gk=document.getElementById('stCallsCard');   // Görüşmeler admin'de gizli
     if(gk) gk.style.display='none';                    // operatör kendi kayıtlarını görür
   }
