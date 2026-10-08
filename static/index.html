@@ -2459,7 +2459,7 @@ function setupDrop(dropId,inputId){
   };
 }
 function initials(n){return n.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?'}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&quot;')}
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
@@ -3091,7 +3091,8 @@ async function loadFollowUpCalls(){
   if(uid)   params.set('user_id',uid);
   if(num)   params.set('number',num);
   const tbody=document.getElementById('fuTbody');
-  tbody.innerHTML=`<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">Yükleniyor...</td></tr>`;
+  const _cols=(window._userRole==='admin'||window._userRole==='super_admin')?9:8;
+  tbody.innerHTML=`<tr><td colspan="${_cols}" style="padding:32px;text-align:center;color:var(--muted)">Yükleniyor...</td></tr>`;
   try{
     const r=await api('GET','/api/follow-ups/calls?'+params.toString());
     let calls=r.calls||[];
@@ -3117,13 +3118,13 @@ async function loadFollowUpCalls(){
     if(isSA && uf) uf.style.display='';
 
     if(!calls.length){
-      tbody.innerHTML=`<tr><td colspan="8" style="padding:32px;text-align:center;color:var(--muted)">Kayıt bulunamadı</td></tr>`;
+      tbody.innerHTML=`<tr><td colspan="${_cols}" style="padding:32px;text-align:center;color:var(--muted)">Kayıt bulunamadı</td></tr>`;
       document.getElementById('fuScriptSection').style.display='none';
       return;
     }
     tbody.innerHTML=calls.map(c=>{
       const dt=c.started_at?new Date(c.started_at).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
-      const dur=c.duration?Math.floor(c.duration)+'sn':'—';
+      const dur=c.duration_sec?Math.floor(c.duration_sec)+'sn':'—';
       const st=c.follow_status||'';
       const selOpts=FU_STATUS_LABELS.map(([v,l])=>`<option value="${v}"${v===st?' selected':''}>${l}</option>`).join('');
       const uname=esc(c.user_name||c.user_email||'');

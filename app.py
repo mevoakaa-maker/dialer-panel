@@ -1,4 +1,4 @@
-import os, json, bcrypt, jwt, base64, io, math
+import os, json, re, bcrypt, jwt, base64, io, math
 from urllib.parse import urlencode
 import requests as req_lib
 from datetime import datetime, timedelta, timezone
@@ -1245,6 +1245,17 @@ def follow_up_calls():
         def _s10(x): return ''.join(c for c in str(x or '') if c.isdigit())[-10:]
         uid = user['id'] if not is_admin else (target_user or None)
         numbers = list(set(c.get('number', '') for c in calls if c.get('number')))
+
+        # user_name: admin görünümü için user_id → name map
+        if is_admin:
+            try:
+                uids = list(set(c.get('user_id') for c in calls if c.get('user_id')))
+                ur = sb.table('users').select('id,name,email').in_('id', uids[:200]).execute()
+                user_map = {u['id']: (u.get('name') or u.get('email','')) for u in (ur.data or [])}
+                for c in calls:
+                    c['user_name'] = user_map.get(c.get('user_id'), '')
+            except Exception:
+                pass
 
         # follow_up durumu
         fu_map = {}
