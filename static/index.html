@@ -656,39 +656,109 @@ td:empty::after{content:'—';color:var(--muted)}
 
   <!-- ARAMA TAKİP -->
   <div class="page" id="page-followup">
-    <div class="card" style="padding:14px 18px">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span style="font-size:13px;font-weight:700;color:var(--text);margin-right:4px">Arama Takip</span>
+    <!-- Filtre bar -->
+    <div class="card" style="padding:12px 16px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:700;color:var(--text)">Arama Takip</span>
         <input type="date" id="fuStart" style="padding:5px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--mono)">
         <span style="color:var(--muted);font-size:12px">–</span>
         <input type="date" id="fuEnd" style="padding:5px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--mono)">
-        <select id="fuUserFilter" style="display:none;padding:5px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--sans)">
+        <select id="fuUserFilter" style="display:none;padding:5px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--sans);max-width:160px">
           <option value="">Tüm Temsilciler</option>
         </select>
         <input type="text" id="fuNumSearch" placeholder="Numara ara..." style="padding:5px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--mono);width:140px">
         <button class="btn g" onclick="loadFollowUpCalls()" style="padding:5px 14px">Filtrele</button>
-        <span id="fuCount" style="font-size:11px;color:var(--muted);margin-left:4px"></span>
+        <span id="fuCount" style="font-size:11px;color:var(--muted)"></span>
       </div>
     </div>
 
-    <div class="card" style="padding:0;overflow:hidden">
-      <div id="fuTableWrap" style="overflow-x:auto">
+    <!-- Arama kayıtları tablosu -->
+    <div class="card" style="padding:0">
+      <div id="fuTableWrap" style="overflow:auto;max-height:calc(100vh - 310px)">
         <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <thead>
+          <thead style="position:sticky;top:0;z-index:2">
             <tr style="background:var(--surface2);border-bottom:1px solid var(--border2)">
-              <th style="padding:10px 14px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">İSİM</th>
-              <th style="padding:10px 14px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">NUMARA</th>
-              <th style="padding:10px 14px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">TARİH</th>
-              <th style="padding:10px 14px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">SÜRE</th>
-              <th id="fuColUser" style="display:none;padding:10px 14px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">TEMSİLCİ</th>
-              <th style="padding:10px 14px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">DURUM</th>
-              <th style="padding:10px 14px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em">NOT</th>
+              <th style="padding:9px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">İSİM</th>
+              <th style="padding:9px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">NUMARA</th>
+              <th style="padding:9px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">TARİH</th>
+              <th style="padding:9px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">SÜRE</th>
+              <th id="fuColUser" style="display:none;padding:9px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">TEMSİLCİ</th>
+              <th style="padding:9px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em;white-space:nowrap">DURUM</th>
+              <th style="padding:9px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:11px;letter-spacing:.04em">NOT</th>
             </tr>
           </thead>
           <tbody id="fuTbody">
             <tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">Filtrele butonuna bas</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Script Oluştur bölümü -->
+    <div id="fuScriptSection" style="display:none">
+      <div class="card" style="padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:700;color:var(--text)">🚀 Yatırım Kontrol Scripti</span>
+          <select id="fuScriptPar" style="padding:4px 8px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px">
+            <option>4</option><option>6</option><option selected>8</option><option>10</option>
+          </select>
+          <select id="fuScriptDelay" style="padding:4px 8px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px">
+            <option>20</option><option selected>38</option><option>60</option>
+          </select>
+          <button class="btn g" onclick="fuGenerateScript()" style="padding:5px 14px">🚀 Script Oluştur</button>
+        </div>
+        <div id="fuScriptOut" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span id="fuScriptBadge" style="font-size:11px;color:var(--accent-lite)"></span>
+            <button class="btn" style="padding:3px 10px;font-size:11px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--dim)" onclick="navigator.clipboard.writeText(document.getElementById('fuScriptText').value).then(()=>{this.textContent='✅ Kopyalandı';setTimeout(()=>this.textContent='📋 Kopyala',2000)})">📋 Kopyala</button>
+          </div>
+          <textarea id="fuScriptText" readonly style="width:100%;height:120px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;color:var(--dim);font-family:var(--mono);font-size:11px;padding:10px;resize:vertical"></textarea>
+        </div>
+      </div>
+
+      <!-- Sonuç Yapıştır -->
+      <div class="card" style="padding:14px 16px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">📦 Script Sonucu Yapıştır</div>
+        <textarea id="fuResultJSON" rows="3" placeholder="Panelde çalıştırdığın scriptin JSON çıktısını yapıştır..." style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:10px;resize:vertical"></textarea>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+          <button class="btn g" onclick="fuLoadResults()" style="padding:5px 14px">📊 Sonuçları Göster</button>
+          <span id="fuResultInfo" style="font-size:11px;color:var(--muted)"></span>
+        </div>
+      </div>
+
+      <!-- Analiz alanı -->
+      <div id="fuResultArea" style="display:none">
+        <div id="fuResultStats" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:8px"></div>
+
+        <div class="card" style="padding:0">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span id="fuResultDurumFilter" style="display:flex;gap:4px;flex-wrap:wrap"></span>
+            </div>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="fuResSearch" placeholder="Ara..." oninput="fuRenderResultTable()" style="padding:4px 8px;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:var(--mono);width:120px">
+              <span id="fuResCount" style="font-size:11px;color:var(--muted);align-self:center"></span>
+            </div>
+          </div>
+          <div id="fuResultTableWrap" style="overflow:auto;max-height:450px">
+            <table style="width:100%;border-collapse:collapse;font-size:12px">
+              <thead style="position:sticky;top:0;z-index:2">
+                <tr style="background:var(--surface2);border-bottom:1px solid var(--border2)">
+                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">#</th>
+                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">USERNAME</th>
+                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">NUMARA</th>
+                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">DURUM</th>
+                  <th style="padding:8px 12px;text-align:right;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">DÖNEM YAT.</th>
+                  <th style="padding:8px 12px;text-align:right;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">TOP. YAT.</th>
+                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">SON YAT.</th>
+                  <th style="padding:8px 12px;text-align:right;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">PASİF G.</th>
+                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">ARAMA TAR.</th>
+                </tr>
+              </thead>
+              <tbody id="fuResultTbody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2983,6 +3053,8 @@ function fuStatusStyle(s){
   return (m[s]||'background:var(--surface2);color:var(--dim)')+';padding:3px 7px;border-radius:6px;border:none;font-size:12px;font-family:var(--sans);cursor:pointer';
 }
 
+let _fuCalls = [];
+
 async function loadFollowUpCalls(){
   const start=document.getElementById('fuStart').value;
   const end=document.getElementById('fuEnd').value;
@@ -2994,18 +3066,24 @@ async function loadFollowUpCalls(){
   if(uid)   params.set('user_id',uid);
   if(num)   params.set('number',num);
   const tbody=document.getElementById('fuTbody');
-  const cols=7;
-  tbody.innerHTML=`<tr><td colspan="${cols}" style="padding:32px;text-align:center;color:var(--muted)">Yükleniyor...</td></tr>`;
+  tbody.innerHTML=`<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">Yükleniyor...</td></tr>`;
   try{
     const r=await api('GET','/api/follow-ups/calls?'+params.toString());
     const calls=r.calls||[];
+    _fuCalls=calls;
     document.getElementById('fuCount').textContent=calls.length+' kayıt';
-    if(!calls.length){
-      tbody.innerHTML=`<tr><td colspan="${cols}" style="padding:32px;text-align:center;color:var(--muted)">Kayıt bulunamadı</td></tr>`;
-      return;
-    }
+    // Temsilci sütunu ve filtresi
     const isSA=(window._userRole==='admin'||window._userRole==='super_admin');
     document.getElementById('fuColUser').style.display=isSA?'':'none';
+    const uf=document.getElementById('fuUserFilter');
+    if(isSA && uf && uf.options.length<=1) fuLoadUserFilter();
+    if(isSA && uf) uf.style.display='';
+
+    if(!calls.length){
+      tbody.innerHTML=`<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--muted)">Kayıt bulunamadı</td></tr>`;
+      document.getElementById('fuScriptSection').style.display='none';
+      return;
+    }
     tbody.innerHTML=calls.map(c=>{
       const dt=c.started_at?new Date(c.started_at).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
       const dur=c.duration?Math.floor(c.duration)+'sn':'—';
@@ -3015,24 +3093,25 @@ async function loadFollowUpCalls(){
       const num2=esc(c.number||'');
       const cname=esc(c.contact_name||c.name||'');
       return `<tr style="border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''">
-        <td style="padding:9px 14px;color:var(--text)">${cname||'—'}</td>
-        <td style="padding:9px 14px;font-family:var(--mono);color:var(--accent-lite)">${num2}</td>
-        <td style="padding:9px 14px;color:var(--dim);font-size:12px;white-space:nowrap">${dt}</td>
-        <td style="padding:9px 14px;font-family:var(--mono);font-size:12px;color:var(--dim)">${dur}</td>
-        ${isSA?`<td style="padding:9px 14px;font-size:12px;color:var(--dim)">${uname}</td>`:''}
-        <td style="padding:9px 14px">
+        <td style="padding:8px 12px;color:var(--text)">${cname||'—'}</td>
+        <td style="padding:8px 12px;font-family:var(--mono);color:var(--accent-lite)">${num2}</td>
+        <td style="padding:8px 12px;color:var(--dim);font-size:12px;white-space:nowrap">${dt}</td>
+        <td style="padding:8px 12px;font-family:var(--mono);font-size:12px;color:var(--dim)">${dur}</td>
+        ${isSA?`<td style="padding:8px 12px;font-size:12px;color:var(--dim)">${uname}</td>`:''}
+        <td style="padding:8px 12px">
           <select onchange="fuSave(this,'${num2}','${cname}')" style="${fuStatusStyle(st)}">${selOpts}</select>
         </td>
-        <td style="padding:9px 14px">
+        <td style="padding:8px 12px">
           <input type="text" value="${esc(c.follow_note||'')}" placeholder="Not ekle..."
             onblur="fuSaveNote(this,'${num2}','${cname}')"
             onfocus="this.style.borderBottomColor='var(--accent)'"
-            style="background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-size:12px;font-family:var(--sans);width:160px;padding:2px 4px;outline:none">
+            style="background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--text);font-size:12px;font-family:var(--sans);width:150px;padding:2px 4px;outline:none">
         </td>
       </tr>`;
     }).join('');
+    document.getElementById('fuScriptSection').style.display='';
   } catch(e){
-    tbody.innerHTML=`<tr><td colspan="${cols}" style="padding:32px;text-align:center;color:var(--red)">Hata: ${e.message}</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="7" style="padding:32px;text-align:center;color:var(--red)">Hata: ${e.message}</td></tr>`;
   }
 }
 
@@ -3057,8 +3136,6 @@ async function fuLoadUserFilter(){
     const users=r.users||[];
     sel.innerHTML='<option value="">Tüm Temsilciler</option>'+
       users.map(u=>`<option value="${u.id}">${esc(u.name||u.email)}</option>`).join('');
-    sel.style.display='';
-    document.getElementById('fuColUser').style.display='';
   } catch(e){}
 }
 
@@ -3066,11 +3143,226 @@ async function fuLoadUserFilter(){
   const today=new Date();
   const fmt=d=>d.toISOString().slice(0,10);
   const d7=new Date(today); d7.setDate(today.getDate()-7);
-  const startEl=document.getElementById('fuStart');
-  const endEl=document.getElementById('fuEnd');
-  if(startEl&&!startEl.value) startEl.value=fmt(d7);
-  if(endEl&&!endEl.value)     endEl.value=fmt(today);
+  const s=document.getElementById('fuStart');
+  const e=document.getElementById('fuEnd');
+  if(s&&!s.value) s.value=fmt(d7);
+  if(e&&!e.value) e.value=fmt(today);
 })();
+
+// ── Script Oluştur ──────────────────────────────────────────
+const FU_HELPERS=`window.__q2=async(o)=>{const p=new URLSearchParams();
+['','id','username','firstname','lastname','balance','total_deposit','total_withdraw','role','callcenter','last_login','created_at','dealername'].forEach((v,i)=>p.set('mDataProp_'+i,v));
+p.set('page','users');p.set('sEcho','1');p.set('iColumns','13');p.set('iDisplayStart','0');p.set('iDisplayLength','200');
+p.set('iSortCol_0','1');p.set('sSortDir_0','desc');
+Object.entries(o||{}).forEach(([k,v])=>p.set(k,v));
+const r=await fetch('/admin/user/list?'+p.toString(),{headers:{'X-Requested-With':'XMLHttpRequest'},credentials:'include'});
+const ct=r.headers.get('content-type')||''; if(!ct.includes('json'))throw new Error('LOGOUT');
+const d=await r.json();
+if(d.aaData&&d.aaData[0]&&!Array.isArray(d.aaData[0])){d.aaData=d.aaData.map(u=>{const a=['',u.id,u.username,u.firstname||'',u.lastname||'',u.phone||'',u.created_at,u.call_center_id||'',u.balance||'0',u.bonus_balance||'0',u.last_login,u.role||'',''];return a;});}
+return d};
+window.__fp=async(uid,db,de,st)=>{const p=new URLSearchParams();
+['','id','user_id','created_at','updated_at','amount','balance','status','type',''].forEach((v,i)=>p.set('mDataProp_'+i,v));
+p.set('dateBegin',db);p.set('dateEnd',de);p.set('type','1');p.set('status','1');
+p.set('user_id',uid);p.set('callcenter_id','0');p.set('dealer_id','0');
+p.set('admin_id','');p.set('payment_method_id','');
+p.set('sEcho','1');p.set('iColumns','10');p.set('iDisplayStart',st||0);p.set('iDisplayLength','500');
+p.set('iSortCol_0','3');p.set('sSortDir_0','desc');
+const r=await fetch('/admin/transaction/finance/list?'+p.toString(),{headers:{'X-Requested-With':'XMLHttpRequest'},credentials:'include'});
+const d=await r.json();
+if(d.aaData&&d.aaData[0]&&!Array.isArray(d.aaData[0])){d.aaData=d.aaData.map(r=>{const a=['',r.id,r.user_id,r.created_at,r.updated_at,r.amount,r.balance,r.status,r.type,''];a.created_at=r.created_at;a.amount=r.amount;return a;});}
+return d};
+window.__fReport=async(uid,db,de)=>{const p=new URLSearchParams();
+p.set('dateBegin',db);p.set('dateEnd',de);p.set('callcenter_id','0');p.set('dealer_id','0');
+p.set('admin_id','');p.set('payment_method_id','');p.set('user_id',uid);
+const r=await fetch('/admin/transaction/finance/report?'+p.toString(),{headers:{'X-Requested-With':'XMLHttpRequest'},credentials:'include'});
+const d=await r.json();
+if(d.yatirim_miktari!==undefined){d.deposit_total=d.yatirim_miktari;d.deposit_count=d.yatirim_sayisi;}
+return d};
+const __TS=s=>{const m=(s||'').match(/(\\d{2})\\.(\\d{2})\\.(\\d{4})[ ](\\d{2}):(\\d{2}):?(\\d{2})?/);
+ return m?(m[3]+m[2]+m[1]+m[4]+m[5]+(m[6]||'00')):''};
+const __JD=t=>Math.floor(Date.UTC(+t.slice(0,4),+t.slice(4,6)-1,+t.slice(6,8))/86400000);
+const __FMT=t=>t?t.slice(6,8)+'.'+t.slice(4,6)+'.'+t.slice(0,4)+' '+t.slice(8,10)+':'+t.slice(10,12):'-';
+const __DE=new Date(Date.now()+3*864e5).toISOString().slice(0,10)+' 23:59:59';
+const sema=(fn,ms=38)=>new Promise(r=>setTimeout(()=>r(fn()),ms));`;
+
+const FU_DURUM_JS=`const __bugun=Math.floor(Date.now()/86400000);
+function __hesaplaDurum(yatAll,kayitGun,bonusBal,donemBasTs){
+  if(yatAll.length===0) return (bonusBal>0)?'Deneme':'Yeni Üye';
+  const yatDonem=donemBasTs?yatAll.filter(v=>v.t>=donemBasTs):yatAll;
+  if(yatDonem.length===0){const sg=__JD(yatAll[yatAll.length-1].t);return (__bugun-sg>=25)?'Pasif':'Aktif';}
+  const di=yatDonem[0],dig=__JD(di.t);
+  const onc=yatAll.filter(v=>v.t<di.t);
+  if(onc.length===0){if(kayitGun!==null&&dig===kayitGun)return 'Sıcak';return 'İlk Yatırım';}
+  const fark=dig-__JD(onc[onc.length-1].t);
+  if(fark>=25){if(yatDonem.length>=5)return '5x Aktif Edildi';return 'Aktif Edildi';}
+  return 'Aktif';
+}`;
+
+function fuGenerateScript(){
+  if(!_fuCalls.length){ alert('Önce tablo yükle!'); return; }
+  const par=document.getElementById('fuScriptPar').value;
+  const del=document.getElementById('fuScriptDelay').value;
+
+  // number → call date map (son arama tarihi)
+  const tarihMap={};
+  const seenNums=new Set();
+  _fuCalls.forEach(c=>{
+    const n=(c.number||'').replace(/\D/g,'').slice(-10);
+    if(n.length<9) return;
+    const dt=c.started_at?c.started_at.slice(0,10):'2024-01-01';
+    if(!tarihMap[n]||dt>tarihMap[n]) tarihMap[n]=dt;
+    seenNums.add(n);
+  });
+  const phones=[...seenNums];
+  if(!phones.length){ alert('Tabloda geçerli numara bulunamadı!'); return; }
+
+  const s=`// ═══ ARAMA TAKİP DÖNÜŞÜM KONTROLİ — ${new Date().toLocaleString('tr-TR')} ═══
+// ${phones.length} numara | Kişi-bazlı arama tarihi
+(async()=>{
+${FU_HELPERS}
+${FU_DURUM_JS}
+
+const __PHONES=${JSON.stringify(phones)};
+const __TARIH_MAP=${JSON.stringify(tarihMap)};
+const __SEEN=new Set();const __BUL=[];const __FINAL=[];
+const PAR=${par};const GEC=${del};
+const __TEL_MAP=new Map();
+const normTel=s=>{s=s.replace(/\\D/g,'');if(s.length>=10){const l=s.slice(-10);if(l[0]==='5')return l;}return s;};
+function __getKisiTarih(tel){return __TARIH_MAP[tel]||Object.values(__TARIH_MAP).sort()[0]||'2024-01-01';}
+function __add(arr,_tel){(arr||[]).forEach(u=>{if(__SEEN.has(u[1]))return;__SEEN.add(u[1]);if(_tel&&!__TEL_MAP.has(u[1]))__TEL_MAP.set(u[1],_tel);__BUL.push(u);});}
+
+console.log('📞 Telefon aranıyor:', __PHONES.length);
+const __BULUNAN=new Set();
+let __pi=0;
+await Promise.all(Array(PAR).fill(0).map(async()=>{while(__pi<__PHONES.length){const t=__PHONES[__pi++];
+  const _tn=normTel(t);
+  const _fmts=['+90'+_tn,t,'+90'+t];
+  let _ok=false;
+  for(const f of _fmts){if(_ok)break;try{const r=await sema(()=>__q2({phone:f}),GEC);if(r.aaData&&r.aaData.length>0){__add(r.aaData,_tn);_ok=true;}}catch(e){}}
+  if(_ok)__BULUNAN.add(_tn);
+  if(__pi%30===0)console.log('  Tel:',__pi+'/'+__PHONES.length,'bul:',__BUL.length);
+}}));
+const __MISS=__PHONES.filter(t=>!__BULUNAN.has(normTel(t)));
+__MISS.forEach(t=>{__FINAL.push({id:0,username:'',tel:normTel(t),isim:'-',durum:'Bulunamadı',arama_tarih:__getKisiTarih(normTel(t)),top_yat:0,rpr_yat:0,donem_yat:0,donem_yat_adet:0,pasif_gun:null,son_tar:'-',bakiye:0});});
+console.log('✅ Bulunan:',__BUL.length,'| Bulunamadı:',__MISS.length);
+
+console.log('💰 Yatırım verileri:', __BUL.length);
+let __fi=0;
+await Promise.all(Array(PAR).fill(0).map(async()=>{while(__fi<__BUL.length){const u=__BUL[__fi++];
+try{
+  const uid=u[1];const tel=__TEL_MAP.get(uid)||normTel(u[5]||'');
+  const kisiTarih=__getKisiTarih(tel);
+  const kisiDB=kisiTarih+' 00:00:00';
+  const kisiBasTs=kisiTarih.replace(/-/g,'')+'000000';
+  const kayitTs=__TS(u[6]);const kayitGun=kayitTs?__JD(kayitTs):null;
+  const rp=await sema(()=>__fReport(uid,kisiDB,__DE),GEC);
+  const fd=await sema(()=>__fp(uid,'2015-01-01 00:00:00',__DE,0),GEC);
+  const yatAll=(fd.aaData||[]).map(r=>({t:__TS(r[3]),a:+r[5]})).filter(r=>r.t).sort((a,b)=>a.t<b.t?-1:1);
+  const son=yatAll[yatAll.length-1]||null;
+  const pasifGun=son?(__bugun-__JD(son.t)):null;
+  const durum=__hesaplaDurum(yatAll,kayitGun,+(u[9]||0),kisiBasTs);
+  const donemYat=yatAll.filter(v=>v.t>=kisiBasTs);
+  __FINAL.push({id:uid,username:u[2]||'',tel,isim:((u[3]||'')+' '+(u[4]||'')).trim(),
+    durum,arama_tarih:kisiTarih,bakiye:+(u[8]||0),
+    top_yat:yatAll.reduce((s,v)=>s+v.a,0),rpr_yat:+(rp?.deposit_total||0),
+    donem_yat:donemYat.reduce((s,v)=>s+v.a,0),donem_yat_adet:donemYat.length,
+    son_tar:son?__FMT(son.t):'-',pasif_gun:pasifGun,yat_adet:yatAll.length});
+  if(__fi%20===0)console.log('  Yatırım:',__fi+'/'+__BUL.length);
+}catch(e){console.warn('Hata:',u[1],e.message);}
+}}));
+
+console.log('✅ Tamamlandı!',__FINAL.length,'kayıt |','Dönem yatırımcı:',__FINAL.filter(r=>r.donem_yat>0).length);
+try{copy(JSON.stringify(__FINAL));console.log('📋 Kopyalandı!');}catch(e){}
+window.__showTSV?window.__showTSV(JSON.stringify(__FINAL),'Arama Takip — '+__FINAL.length+' kayıt'):console.log(JSON.stringify(__FINAL));
+})();`;
+
+  document.getElementById('fuScriptText').value=s;
+  document.getElementById('fuScriptBadge').textContent=`${phones.length} numara → kopyala, panelde F12 → Console → yapıştır`;
+  document.getElementById('fuScriptOut').style.display='';
+}
+
+// ── Sonuç Analizi ──────────────────────────────────────────
+let _fuResData=[], _fuResDurumFilter='hepsi';
+
+const FU_DURUM_COLORS={'Sıcak':'#ef4444','İlk Yatırım':'#f59e0b','Aktif Edildi':'#10b981',
+  '5x Aktif Edildi':'#06b6d4','Aktif':'#3b82f6','Pasif':'#6b7280',
+  'Yeni Üye':'#8b5cf6','Deneme':'#ec4899','Bulunamadı':'#4b5563'};
+
+function fuLoadResults(){
+  const raw=(document.getElementById('fuResultJSON').value||'').trim();
+  if(!raw){ alert('Script çıktısını yapıştır!'); return; }
+  let data;
+  try{ data=JSON.parse(raw); if(!Array.isArray(data)) throw new Error('Dizi bekleniyor'); }
+  catch(e){ alert('Geçersiz JSON: '+e.message); return; }
+  _fuResData=data;
+  _fuResDurumFilter='hepsi';
+  document.getElementById('fuResultInfo').textContent=`✅ ${data.length} kayıt yüklendi`;
+  document.getElementById('fuResultArea').style.display='';
+
+  // Durum filtreleri
+  const durumlar=[...new Set(data.map(r=>r.durum||''))].filter(Boolean);
+  const order=['Sıcak','İlk Yatırım','Aktif Edildi','5x Aktif Edildi','Aktif','Pasif','Yeni Üye','Deneme','Bulunamadı'];
+  const sorted=[...order.filter(d=>durumlar.includes(d)),...durumlar.filter(d=>!order.includes(d))];
+  document.getElementById('fuResultDurumFilter').innerHTML=
+    `<span onclick="fuSetDurum('hepsi')" style="padding:3px 9px;border-radius:20px;font-size:11px;cursor:pointer;background:var(--accent-dim);color:var(--accent-lite);border:1px solid var(--accent)">Tümü</span>`+
+    sorted.map(d=>{
+      const c=FU_DURUM_COLORS[d]||'#6b7280';
+      const cnt=data.filter(r=>r.durum===d).length;
+      return `<span onclick="fuSetDurum('${d}')" data-du="${d}" style="padding:3px 9px;border-radius:20px;font-size:11px;cursor:pointer;background:${c}22;color:${c};border:1px solid ${c}55">${d} (${cnt})</span>`;
+    }).join('');
+
+  fuRenderResultStats();
+  fuRenderResultTable();
+}
+
+function fuSetDurum(val){
+  _fuResDurumFilter=val;
+  document.querySelectorAll('#fuResultDurumFilter span').forEach(el=>{
+    const isAll=!el.dataset.du;
+    const active=val==='hepsi'?isAll:(el.dataset.du===val);
+    el.style.fontWeight=active?'700':'400';
+    el.style.opacity=active?'1':'0.55';
+  });
+  fuRenderResultTable();
+}
+
+function fuRenderResultStats(){
+  const d=_fuResData;
+  const yapan=d.filter(r=>(r.donem_yat||0)>0);
+  const topYat=yapan.reduce((s,r)=>s+(r.donem_yat||0),0);
+  const oran=d.length?Math.round(yapan.length/d.length*1000)/10:0;
+  const fmtTR=n=>n>=1000?(n/1000).toLocaleString('tr-TR',{maximumFractionDigits:1})+'K':n.toLocaleString('tr-TR');
+  document.getElementById('fuResultStats').innerHTML=`
+    <div class="card" style="padding:12px 14px;text-align:center"><div style="font-size:20px;font-weight:800">${d.length}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">📞 Aranan</div></div>
+    <div class="card" style="padding:12px 14px;text-align:center;border-color:var(--green)"><div style="font-size:20px;font-weight:800;color:var(--green)">${yapan.length}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">💰 Dönem Yatırımcı</div><div style="font-size:10px;color:var(--muted)">%${oran}</div></div>
+    <div class="card" style="padding:12px 14px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--accent-lite)">${fmtTR(topYat)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">💵 Dönem Toplam</div><div style="font-size:10px;color:var(--muted)">${yapan.length?'ort '+fmtTR(Math.round(topYat/yapan.length)):''}</div></div>
+    <div class="card" style="padding:12px 14px;text-align:center"><div style="font-size:20px;font-weight:800">${d.filter(r=>!r.id).length}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">🔎 Bulunamadı</div></div>`;
+}
+
+function fuRenderResultTable(){
+  let data=_fuResData;
+  if(_fuResDurumFilter!=='hepsi') data=data.filter(r=>r.durum===_fuResDurumFilter);
+  const q=(document.getElementById('fuResSearch')?.value||'').toLowerCase();
+  if(q) data=data.filter(r=>(r.username||'').toLowerCase().includes(q)||(r.tel||'').includes(q)||(r.isim||'').toLowerCase().includes(q));
+  data=[...data].sort((a,b)=>(b.donem_yat||0)-(a.donem_yat||0));
+  document.getElementById('fuResCount').textContent=data.length+' kayıt';
+  const fmtTR=n=>n>=1000?(n/1000).toLocaleString('tr-TR',{maximumFractionDigits:1})+'K':n.toLocaleString('tr-TR');
+  document.getElementById('fuResultTbody').innerHTML=data.slice(0,500).map((r,i)=>{
+    const dc=FU_DURUM_COLORS[r.durum]||'#6b7280';
+    const yatColor=(r.donem_yat||0)>0?'color:var(--green);font-weight:700':'color:var(--muted)';
+    return `<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''">
+      <td style="padding:7px 12px;color:var(--muted)">${i+1}</td>
+      <td style="padding:7px 12px;font-weight:600">${esc(r.username||'-')}</td>
+      <td style="padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--accent-lite)">${esc(r.tel||'-')}</td>
+      <td style="padding:7px 12px"><span style="color:${dc};font-weight:600;font-size:12px">${esc(r.durum||'-')}</span></td>
+      <td style="padding:7px 12px;text-align:right;font-family:var(--mono);${yatColor}">${(r.donem_yat||0)>0?fmtTR(r.donem_yat):'-'}</td>
+      <td style="padding:7px 12px;text-align:right;font-family:var(--mono);color:var(--dim)">${fmtTR(r.top_yat||0)}</td>
+      <td style="padding:7px 12px;font-size:11px;color:var(--dim)">${esc(r.son_tar||'-')}</td>
+      <td style="padding:7px 12px;text-align:right;font-family:var(--mono);font-size:11px;color:${(r.pasif_gun||0)>=25?'var(--amber)':'var(--dim)'}">${r.pasif_gun!=null?r.pasif_gun:'-'}</td>
+      <td style="padding:7px 12px;font-size:11px;color:var(--dim)">${esc(r.arama_tarih||'-')}</td>
+    </tr>`;
+  }).join('');
+}
 </script>
 </body>
 </html>
