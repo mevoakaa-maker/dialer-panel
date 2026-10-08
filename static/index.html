@@ -769,6 +769,8 @@ td:empty::after{content:'—';color:var(--muted)}
                   <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">#</th>
                   <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">USERNAME</th>
                   <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">NUMARA</th>
+                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">DATA</th>
+                  <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">KAYIT TAR.</th>
                   <th style="padding:8px 12px;text-align:left;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">DURUM</th>
                   <th style="padding:8px 12px;text-align:right;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">DÖNEM YAT.</th>
                   <th style="padding:8px 12px;text-align:right;font-weight:600;color:var(--dim);font-size:10px;letter-spacing:.04em">TOP. YAT.</th>
@@ -3173,6 +3175,8 @@ async function fuLoadUserFilter(){
     const users=r.users||[];
     sel.innerHTML='<option value="">Tüm Temsilciler</option>'+
       users.map(u=>`<option value="${u.id}">${esc(u.name||u.email)}</option>`).join('');
+    sel.style.display='inline-block';
+    document.getElementById('fuColUser').style.display='';
   } catch(e){}
 }
 
@@ -3300,7 +3304,7 @@ try{
   const durum=__hesaplaDurum(yatAll,kayitGun,+(u[9]||0),kisiBasTs);
   const donemYat=yatAll.filter(v=>v.t>=kisiBasTs);
   __FINAL.push({id:uid,username:u[2]||'',tel,isim:((u[3]||'')+' '+(u[4]||'')).trim(),
-    durum,arama_tarih:kisiTarih,bakiye:+(u[8]||0),
+    kayit:u[6]||'',durum,arama_tarih:kisiTarih,bakiye:+(u[8]||0),
     top_yat:yatAll.reduce((s,v)=>s+v.a,0),rpr_yat:+(rp?.deposit_total||0),
     donem_yat:donemYat.reduce((s,v)=>s+v.a,0),donem_yat_adet:donemYat.length,
     son_tar:son?__FMT(son.t):'-',pasif_gun:pasifGun,yat_adet:yatAll.length});
@@ -3368,6 +3372,16 @@ function fuLoadResults(){
   let data;
   try{ data=JSON.parse(raw); if(!Array.isArray(data)) throw new Error('Dizi bekleniyor'); }
   catch(e){ alert('Geçersiz JSON: '+e.message); return; }
+  // _fuCalls'dan telefon → list_name map'i oluştur
+  const _listMap={};
+  (_fuCalls||[]).forEach(c=>{
+    const n=(c.number||'').replace(/\D/g,'').slice(-10);
+    if(n && c.list_name) _listMap[n]=c.list_name;
+  });
+  data.forEach(r=>{
+    const n=(r.tel||'').replace(/\D/g,'').slice(-10);
+    if(!r.list_name) r.list_name=_listMap[n]||'';
+  });
   _fuResData=data;
   _fuResDurumFilter='hepsi';
   document.getElementById('fuResultInfo').textContent=`✅ ${data.length} kayıt yüklendi`;
@@ -3424,10 +3438,14 @@ function fuRenderResultTable(){
   document.getElementById('fuResultTbody').innerHTML=data.slice(0,500).map((r,i)=>{
     const dc=FU_DURUM_COLORS[r.durum]||'#6b7280';
     const yatColor=(r.donem_yat||0)>0?'color:var(--green);font-weight:700':'color:var(--muted)';
+    const kayitStr=r.kayit?r.kayit.slice(0,10).split('-').reverse().join('.'):'—';
+    const listStr=esc(r.list_name||'—');
     return `<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''">
       <td style="padding:7px 12px;color:var(--muted)">${i+1}</td>
       <td style="padding:7px 12px;font-weight:600">${esc(r.username||'-')}</td>
       <td style="padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--accent-lite)">${esc(r.tel||'-')}</td>
+      <td style="padding:7px 12px;font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${listStr}">${listStr}</td>
+      <td style="padding:7px 12px;font-family:var(--mono);font-size:11px;color:var(--dim)">${kayitStr}</td>
       <td style="padding:7px 12px"><span style="color:${dc};font-weight:600;font-size:12px">${esc(r.durum||'-')}</span></td>
       <td style="padding:7px 12px;text-align:right;font-family:var(--mono);${yatColor}">${(r.donem_yat||0)>0?fmtTR(r.donem_yat):'-'}</td>
       <td style="padding:7px 12px;text-align:right;font-family:var(--mono);color:var(--dim)">${fmtTR(r.top_yat||0)}</td>
