@@ -3172,9 +3172,10 @@ async function fuLoadUserFilter(){
   if(!sel) return;
   try{
     const r=await api('GET','/api/users');
-    const users=r.users||[];
+    const users=Array.isArray(r)?r:(r.users||[]);
+    const temsilciler=users.filter(u=>u.role==='user'||u.role==='admin');
     sel.innerHTML='<option value="">Tüm Temsilciler</option>'+
-      users.map(u=>`<option value="${u.id}">${esc(u.name||u.email)}</option>`).join('');
+      temsilciler.map(u=>`<option value="${u.id}">${esc(u.name||u.email)}</option>`).join('');
     sel.style.display='inline-block';
     document.getElementById('fuColUser').style.display='';
   } catch(e){}
