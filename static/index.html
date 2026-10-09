@@ -742,8 +742,12 @@ td:empty::after{content:'—';color:var(--muted)}
       <div class="card" style="padding:14px 16px">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">📦 Script Sonucu Yapıştır</div>
         <textarea id="fuResultJSON" rows="3" placeholder="Panelde çalıştırdığın scriptin JSON çıktısını yapıştır..." style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;padding:10px;resize:vertical"></textarea>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
           <button class="btn g" onclick="fuLoadResults()" style="padding:5px 14px">📊 Sonuçları Göster</button>
+          <label style="padding:5px 12px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:8px;color:var(--accent-lite);font-size:12px;cursor:pointer">
+            📁 JSON Dosyası Yükle
+            <input type="file" accept=".json,application/json" style="display:none" onchange="fuLoadFile(this)">
+          </label>
           <span id="fuResultInfo" style="font-size:11px;color:var(--muted)"></span>
         </div>
       </div>
@@ -3332,30 +3336,40 @@ __ov.innerHTML='<div style="font-size:15px;font-weight:700;color:#fff;margin-bot
 +'<div style="flex:1;background:#1a2130;border:1px solid #7c8cf8;border-radius:8px;padding:10px;text-align:center"><div style="font-size:24px;font-weight:800;color:#afb9ff">'+(__tutar>=1000?(__tutar/1000).toFixed(1)+'K':__tutar)+'</div><div style="font-size:11px;color:#afb9ff;opacity:.8">Toplam Yatırım ₺</div></div>'
 +'</div>'
 +'<div style="font-size:11px;color:#6e7a91;margin-bottom:14px;padding:8px 10px;background:#0b0e14;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+__prev+'</div>'
-+'<textarea id="__ovTa" readonly style="width:100%;height:60px;resize:none;background:#0b0e14;color:#6e7a91;border:1px solid #2c3548;border-radius:6px;font-size:11px;padding:6px;box-sizing:border-box;font-family:monospace;margin-bottom:10px">'+__json.slice(0,300)+'...</textarea>'
-+'<div style="display:flex;gap:8px">'
++'<div style="display:flex;gap:8px;margin-bottom:10px">'
 +'<button id="__ovCp" style="flex:1;padding:10px;background:#7c8cf8;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">📋 Kopyala</button>'
-+'<button id="__ovX" style="padding:10px 16px;background:#1a2130;color:#a2aec4;border:1px solid #2c3548;border-radius:8px;font-size:14px;cursor:pointer">Kapat</button>'
-+'</div>';
++'<a id="__ovDl" style="padding:10px 14px;background:#1a3020;color:#45c08a;border:1px solid #45c08a;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;display:flex;align-items:center">⬇ İndir</a>'
++'<button id="__ovX" style="padding:10px 14px;background:#1a2130;color:#a2aec4;border:1px solid #2c3548;border-radius:8px;font-size:14px;cursor:pointer">✕</button>'
++'</div>'
++'<textarea id="__ovTa" readonly style="display:none;width:100%;height:100px;resize:none;background:#0b0e14;color:#a2aec4;border:1px solid #7c8cf8;border-radius:6px;font-size:11px;padding:6px;box-sizing:border-box;font-family:monospace"></textarea>';
 document.body.appendChild(__ov);
+const __blob=new Blob([__json],{type:'application/json'});
+const __dlUrl=URL.createObjectURL(__blob);
+document.getElementById('__ovDl').href=__dlUrl;
+document.getElementById('__ovDl').download='sonuc_'+Date.now()+'.json';
 function __doCopy(){
   try{
     const _ta=document.createElement('textarea');
-    _ta.value=__json;_ta.style.position='fixed';_ta.style.opacity='0';
-    document.body.appendChild(_ta);_ta.select();_ta.setSelectionRange(0,99999);
+    _ta.value=__json;_ta.style.cssText='position:fixed;top:0;left:0;opacity:0.01;width:1px;height:1px';
+    document.body.appendChild(_ta);_ta.focus();_ta.select();_ta.setSelectionRange(0,_ta.value.length);
     const ok=document.execCommand('copy');
     document.body.removeChild(_ta);
     if(ok) return true;
   }catch(e){}
-  try{navigator.clipboard.writeText(__json);}catch(e){}
+  try{return navigator.clipboard.writeText(__json).then(()=>true).catch(()=>false);}catch(e){}
   return false;
 }
-document.getElementById('__ovX').onclick=()=>document.body.removeChild(__ov);
-document.getElementById('__ovCp').onclick=()=>{
-  const ok=__doCopy();
-  document.getElementById('__ovCp').textContent=ok?'✅ Kopyalandı!':'⚠️ Manuel seç → kopyala';
-  if(ok) setTimeout(()=>document.body.contains(__ov)&&document.body.removeChild(__ov),800);
-  else{ document.getElementById('__ovTa').value=__json; document.getElementById('__ovTa').style.height='120px'; document.getElementById('__ovTa').select(); }
+document.getElementById('__ovX').onclick=()=>{URL.revokeObjectURL(__dlUrl);document.body.removeChild(__ov);};
+document.getElementById('__ovCp').onclick=async()=>{
+  const ok=await __doCopy();
+  const btn=document.getElementById('__ovCp');
+  if(ok){btn.textContent='✅ Kopyalandı!';setTimeout(()=>{URL.revokeObjectURL(__dlUrl);document.body.contains(__ov)&&document.body.removeChild(__ov);},1000);}
+  else{
+    btn.textContent='⚠️ Kopyalanamadı — İndir kullan';
+    const ta=document.getElementById('__ovTa');
+    ta.style.display='block';ta.value=__json;
+    try{ta.select();ta.setSelectionRange(0,ta.value.length);}catch(e){}
+  }
 };
 })();`;
 
@@ -3386,6 +3400,18 @@ let _fuResData=[], _fuResDurumFilter='hepsi', _fuResSortCol='donem_yat', _fuResS
 const FU_DURUM_COLORS={'Sıcak':'#ef4444','İlk Yatırım':'#f59e0b','Aktif Edildi':'#10b981',
   '5x Aktif Edildi':'#06b6d4','Aktif':'#3b82f6','Pasif':'#6b7280','Boş Üye':'#374151',
   'Yeni Üye':'#8b5cf6','Deneme':'#ec4899','Bulunamadı':'#4b5563'};
+
+function fuLoadFile(input){
+  const f=input.files&&input.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    document.getElementById('fuResultJSON').value=e.target.result;
+    fuLoadResults();
+  };
+  r.readAsText(f,'utf-8');
+  input.value='';
+}
 
 function fuLoadResults(){
   let raw=(document.getElementById('fuResultJSON').value||'').trim();
