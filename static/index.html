@@ -3347,27 +3347,26 @@ const __blob=new Blob([__json],{type:'application/json'});
 const __dlUrl=URL.createObjectURL(__blob);
 document.getElementById('__ovDl').href=__dlUrl;
 document.getElementById('__ovDl').download='sonuc_'+Date.now()+'.json';
-function __doCopy(){
-  try{
-    const _ta=document.createElement('textarea');
-    _ta.value=__json;_ta.style.cssText='position:fixed;top:0;left:0;opacity:0.01;width:1px;height:1px';
-    document.body.appendChild(_ta);_ta.focus();_ta.select();_ta.setSelectionRange(0,_ta.value.length);
-    const ok=document.execCommand('copy');
-    document.body.removeChild(_ta);
-    if(ok) return true;
-  }catch(e){}
-  try{return navigator.clipboard.writeText(__json).then(()=>true).catch(()=>false);}catch(e){}
-  return false;
-}
 document.getElementById('__ovX').onclick=()=>{URL.revokeObjectURL(__dlUrl);document.body.removeChild(__ov);};
 document.getElementById('__ovCp').onclick=async()=>{
-  const ok=await __doCopy();
   const btn=document.getElementById('__ovCp');
-  if(ok){btn.textContent='✅ Kopyalandı!';setTimeout(()=>{URL.revokeObjectURL(__dlUrl);document.body.contains(__ov)&&document.body.removeChild(__ov);},1000);}
+  let ok=false;
+  // 1. navigator.clipboard (uzak masaüstü clipboard paylaşımıyla çalışır)
+  try{ await navigator.clipboard.writeText(__json); ok=true; }catch(e){}
+  // 2. copy() - bazı panellerde global olarak tanımlı
+  if(!ok){ try{ copy(__json); ok=true; }catch(e){} }
+  // 3. execCommand fallback
+  if(!ok){ try{
+    const _t=document.createElement('textarea');
+    _t.value=__json; _t.style.cssText='position:fixed;top:0;left:0;opacity:0.01;width:1px;height:1px';
+    document.body.appendChild(_t); _t.focus(); _t.select(); _t.setSelectionRange(0,_t.value.length);
+    ok=document.execCommand('copy'); document.body.removeChild(_t);
+  }catch(e){} }
+  if(ok){ btn.textContent='✅ Kopyalandı!'; setTimeout(()=>{URL.revokeObjectURL(__dlUrl);document.body.contains(__ov)&&document.body.removeChild(__ov);},1000); }
   else{
-    btn.textContent='⚠️ Kopyalanamadı — İndir kullan';
+    btn.textContent='⚠️ Kopyalanamadı';
     const ta=document.getElementById('__ovTa');
-    ta.style.display='block';ta.value=__json;
+    ta.style.display='block'; ta.value=__json;
     try{ta.select();ta.setSelectionRange(0,ta.value.length);}catch(e){}
   }
 };
