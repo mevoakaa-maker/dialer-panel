@@ -1238,8 +1238,14 @@ def follow_up_calls():
         if end:
             q = q.lte('started_at', end + 'T23:59:59')
 
-    res = q.order('started_at', desc=True).limit(5000).execute()
-    calls = res.data or []
+    calls = []
+    batch = 1000
+    for offset in range(0, 6000, batch):
+        res = q.order('started_at', desc=True).range(offset, offset + batch - 1).execute()
+        chunk = res.data or []
+        calls.extend(chunk)
+        if len(chunk) < batch:
+            break
 
     if calls:
         def _s10(x): return ''.join(c for c in str(x or '') if c.isdigit())[-10:]
