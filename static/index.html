@@ -672,7 +672,7 @@ td:empty::after{content:'—';color:var(--muted)}
         <select id="fuUserFilter" style="display:none;padding:5px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--sans);max-width:160px">
           <option value="">Tüm Temsilciler</option>
         </select>
-        <input type="text" id="fuNumSearch" placeholder="Numara ara..." style="padding:5px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--mono);width:140px">
+        <input type="text" id="fuNumSearch" placeholder="Numara veya isim ara..." style="padding:5px 9px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:var(--mono);width:180px" onkeydown="if(event.key==='Enter')loadFollowUpCalls()">
         <button class="btn g" onclick="loadFollowUpCalls()" style="padding:5px 14px">Filtrele</button>
         <span id="fuCount" style="font-size:11px;color:var(--muted)"></span>
       </div>
@@ -3088,12 +3088,19 @@ async function loadFollowUpCalls(){
   const start=document.getElementById('fuStart').value;
   const end=document.getElementById('fuEnd').value;
   const uid=document.getElementById('fuUserFilter')?.value||'';
-  const num=(document.getElementById('fuNumSearch')?.value||'').trim();
+  const searchVal=(document.getElementById('fuNumSearch')?.value||'').trim();
   const params=new URLSearchParams();
   if(start) params.set('start',start);
   if(end)   params.set('end',end);
   if(uid)   params.set('user_id',uid);
-  if(num)   params.set('number',num);
+  if(searchVal){
+    // Tamamen rakamlardan oluşuyorsa numara araması, değilse isim araması
+    if(/^[\d\s\+\-\(\)]+$/.test(searchVal)){
+      params.set('number',searchVal.replace(/\D/g,''));
+    } else {
+      params.set('name',searchVal);
+    }
+  }
   const tbody=document.getElementById('fuTbody');
   const _cols=(window._userRole==='admin'||window._userRole==='super_admin')?9:8;
   tbody.innerHTML=`<tr><td colspan="${_cols}" style="padding:32px;text-align:center;color:var(--muted)">Yükleniyor...</td></tr>`;
@@ -3101,9 +3108,11 @@ async function loadFollowUpCalls(){
     const r=await api('GET','/api/follow-ups/calls?'+params.toString());
     let calls=r.calls||[];
     const isNumSearch=r.number_search||false;
+    const isNameSearch=r.name_search||false;
+    const isSearchMode=isNumSearch||isNameSearch;
 
-    // Numara araması değilse: numaraya göre deduplicate (en son arama)
-    if(!isNumSearch){
+    // Arama modu değilse: numaraya göre deduplicate (en son arama)
+    if(!isSearchMode){
       const seen=new Set(); const deduped=[];
       for(const c of calls){
         const n=(c.number||'').replace(/\D/g,'').slice(-10);
@@ -3113,7 +3122,8 @@ async function loadFollowUpCalls(){
     }
 
     _fuCalls=calls;
-    document.getElementById('fuCount').textContent=calls.length+(isNumSearch?' arama (tüm geçmiş)':' numara');
+    const countLabel=isNumSearch?' arama (numara geçmişi)':isNameSearch?' arama (isim araması)':' numara';
+    document.getElementById('fuCount').textContent=calls.length+countLabel;
     // Temsilci sütunu ve filtresi
     const isSA=(window._userRole==='admin'||window._userRole==='super_admin');
     document.getElementById('fuColUser').style.display=isSA?'':'none';

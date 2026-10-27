@@ -1215,37 +1215,68 @@ def follow_up_calls():
     end          = request.args.get('end', '')
     target_user  = request.args.get('user_id', '')
     number_search = request.args.get('number', '').strip()
+    name_search   = request.args.get('name', '').strip()
+
+    def _base_cq():
+        bq = sb.table('call_logs').select('*')
+        if is_admin:
+            if target_user:
+                bq = bq.eq('user_id', target_user)
+        else:
+            bq = bq.eq('user_id', user['id'])
+        return bq
+
+    def _paginate(q, max_rows=6000):
+        out = []; batch = 1000
+        for offset in range(0, max_rows, batch):
+            res = q.order('started_at', desc=True).range(offset, offset + batch - 1).execute()
+            chunk = res.data or []
+            out.extend(chunk)
+            if len(chunk) < batch:
+                break
+        return out
 
     if number_search:
         n10 = _son10(number_search)
         variants = [n10, '0' + n10, '90' + n10]
-        q = sb.table('call_logs').select('*')
-        if is_admin:
-            if target_user:
-                q = q.eq('user_id', target_user)
-        else:
-            q = q.eq('user_id', user['id'])
-        q = q.in_('number', variants)
+        calls = _paginate(_base_cq().in_('number', variants))
+
+    elif name_search:
+        safe = name_search.replace('%', '').replace('_', '')[:60]
+        # contacts tablosunda isim ara → numara listesi
+        contact_nums = []
+        try:
+            import re as _re2
+            cr = sb.table('contacts').select('tel').ilike('name', f'%{safe}%').limit(500).execute()
+            contact_nums = list(set(
+                _re2.sub(r'\D', '', str(c['tel']))[-10:]
+                for c in (cr.data or []) if c.get('tel')
+            ))
+        except Exception:
+            pass
+        # call_logs.contact_name araması
+        calls = []
+        seen_ids = set()
+        for c in _paginate(_base_cq().ilike('contact_name', f'%{safe}%'), max_rows=3000):
+            if c['id'] not in seen_ids:
+                calls.append(c); seen_ids.add(c['id'])
+        # contacts'tan bulunan numaralar
+        if contact_nums:
+            variants2 = []
+            for n in contact_nums[:150]:
+                variants2 += [n, '0' + n, '90' + n]
+            for c in _paginate(_base_cq().in_('number', variants2), max_rows=3000):
+                if c['id'] not in seen_ids:
+                    calls.append(c); seen_ids.add(c['id'])
+        calls.sort(key=lambda c: c.get('started_at', ''), reverse=True)
+
     else:
-        q = sb.table('call_logs').select('*').eq('answered', True)
-        if is_admin:
-            if target_user:
-                q = q.eq('user_id', target_user)
-        else:
-            q = q.eq('user_id', user['id'])
+        q = _base_cq().eq('answered', True)
         if start:
             q = q.gte('started_at', start)
         if end:
             q = q.lte('started_at', end + 'T23:59:59')
-
-    calls = []
-    batch = 1000
-    for offset in range(0, 6000, batch):
-        res = q.order('started_at', desc=True).range(offset, offset + batch - 1).execute()
-        chunk = res.data or []
-        calls.extend(chunk)
-        if len(chunk) < batch:
-            break
+        calls = _paginate(q)
 
     if calls:
         def _s10(x): return ''.join(c for c in str(x or '') if c.isdigit())[-10:]
@@ -1317,7 +1348,7 @@ def follow_up_calls():
             except Exception:
                 pass
 
-    return jsonify({'calls': calls, 'number_search': bool(number_search)})
+    return jsonify({'calls': calls, 'number_search': bool(number_search), 'name_search': bool(name_search)})
 
 
 @app.route('/api/follow-ups/update', methods=['POST'])
