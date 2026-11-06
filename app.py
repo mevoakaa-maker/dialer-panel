@@ -1039,16 +1039,17 @@ def calls_log():
         # ayni call_id tekrar gelirse guncelle, cakisma hatasi verme
         sb.table('call_logs').upsert(
             rows, on_conflict='user_id,call_id').execute()
-    except Exception:
+    except Exception as _upsert_err:
         # upsert desteklenmezse tek tek dene, hatalilari atla
         saved = 0
+        _last_err = str(_upsert_err)
         for r in rows:
             try:
                 sb.table('call_logs').insert(r).execute()
                 saved += 1
-            except Exception:
-                pass
-        return jsonify({'ok': True, 'saved': saved})
+            except Exception as _ie:
+                _last_err = str(_ie)
+        return jsonify({'ok': True, 'saved': saved, 'debug': _last_err[:300]})
 
     return jsonify({'ok': True, 'saved': len(rows)})
 
