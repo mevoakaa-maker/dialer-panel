@@ -1175,6 +1175,18 @@ async function initApp(){
   loadTodayStats(); setInterval(loadTodayStats,60000);
   tickRing();    setInterval(tickRing,1000);
   setInterval(pollLocal,1000); pollLocal();
+
+  // Uzun acik kalinca biriken bellek sizintisini onler: 2 saat sonra,
+  // operator BOSTAYKEN (aktif cagri yok, arama yok) sayfayi otomatik yeniler.
+  // callAnswered veya cnum doluyken ASLA yenilemez -> cagri gostergesi/isim kesilmez.
+  let __reloadPending=false;
+  setInterval(()=>{__reloadPending=true;}, 2*60*60*1000);
+  setInterval(()=>{
+    if(!__reloadPending) return;
+    const num=(document.getElementById('cnum')?.textContent||'').trim();
+    const varNumara = num && num!=='—' && num!=='-';
+    if(!callAnswered && !varNumara) location.reload();
+  }, 5000);
 }
 
 // ── ARAMA BÖLGESİ (sıradaki + halka + günlük özet) ────────
